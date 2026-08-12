@@ -138,10 +138,6 @@ HMS-JBS/
 │   │       ├── manager/                    # Hotel Management operations
 │   │       └── admin/                      # Admin and System configs
 │   │
-│   ├── assets/                             # Static resources
-│   │   ├── css/
-│   │   ├── js/
-│   │   └── images/
 │   │
 │   └── index.jsp                           # Root redirect
 │
@@ -154,10 +150,6 @@ HMS-JBS/
 │   ├── config.properties
 │   └── i18n/
 │
-├── docker/                                 # Docker setup
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── mysql-init/
 │
 ├── build.xml                               # Apache Ant build script
 └── README.md
