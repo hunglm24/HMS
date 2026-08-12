@@ -76,4 +76,37 @@ public class UserDao {
         return findByEmail(email).orElseThrow(
                 () -> new SQLException("Không đọc được tài khoản vừa tạo"));
     }
+
+    public void updatePassword(User user, String passwordHash) throws SQLException {
+        String sql = user.getRoleId() == 0
+                ? "UPDATE guest SET password_hash = ? WHERE guest_id = ? AND has_account = 1"
+                : "UPDATE `user` SET password_hash = ? WHERE user_id = ?";
+        executeUpdate(sql, passwordHash, user.getUserId(), "Không thể cập nhật mật khẩu");
+    }
+
+    public void updateProfile(User user, String fullName, String phone) throws SQLException {
+        String sql = user.getRoleId() == 0
+                ? "UPDATE guest SET full_name = ?, phone = ? WHERE guest_id = ? AND has_account = 1"
+                : "UPDATE `user` SET full_name = ?, phone = ? WHERE user_id = ?";
+        try (Connection connection = DBConnectionUtil.getConnection()) {
+            if (connection == null) throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, fullName);
+                statement.setString(2, phone);
+                statement.setInt(3, user.getUserId());
+                if (statement.executeUpdate() == 0) throw new SQLException("Không thể cập nhật hồ sơ");
+            }
+        }
+    }
+
+    private void executeUpdate(String sql, String value, int id, String error) throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection()) {
+            if (connection == null) throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, value);
+                statement.setInt(2, id);
+                if (statement.executeUpdate() == 0) throw new SQLException(error);
+            }
+        }
+    }
 }
