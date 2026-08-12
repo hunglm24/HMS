@@ -71,4 +71,50 @@ public class UserService {
         return userDao.createCustomer(normalizedName, normalizedEmail,
                 normalizedPhone.isEmpty() ? null : normalizedPhone, PasswordUtil.hash(password));
     }
+
+    public void resetPassword(String email, String phone, String password, String confirmPassword)
+            throws SQLException {
+        User user = userDao.findByEmail(email == null ? "" : email.trim().toLowerCase(Locale.ROOT))
+                .orElseThrow(() -> new IllegalArgumentException("Thông tin xác minh không chính xác."));
+        String storedPhone = user.getPhone() == null ? "" : user.getPhone().trim();
+        if (phone == null || !storedPhone.equals(phone.trim())) {
+            throw new IllegalArgumentException("Thông tin xác minh không chính xác.");
+        }
+        validateNewPassword(password, confirmPassword);
+        userDao.updatePassword(user, PasswordUtil.hash(password));
+    }
+
+    public void changePassword(User user, String currentPassword, String newPassword,
+                               String confirmPassword) throws SQLException {
+        User stored = userDao.findByEmail(user.getEmail()).orElseThrow(
+                () -> new IllegalArgumentException("Không tìm thấy tài khoản."));
+        if (!PasswordUtil.verify(currentPassword, stored.getPasswordHash())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không đúng.");
+        }
+        validateNewPassword(newPassword, confirmPassword);
+        userDao.updatePassword(stored, PasswordUtil.hash(newPassword));
+    }
+
+    public void updateProfile(User user, String fullName, String phone) throws SQLException {
+        String normalizedName = fullName == null ? "" : fullName.trim();
+        String normalizedPhone = phone == null ? "" : phone.trim();
+        if (normalizedName.length() < 2 || normalizedName.length() > 100) {
+            throw new IllegalArgumentException("Họ tên phải có từ 2 đến 100 ký tự.");
+        }
+        if (!normalizedPhone.isEmpty() && !PHONE_PATTERN.matcher(normalizedPhone).matches()) {
+            throw new IllegalArgumentException("Số điện thoại không đúng định dạng.");
+        }
+        userDao.updateProfile(user, normalizedName, normalizedPhone.isEmpty() ? null : normalizedPhone);
+        user.setFullName(normalizedName);
+        user.setPhone(normalizedPhone.isEmpty() ? null : normalizedPhone);
+    }
+
+    private void validateNewPassword(String password, String confirmPassword) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("Mật khẩu mới phải có ít nhất 8 ký tự.");
+        }
+        if (!password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp.");
+        }
+    }
 }

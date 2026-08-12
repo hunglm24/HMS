@@ -20,6 +20,10 @@
         button { width: 100%; margin-top: 24px; padding: 13px; border: 0; border-radius: 9px;
             background: #245ec7; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
         button:hover { background: #194da9; }
+        .form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+        .form-actions button { margin: 0; }
+        .reset-button { background: #eef2f7; color: #344054; }
+        .reset-button:hover { background: #dfe6ef; }
         .error { padding: 11px 13px; margin-bottom: 16px; border-radius: 8px; background: #fff0f0; color: #a51d27; }
         .link { text-align: center; margin: 18px 0 0; }
         .link a { color: #245ec7; text-decoration: none; }
@@ -52,7 +56,10 @@
         <label for="confirmPassword">Xác nhận mật khẩu</label>
         <input id="confirmPassword" name="confirmPassword" type="password" minlength="8" autocomplete="new-password" required>
 
-        <button type="submit">Đăng ký</button>
+        <div class="form-actions">
+            <button class="reset-button" type="reset">Nhập lại</button>
+            <button type="submit">Đăng ký</button>
+        </div>
     </form>
     <p class="link">Đã có tài khoản? <a href="${pageContext.request.contextPath}/login">Đăng nhập</a></p>
 </main>

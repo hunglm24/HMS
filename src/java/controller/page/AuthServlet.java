@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Optional;
 
-@WebServlet(urlPatterns = {"/login", "/register", "/logout"})
+@WebServlet(urlPatterns = {"/login", "/register", "/forgot-password", "/logout"})
 public class AuthServlet extends HttpServlet {
     private UserService userService;
 
@@ -38,6 +38,10 @@ public class AuthServlet extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/public/register.jsp").forward(request, response);
             return;
         }
+        if (request.getServletPath().equals("/forgot-password")) {
+            request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
+            return;
+        }
         String returnUrl = validReturnUrl(request, request.getParameter("returnUrl"));
         if (returnUrl != null) {
             request.getSession(true).setAttribute("loginReturnUrl", returnUrl);
@@ -54,6 +58,10 @@ public class AuthServlet extends HttpServlet {
         }
         if (request.getServletPath().equals("/register")) {
             register(request, response);
+            return;
+        }
+        if (request.getServletPath().equals("/forgot-password")) {
+            resetPassword(request, response);
             return;
         }
 
@@ -87,6 +95,22 @@ public class AuthServlet extends HttpServlet {
             getServletContext().log("Đăng nhập thất bại do lỗi cơ sở dữ liệu", ex);
             request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
             request.getRequestDispatcher("/WEB-INF/views/public/login.jsp").forward(request, response);
+        }
+    }
+
+    private void resetPassword(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            userService.resetPassword(request.getParameter("email"), request.getParameter("phone"),
+                    request.getParameter("password"), request.getParameter("confirmPassword"));
+            response.sendRedirect(request.getContextPath() + "/login?reset=1");
+        } catch (IllegalArgumentException ex) {
+            request.setAttribute("error", ex.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
+        } catch (SQLException ex) {
+            getServletContext().log("Đặt lại mật khẩu thất bại", ex);
+            request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
+            request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
         }
     }
 

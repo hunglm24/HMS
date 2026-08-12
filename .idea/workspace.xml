@@ -5,20 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="35c2fd85-0860-4253-9e75-835e40870cee" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/nbproject/project.properties" beforeDir="false" afterPath="$PROJECT_DIR$/nbproject/project.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/localhost_access_log.2026-08-12.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/localhost_access_log.2026-08-12.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/java/controller/page/AuthServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/controller/page/AuthServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/java/dao/UserDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/dao/UserDao.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/filter/AuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/filter/AuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/java/filter/AuthorizationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/filter/AuthorizationFilter.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/java/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/service/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/util/DBConnectionUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/util/DBConnectionUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/util/PasswordUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/util/PasswordUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/META-INF/context.xml" beforeDir="false" afterPath="$PROJECT_DIR$/web/META-INF/context.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/common/header.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/common/header.jsp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/public/login.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/public/login.jsp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/public/register.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/public/register.jsp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/WEB-INF/web.xml" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/web.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/assets/css/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/assets/css/main.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/index.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/index.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/common/header_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/common/header_jsp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/public_/login_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/public_/login_jsp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/index_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/index_jsp.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,23 +44,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.4085755059576808" />
-      <entry key="MS500" value="4.527036513020413" />
-      <entry key="S2" value="10.87853268022479" />
-      <entry key="S5" value="16.778876173156387" />
-      <entry key="S10" value="23.490451829150253" />
-      <entry key="S30" value="34.594673479866" />
-      <entry key="S60" value="42.041698812930264" />
-      <entry key="M2" value="54.21586945693314" />
-      <entry key="M5" value="84.40913847409985" />
-      <entry key="M10" value="120.69715626212708" />
-      <entry key="M15" value="145.44750589820393" />
-      <entry key="M30" value="185.36932106582614" />
-      <entry key="H1" value="214.82665498582105" />
-      <entry key="H2" value="232.98618996154707" />
-      <entry key="H4" value="243.10535019347137" />
-      <entry key="D1" value="252.12750919025814" />
-      <entry key="W1" value="253.7310733313824" />
+      <entry key="MS100" value="1.5046966124882606" />
+      <entry key="MS500" value="4.960140573329219" />
+      <entry key="S2" value="9.113213668955657" />
+      <entry key="S5" value="10.689815726570544" />
+      <entry key="S10" value="11.314939573302123" />
+      <entry key="S30" value="11.766311671956757" />
+      <entry key="S60" value="12.037618954838877" />
+      <entry key="M2" value="13.838594219054807" />
+      <entry key="M5" value="31.747041459166784" />
+      <entry key="M10" value="78.49695300712062" />
+      <entry key="M15" value="123.25548124342154" />
+      <entry key="M30" value="224.7515522636065" />
+      <entry key="H1" value="332.4732115325924" />
+      <entry key="H2" value="416.9300155048829" />
+      <entry key="H4" value="470.888808243864" />
+      <entry key="D1" value="523.519064077937" />
+      <entry key="W1" value="533.3390641412483" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -82,23 +82,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.0706385676577768" />
-      <entry key="MS500" value="4.40133946921544" />
-      <entry key="S2" value="10.81979742623288" />
-      <entry key="S5" value="16.74564372738898" />
-      <entry key="S10" value="23.467516701751507" />
-      <entry key="S30" value="34.58326023742534" />
-      <entry key="S60" value="42.034817217424695" />
-      <entry key="M2" value="54.211488577799535" />
-      <entry key="M5" value="84.4064336724027" />
-      <entry key="M10" value="120.6951815615773" />
-      <entry key="M15" value="145.44588729780685" />
-      <entry key="M30" value="185.3682579793031" />
-      <entry key="H1" value="214.82602720047282" />
-      <entry key="H2" value="232.98584601521787" />
-      <entry key="H4" value="243.10516979419438" />
-      <entry key="D1" value="252.12747786689653" />
-      <entry key="W1" value="253.73106882464245" />
+      <entry key="MS100" value="1.3985291644289541" />
+      <entry key="MS500" value="4.86115922796198" />
+      <entry key="S2" value="8.995619425129757" />
+      <entry key="S5" value="10.62070953523031" />
+      <entry key="S10" value="11.275515460641776" />
+      <entry key="S30" value="11.751948846354656" />
+      <entry key="S60" value="12.030229089994286" />
+      <entry key="M2" value="13.834562861284992" />
+      <entry key="M5" value="31.74462522621935" />
+      <entry key="M10" value="78.49499646738137" />
+      <entry key="M15" value="123.25373306989427" />
+      <entry key="M30" value="224.7501634025221" />
+      <entry key="H1" value="332.47223031207915" />
+      <entry key="H2" value="416.92940872593556" />
+      <entry key="H4" value="470.88846708773525" />
+      <entry key="D1" value="523.51900101108" />
+      <entry key="W1" value="533.3390549652812" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo"><![CDATA[{
@@ -120,7 +120,7 @@
     "Smart Tomcat.Unnamed.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "doan-nam",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
