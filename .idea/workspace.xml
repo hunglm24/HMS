@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="35c2fd85-0860-4253-9e75-835e40870cee" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/nbproject/project.properties" beforeDir="false" afterPath="$PROJECT_DIR$/nbproject/project.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/java/controller/page/AuthServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/controller/page/AuthServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/java/dao/UserDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/dao/UserDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/java/filter/AuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/filter/AuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/java/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/java/util/DBConnectionUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/util/DBConnectionUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/java/util/PasswordUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/util/PasswordUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/META-INF/context.xml" beforeDir="false" afterPath="$PROJECT_DIR$/web/META-INF/context.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/common/header.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/common/header.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/public/login.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/public/login.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/public/register.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/public/register.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/WEB-INF/web.xml" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/web.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/assets/css/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/assets/css/main.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/index.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/index.jsp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="170" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="LogFilters">
+    <option name="FILTER_ERRORS" value="false" />
+    <option name="FILTER_WARNINGS" value="false" />
+    <option name="FILTER_INFO" value="true" />
+    <option name="FILTER_DEBUG" value="true" />
+    <option name="CUSTOM_FILTER" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.4085755059576808" />
+      <entry key="MS500" value="4.527036513020413" />
+      <entry key="S2" value="10.87853268022479" />
+      <entry key="S5" value="16.778876173156387" />
+      <entry key="S10" value="23.490451829150253" />
+      <entry key="S30" value="34.594673479866" />
+      <entry key="S60" value="42.041698812930264" />
+      <entry key="M2" value="54.21586945693314" />
+      <entry key="M5" value="84.40913847409985" />
+      <entry key="M10" value="120.69715626212708" />
+      <entry key="M15" value="145.44750589820393" />
+      <entry key="M30" value="185.36932106582614" />
+      <entry key="H1" value="214.82665498582105" />
+      <entry key="H2" value="232.98618996154707" />
+      <entry key="H4" value="243.10535019347137" />
+      <entry key="D1" value="252.12750919025814" />
+      <entry key="W1" value="253.7310733313824" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.0706385676577768" />
+      <entry key="MS500" value="4.40133946921544" />
+      <entry key="S2" value="10.81979742623288" />
+      <entry key="S5" value="16.74564372738898" />
+      <entry key="S10" value="23.467516701751507" />
+      <entry key="S30" value="34.58326023742534" />
+      <entry key="S60" value="42.034817217424695" />
+      <entry key="M2" value="54.211488577799535" />
+      <entry key="M5" value="84.4064336724027" />
+      <entry key="M10" value="120.6951815615773" />
+      <entry key="M15" value="145.44588729780685" />
+      <entry key="M30" value="185.3682579793031" />
+      <entry key="H1" value="214.82602720047282" />
+      <entry key="H2" value="232.98584601521787" />
+      <entry key="H4" value="243.10516979419438" />
+      <entry key="D1" value="252.12747786689653" />
+      <entry key="W1" value="253.73106882464245" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 6,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3HoyOBMDT16ypS4iBpxCOEjt7jr" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.DBConnectionUtil.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Smart Tomcat.Unnamed.executor": "Run",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "to.speed.mode.migration.done": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="Unnamed" type="com.poratu.idea.plugins.tomcat" nameIsGenerated="true">
+      <predefined_log_file enabled="true" id="Tomcat Localhost Log" />
+      <predefined_log_file enabled="true" id="Tomcat Access Log" />
+      <predefined_log_file id="Tomcat Catalina Log" />
+      <predefined_log_file id="Tomcat Manager Log" />
+      <predefined_log_file id="Tomcat Host Manager Log" />
+      <option name="catalinaBase" value="C:\Users\admin\IdeaProjects\HMS" />
+      <option name="contextPath" value="/HMS" />
+      <option name="docBase" value="C:\Users\admin\IdeaProjects\HMS\web" />
+      <option name="envOptions">
+        <map />
+      </option>
+      <option name="extraClassPath" value="" />
+      <option name="tomcatInfo">
+        <TomcatInfo>
+          <option name="name" value="Apache Tomcat/10.1.57" />
+          <option name="path" value="$PROJECT_DIR$/../../../../apache-tomcat-10.1.57" />
+          <option name="version" value="10.1.57.0" />
+        </TomcatInfo>
+      </option>
+      <option name="vmOptions" value="" />
+      <module name="HMS" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-34e2839f716b-intellij.indexing.shared.core-IU-262.9437.185" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.9437.185" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="35c2fd85-0860-4253-9e75-835e40870cee" name="Changes" comment="" />
+      <created>1786548682140</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1786548682140</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
