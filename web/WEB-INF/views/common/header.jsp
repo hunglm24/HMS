@@ -33,6 +33,9 @@
                 <a href="<%= contextPath %>/login">Đăng nhập</a>
                 <a class="nav-primary" href="<%= contextPath %>/register">Đăng ký</a>
             <% } else { %>
+                <% if (headerUser.getRoleId() == 2 || headerUser.getRoleId() == 4) { %>
+                    <a href="<%= contextPath %>/housekeeping/tasks">Housekeeping</a>
+                <% } %>
                 <span class="user-chip" title="Tài khoản đang đăng nhập">
                     <span class="user-avatar" aria-hidden="true">●</span>
                     <span>
