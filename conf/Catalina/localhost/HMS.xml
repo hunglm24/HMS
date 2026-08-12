@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Context docBase="C:\Users\admin\IdeaProjects\HMS\web" path="/HMS">
+  <Resources cacheMaxSize="10240">
+    <PostResources base="C:/Users/admin/IdeaProjects/HMS/web/WEB-INF/lib/mysql-connector-j-26.7.0.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/mysql-connector-j-26.7.0.jar"/>
+    <PreResources base="C:/Users/admin/IdeaProjects/HMS/out/production/HMS" className="org.apache.catalina.webresources.DirResourceSet" webAppMount="/WEB-INF/classes"/>
+  </Resources>
+</Context>
