@@ -11,7 +11,7 @@ public class DBConnectionUtil {
     private static final String PORT = "3306";
     private static final String DB_NAME = "hmss_db";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "ngochuy2603";
+    private static final String PASSWORD = "123456";
 
 
     private static final String URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME 
