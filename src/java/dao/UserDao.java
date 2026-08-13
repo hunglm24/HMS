@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDateTime;
 
 public class UserDao {
@@ -25,6 +27,30 @@ public class UserDao {
     private static final String CREATE_CUSTOMER = """
             INSERT INTO accounts (role_id, full_name, phone, email, password, status)
             VALUES (?, ?, ?, ?, ?, 'ACTIVE')
+            """;
+    private static final String LIST_USERS = """
+            SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                   a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+            FROM accounts a
+            INNER JOIN roles r ON r.id = a.role_id
+            WHERE (? IS NULL OR LOWER(a.full_name) LIKE ? OR LOWER(a.email) LIKE ?)
+            ORDER BY a.created_at DESC, a.id DESC
+            """;
+    private static final String FIND_BY_ID = """
+            SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                   a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+            FROM accounts a
+            INNER JOIN roles r ON r.id = a.role_id
+            WHERE a.id = ?
+            """;
+    private static final String CREATE_USER = """
+            INSERT INTO accounts (role_id, full_name, phone, email, password, status)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """;
+    private static final String UPDATE_USER = """
+            UPDATE accounts
+            SET role_id = ?, full_name = ?, phone = ?, status = ?
+            WHERE id = ?
             """;
 
     public Optional<User> findByEmail(String email) throws SQLException {
@@ -48,6 +74,65 @@ public class UserDao {
                     user.setCreatedAt(resultSet.getTimestamp("created_at"));
                     return Optional.of(user);
                 }
+            }
+        }
+    }
+
+    public List<User> listUsers(String keyword) throws SQLException {
+        List<User> users = new ArrayList<>();
+        String normalized = keyword == null || keyword.isBlank()
+                ? null : "%" + keyword.trim().toLowerCase(java.util.Locale.ROOT) + "%";
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(LIST_USERS)) {
+            statement.setString(1, normalized);
+            statement.setString(2, normalized);
+            statement.setString(3, normalized);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    users.add(mapUser(resultSet));
+                }
+            }
+        }
+        return users;
+    }
+
+    public Optional<User> findById(long id) throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID)) {
+            statement.setLong(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? Optional.of(mapUser(resultSet)) : Optional.empty();
+            }
+        }
+    }
+
+    public void createUser(String fullName, String email, String phone, String passwordHash,
+                           long roleId, String status) throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(CREATE_USER)) {
+            statement.setLong(1, roleId);
+            statement.setString(2, fullName);
+            statement.setString(3, phone);
+            statement.setString(4, email);
+            statement.setString(5, passwordHash);
+            statement.setString(6, status);
+            if (statement.executeUpdate() == 0) {
+                throw new SQLException("Không thể tạo người dùng");
+            }
+        }
+    }
+
+    public void updateUser(long id, String fullName, String phone, long roleId, String status)
+            throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(UPDATE_USER)) {
+            statement.setLong(1, roleId);
+            statement.setString(2, fullName);
+            statement.setString(3, phone);
+            statement.setString(4, status);
+            statement.setLong(5, id);
+            if (statement.executeUpdate() == 0) {
+                throw new SQLException("Không thể cập nhật người dùng");
             }
         }
     }
@@ -186,5 +271,20 @@ public class UserDao {
                 if (statement.executeUpdate() == 0) throw new SQLException(error);
             }
         }
+    }
+
+    private User mapUser(ResultSet resultSet) throws SQLException {
+        User user = new User();
+        user.setUserId(resultSet.getInt("id"));
+        user.setFullName(resultSet.getString("full_name"));
+        user.setEmail(resultSet.getString("email"));
+        user.setPhone(resultSet.getString("phone"));
+        user.setPasswordHash(resultSet.getString("password"));
+        user.setRoleId(resultSet.getInt("role_id"));
+        user.setRoleName(resultSet.getString("role_name"));
+        user.setStatus(resultSet.getString("status"));
+        user.setCreatedAt(resultSet.getTimestamp("created_at"));
+        user.setUpdatedAt(resultSet.getTimestamp("updated_at"));
+        return user;
     }
 }

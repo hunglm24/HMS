@@ -1,7 +1,17 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="model.User" %>
-<% User dashboardUser = (User) session.getAttribute("currentUser");
-   String dashboardRole = dashboardUser == null ? "" : dashboardUser.getRoleName();
+<%!
+    private String callStringGetter(Object target, String methodName) {
+        if (target == null) return "";
+        try {
+            Object value = target.getClass().getMethod(methodName).invoke(target);
+            return value == null ? "" : value.toString();
+        } catch (ReflectiveOperationException e) {
+            return "";
+        }
+    }
+%>
+<% Object dashboardUser = session.getAttribute("currentUser");
+   String dashboardRole = callStringGetter(dashboardUser, "getRoleName");
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -18,7 +28,7 @@
             <h1>Chào mừng đến HMS</h1>
             <p>Tìm phòng phù hợp hoặc đăng nhập để quản lý các đặt phòng của bạn.</p>
         <% } else { %>
-            <h1>Xin chào, ${sessionScope.currentUser.fullName}</h1>
+            <h1>Xin chào, <%= callStringGetter(dashboardUser, "getFullName") %></h1>
             <p>Chọn một nghiệp vụ để bắt đầu làm việc.</p>
         <% } %>
         <section class="action-grid" aria-label="Thao tác nhanh">
@@ -34,7 +44,7 @@
                 <a class="action-card" href="${pageContext.request.contextPath}/reception/check-in"><strong>Nhận phòng</strong><span>Xác minh khách và gán phòng thực tế.</span></a>
                 <a class="action-card" href="${pageContext.request.contextPath}/reception/check-out"><strong>Trả phòng</strong><span>Tổng hợp chi phí, thanh toán và xuất hóa đơn.</span></a>
             <% } else if ("HOUSEKEEPING".equalsIgnoreCase(dashboardRole)) { %>
-                <a class="action-card" href="${pageContext.request.contextPath}/housekeeping/tasks"><strong>Phòng cần xử lý</strong><span>Nhận việc và cập nhật Dirty → Cleaning → Clean.</span></a>
+                <a class="action-card" href="${pageContext.request.contextPath}/housekeeping/tasks"><strong>Phòng cần xử lý</strong><span>Nhận việc và cập nhật Dirty -> Cleaning -> Clean.</span></a>
                 <a class="action-card" href="${pageContext.request.contextPath}/housekeeping/issues"><strong>Báo cáo sự cố</strong><span>Ghi nhận vấn đề phòng hoặc thiết bị.</span></a>
             <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(dashboardRole)) { %>
                 <a class="action-card" href="${pageContext.request.contextPath}/manager/reports"><strong>Báo cáo vận hành</strong><span>Xem công suất phòng, doanh thu và thống kê.</span></a>

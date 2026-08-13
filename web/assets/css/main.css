@@ -85,6 +85,27 @@ body { margin: 0; font-family: Inter, -apple-system, "Segoe UI", Roboto, sans-se
 .action-card strong { color: var(--header-blue); font-size: 17px; }
 .action-card span { margin-top: 8px; color: var(--header-muted); font-size: 14px; line-height: 1.45; }
 
+.panel {
+    margin-top: 24px;
+    padding: 22px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg-surface);
+    box-shadow: 0 7px 20px rgba(20, 38, 70, .05);
+}
+.panel h2 { margin: 0 0 18px; font-size: 20px; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.form-grid label { display: grid; gap: 6px; color: var(--color-text-primary); font-size: 14px; font-weight: 600; }
+.form-actions { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; }
+.section-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.search-form { display: flex; gap: 8px; align-items: center; }
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.data-table th, .data-table td { padding: 11px 12px; border-bottom: 1px solid var(--color-border); text-align: left; vertical-align: middle; }
+.data-table th { background: var(--color-bg-base); color: var(--color-text-secondary); font-weight: 700; }
+.data-table a { color: var(--color-primary-600); font-weight: 700; text-decoration: none; }
+.data-table a:hover { text-decoration: underline; }
+
 @media (max-width: 720px) {
     .header-container { width: min(100% - 28px, 1180px); min-height: 62px; flex-wrap: wrap; }
     .brand-copy small { display: none; }
@@ -98,4 +119,7 @@ body { margin: 0; font-family: Inter, -apple-system, "Segoe UI", Roboto, sans-se
     .dropdown-menu a { text-align: center; white-space: normal; }
     .user-chip { margin: 4px 0; padding: 10px 0; border-left: 0; border-top: 1px solid var(--header-border); }
     .logout-form button { width: 100%; }
+    .form-grid { grid-template-columns: 1fr; }
+    .section-header { align-items: stretch; flex-direction: column; }
+    .search-form { align-items: stretch; flex-direction: column; }
 }

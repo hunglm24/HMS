@@ -1,6 +1,15 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="model.User" %>
 <%!
+    private String callStringGetter(Object target, String methodName) {
+        if (target == null) return "";
+        try {
+            Object value = target.getClass().getMethod(methodName).invoke(target);
+            return value == null ? "" : value.toString();
+        } catch (ReflectiveOperationException e) {
+            return "";
+        }
+    }
+
     private String escapeHtml(String value) {
         if (value == null) return "";
         return value.replace("&", "&amp;").replace("<", "&lt;")
@@ -20,9 +29,9 @@
     }
 %>
 <%
-    User headerUser = (User) session.getAttribute("currentUser");
+    Object headerUser = session.getAttribute("currentUser");
     String contextPath = request.getContextPath();
-    String roleName = headerUser == null ? "" : headerUser.getRoleName();
+    String roleName = callStringGetter(headerUser, "getRoleName");
     boolean customer = "CUSTOMER".equalsIgnoreCase(roleName);
     boolean receptionist = "RECEPTIONIST".equalsIgnoreCase(roleName);
     boolean housekeeping = "HOUSEKEEPING".equalsIgnoreCase(roleName);
@@ -99,8 +108,8 @@
             <% } else { %>
                 <a class="user-chip" href="<%= contextPath %>/profile" title="Xem hồ sơ">
                     <span class="user-avatar" aria-hidden="true">●</span>
-                    <span><strong><%= escapeHtml(headerUser.getFullName()) %></strong>
-                        <small><%= roleLabel(headerUser.getRoleName()) %></small></span>
+                    <span><strong><%= escapeHtml(callStringGetter(headerUser, "getFullName")) %></strong>
+                        <small><%= roleLabel(roleName) %></small></span>
                 </a>
                 <a href="<%= contextPath %>/change-password">Đổi mật khẩu</a>
                 <form class="logout-form" method="post" action="<%= contextPath %>/logout">

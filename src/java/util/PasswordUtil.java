@@ -6,7 +6,6 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
-import org.mindrot.jbcrypt.BCrypt;
 
 public final class PasswordUtil {
     private static final int ITERATIONS = 120_000;
@@ -36,13 +35,6 @@ public final class PasswordUtil {
             return false;
         }
         try {
-            if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$")
-                    || storedHash.startsWith("$2y$")) {
-                // jBCrypt nhận prefix $2a$; $2y$ có cùng định dạng hash BCrypt.
-                String compatibleHash = storedHash.startsWith("$2y$")
-                        ? "$2a$" + storedHash.substring(4) : storedHash;
-                return BCrypt.checkpw(password, compatibleHash);
-            }
             String[] parts = storedHash.split("\\$", -1);
             if (parts.length != 4 || !PREFIX.equals(parts[0])) {
                 return false;
