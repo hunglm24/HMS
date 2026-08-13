@@ -35,13 +35,13 @@ public class AuthorizationFilter implements Filter {
         /*
         User user = (User) session.getAttribute("currentUser");
         String path = request.getServletPath();
-        int requiredRole = path.startsWith("/reception/") ? 1
-                : path.startsWith("/housekeeping/") ? 2
-                : path.startsWith("/technician/") ? 3
-                : path.startsWith("/manager/") ? 4
-                : path.startsWith("/admin/") ? 5 : -1;
+        String requiredRole = path.startsWith("/reception/") ? "RECEPTIONIST"
+                : path.startsWith("/housekeeping/") ? "HOUSEKEEPING"
+                : path.startsWith("/technician/") ? "HOUSEKEEPING"
+                : path.startsWith("/manager/") ? "HOTEL_MANAGER"
+                : path.startsWith("/admin/") ? "ADMIN" : null;
 
-        if (requiredRole != -1 && user.getRoleId() != requiredRole) {
+        if (requiredRole != null && !requiredRole.equalsIgnoreCase(user.getRoleName())) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
                     "Ban khong co quyen truy cap chuc nang nay.");
             return;

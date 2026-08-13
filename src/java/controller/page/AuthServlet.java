@@ -8,12 +8,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
 import service.UserService;
+import util.MailUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Optional;
 
-@WebServlet(urlPatterns = {"/login", "/register", "/forgot-password", "/logout"})
+@WebServlet(urlPatterns = {"/login", "/register", "/forgot-password", "/reset-password", "/logout"})
 public class AuthServlet extends HttpServlet {
     private UserService userService;
 
@@ -42,6 +43,11 @@ public class AuthServlet extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
             return;
         }
+        if (request.getServletPath().equals("/reset-password")) {
+            request.setAttribute("token", request.getParameter("token"));
+            request.getRequestDispatcher("/WEB-INF/views/public/reset-password.jsp").forward(request, response);
+            return;
+        }
         String returnUrl = validReturnUrl(request, request.getParameter("returnUrl"));
         if (returnUrl != null) {
             request.getSession(true).setAttribute("loginReturnUrl", returnUrl);
@@ -61,6 +67,10 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         if (request.getServletPath().equals("/forgot-password")) {
+            requestPasswordReset(request, response);
+            return;
+        }
+        if (request.getServletPath().equals("/reset-password")) {
             resetPassword(request, response);
             return;
         }
@@ -90,7 +100,8 @@ public class AuthServlet extends HttpServlet {
             session.setAttribute("currentUser", currentUser);
             session.setMaxInactiveInterval(30 * 60);
 
-            response.sendRedirect(returnUrl == null ? request.getContextPath() + "/" : returnUrl);
+            String defaultUrl = request.getContextPath() + "/";
+            response.sendRedirect(returnUrl == null ? defaultUrl : returnUrl);
         } catch (SQLException ex) {
             getServletContext().log("Đăng nhập thất bại do lỗi cơ sở dữ liệu", ex);
             request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
@@ -98,19 +109,42 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
+    private void requestPasswordReset(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String email = request.getParameter("email");
+            Optional<String> token = userService.createPasswordResetToken(email);
+            if (token.isPresent()) {
+                String resetUrl = request.getScheme() + "://" + request.getServerName()
+                        + ((request.getServerPort() == 80 || request.getServerPort() == 443)
+                        ? "" : ":" + request.getServerPort())
+                        + request.getContextPath() + "/reset-password?token="
+                        + java.net.URLEncoder.encode(token.get(), java.nio.charset.StandardCharsets.UTF_8);
+                MailUtil.sendPasswordReset(email.trim(), resetUrl);
+            }
+            request.setAttribute("success", "Nếu email tồn tại, hệ thống đã gửi liên kết đặt lại mật khẩu.");
+            request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
+        } catch (SQLException | IllegalStateException | IOException ex) {
+            getServletContext().log("Gửi email đặt lại mật khẩu thất bại", ex);
+            request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
+            request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
+        }
+    }
+
     private void resetPassword(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            userService.resetPassword(request.getParameter("email"), request.getParameter("phone"),
+            userService.resetPasswordWithToken(request.getParameter("token"),
                     request.getParameter("password"), request.getParameter("confirmPassword"));
             response.sendRedirect(request.getContextPath() + "/login?reset=1");
         } catch (IllegalArgumentException ex) {
             request.setAttribute("error", ex.getMessage());
-            request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
+            request.setAttribute("token", request.getParameter("token"));
+            request.getRequestDispatcher("/WEB-INF/views/public/reset-password.jsp").forward(request, response);
         } catch (SQLException ex) {
             getServletContext().log("Đặt lại mật khẩu thất bại", ex);
             request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
-            request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/public/reset-password.jsp").forward(request, response);
         }
     }
 

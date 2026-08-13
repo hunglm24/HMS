@@ -1,111 +1,13 @@
 package model;
-
-public class Booking {
-    private int bookingId;
-    private int guestId;
-    private String bookingType;
-    private java.util.Date checkInDate;
-    private java.util.Date checkOutDate;
-    private String status;
-    private double totalAmount;
-    private double depositAmount;
-    private int cancellationPolicyId;
-    private java.util.Date createdAt;
-
-    public Booking() {
-    }
-
-    public Booking(int bookingId, int guestId, String bookingType, java.util.Date checkInDate, java.util.Date checkOutDate, String status, double totalAmount, double depositAmount, int cancellationPolicyId, java.util.Date createdAt) {
-        this.bookingId = bookingId;
-        this.guestId = guestId;
-        this.bookingType = bookingType;
-        this.checkInDate = checkInDate;
-        this.checkOutDate = checkOutDate;
-        this.status = status;
-        this.totalAmount = totalAmount;
-        this.depositAmount = depositAmount;
-        this.cancellationPolicyId = cancellationPolicyId;
-        this.createdAt = createdAt;
-    }
-
-    public int getBookingId() {
-        return bookingId;
-    }
-
-    public void setBookingId(int bookingId) {
-        this.bookingId = bookingId;
-    }
-
-    public int getGuestId() {
-        return guestId;
-    }
-
-    public void setGuestId(int guestId) {
-        this.guestId = guestId;
-    }
-
-    public String getBookingType() {
-        return bookingType;
-    }
-
-    public void setBookingType(String bookingType) {
-        this.bookingType = bookingType;
-    }
-
-    public java.util.Date getCheckInDate() {
-        return checkInDate;
-    }
-
-    public void setCheckInDate(java.util.Date checkInDate) {
-        this.checkInDate = checkInDate;
-    }
-
-    public java.util.Date getCheckOutDate() {
-        return checkOutDate;
-    }
-
-    public void setCheckOutDate(java.util.Date checkOutDate) {
-        this.checkOutDate = checkOutDate;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public double getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(double totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public double getDepositAmount() {
-        return depositAmount;
-    }
-
-    public void setDepositAmount(double depositAmount) {
-        this.depositAmount = depositAmount;
-    }
-
-    public int getCancellationPolicyId() {
-        return cancellationPolicyId;
-    }
-
-    public void setCancellationPolicyId(int cancellationPolicyId) {
-        this.cancellationPolicyId = cancellationPolicyId;
-    }
-
-    public java.util.Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(java.util.Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
+import java.math.BigDecimal; import java.sql.Date; import java.sql.Timestamp;
+public class Booking extends BaseEntity {
+ private String bookingCode,bookingSource,status,cancellationReason; private Long customerId,createdBy; private Date checkInDate,checkOutDate; private Timestamp checkInDatetime,checkOutDatetime,cancelledAt,updatedAt;
+ private BigDecimal totalRoomAmount,totalServiceAmount,totalDamageAmount,discountAmount,totalAmount;
+ public String getBookingCode(){return bookingCode;} public void setBookingCode(String v){bookingCode=v;} public Long getCustomerId(){return customerId;} public void setCustomerId(Long v){customerId=v;}
+ public String getBookingSource(){return bookingSource;} public void setBookingSource(String v){bookingSource=v;} public Date getCheckInDate(){return checkInDate;} public void setCheckInDate(Date v){checkInDate=v;} public Date getCheckOutDate(){return checkOutDate;} public void setCheckOutDate(Date v){checkOutDate=v;}
+ public Timestamp getCheckInDatetime(){return checkInDatetime;} public void setCheckInDatetime(Timestamp v){checkInDatetime=v;} public Timestamp getCheckOutDatetime(){return checkOutDatetime;} public void setCheckOutDatetime(Timestamp v){checkOutDatetime=v;}
+ public BigDecimal getTotalRoomAmount(){return totalRoomAmount;} public void setTotalRoomAmount(BigDecimal v){totalRoomAmount=v;} public BigDecimal getTotalServiceAmount(){return totalServiceAmount;} public void setTotalServiceAmount(BigDecimal v){totalServiceAmount=v;}
+ public BigDecimal getTotalDamageAmount(){return totalDamageAmount;} public void setTotalDamageAmount(BigDecimal v){totalDamageAmount=v;} public BigDecimal getDiscountAmount(){return discountAmount;} public void setDiscountAmount(BigDecimal v){discountAmount=v;} public BigDecimal getTotalAmount(){return totalAmount;} public void setTotalAmount(BigDecimal v){totalAmount=v;}
+ public String getStatus(){return status;} public void setStatus(String v){status=v;} public String getCancellationReason(){return cancellationReason;} public void setCancellationReason(String v){cancellationReason=v;} public Timestamp getCancelledAt(){return cancelledAt;} public void setCancelledAt(Timestamp v){cancelledAt=v;}
+ public Long getCreatedBy(){return createdBy;} public void setCreatedBy(Long v){createdBy=v;} public Timestamp getUpdatedAt(){return updatedAt;} public void setUpdatedAt(Timestamp v){updatedAt=v;}
 }
