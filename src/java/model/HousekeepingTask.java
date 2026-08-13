@@ -1,56 +1,84 @@
 package model;
 
+import java.math.BigDecimal;
+import java.util.Date;
+
 public class HousekeepingTask {
-    private int taskId;
-    private int roomId;
-    private Integer assignedTo;
+    private long taskId;
+    private long roomId;
+    private Long bookingRoomId;
+    private Long roomEquipmentId;
+    private Long assignedTo;
+    private String taskType;
+    private String priority;
     private String status;
-    private java.util.Date createdAt;
-    private java.util.Date startedAt;
-    private java.util.Date completedAt;
-    private Integer completedBy;
-    private String completionNote;
-    private java.util.Date updatedAt;
+    private String note;
+    private Date createdAt;
+    private Date startedAt;
+    private Date completedAt;
     private String roomNumber;
-    private int floor;
+    private Integer floorNumber;
     private String roomTypeName;
-    private String roomHousekeepingStatus;
+    private String roomStatus;
     private String assignedStaffName;
-    private String completedStaffName;
 
-    public HousekeepingTask() {
-    }
-
-    public int getTaskId() { return taskId; }
-    public void setTaskId(int taskId) { this.taskId = taskId; }
-    public int getRoomId() { return roomId; }
-    public void setRoomId(int roomId) { this.roomId = roomId; }
-    public Integer getAssignedTo() { return assignedTo; }
-    public void setAssignedTo(Integer assignedTo) { this.assignedTo = assignedTo; }
+    public long getTaskId() { return taskId; }
+    public void setTaskId(long taskId) { this.taskId = taskId; }
+    public long getRoomId() { return roomId; }
+    public void setRoomId(long roomId) { this.roomId = roomId; }
+    public Long getBookingRoomId() { return bookingRoomId; }
+    public void setBookingRoomId(Long bookingRoomId) { this.bookingRoomId = bookingRoomId; }
+    public Long getRoomEquipmentId() { return roomEquipmentId; }
+    public void setRoomEquipmentId(Long roomEquipmentId) { this.roomEquipmentId = roomEquipmentId; }
+    public Long getAssignedTo() { return assignedTo; }
+    public void setAssignedTo(Long assignedTo) { this.assignedTo = assignedTo; }
+    public String getTaskType() { return taskType; }
+    public void setTaskType(String taskType) { this.taskType = taskType; }
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public java.util.Date getCreatedAt() { return createdAt; }
-    public void setCreatedAt(java.util.Date createdAt) { this.createdAt = createdAt; }
-    public java.util.Date getStartedAt() { return startedAt; }
-    public void setStartedAt(java.util.Date startedAt) { this.startedAt = startedAt; }
-    public java.util.Date getCompletedAt() { return completedAt; }
-    public void setCompletedAt(java.util.Date completedAt) { this.completedAt = completedAt; }
-    public Integer getCompletedBy() { return completedBy; }
-    public void setCompletedBy(Integer completedBy) { this.completedBy = completedBy; }
-    public String getCompletionNote() { return completionNote; }
-    public void setCompletionNote(String completionNote) { this.completionNote = completionNote; }
-    public java.util.Date getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(java.util.Date updatedAt) { this.updatedAt = updatedAt; }
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+    public Date getStartedAt() { return startedAt; }
+    public void setStartedAt(Date startedAt) { this.startedAt = startedAt; }
+    public Date getCompletedAt() { return completedAt; }
+    public void setCompletedAt(Date completedAt) { this.completedAt = completedAt; }
     public String getRoomNumber() { return roomNumber; }
     public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
-    public int getFloor() { return floor; }
-    public void setFloor(int floor) { this.floor = floor; }
+    public Integer getFloorNumber() { return floorNumber; }
+    public void setFloorNumber(Integer floorNumber) { this.floorNumber = floorNumber; }
     public String getRoomTypeName() { return roomTypeName; }
     public void setRoomTypeName(String roomTypeName) { this.roomTypeName = roomTypeName; }
-    public String getRoomHousekeepingStatus() { return roomHousekeepingStatus; }
-    public void setRoomHousekeepingStatus(String roomHousekeepingStatus) { this.roomHousekeepingStatus = roomHousekeepingStatus; }
+    public String getRoomStatus() { return roomStatus; }
+    public void setRoomStatus(String roomStatus) { this.roomStatus = roomStatus; }
     public String getAssignedStaffName() { return assignedStaffName; }
     public void setAssignedStaffName(String assignedStaffName) { this.assignedStaffName = assignedStaffName; }
-    public String getCompletedStaffName() { return completedStaffName; }
-    public void setCompletedStaffName(String completedStaffName) { this.completedStaffName = completedStaffName; }
+
+    public static class EquipmentCheck {
+        private long roomEquipmentId;
+        private String equipmentName;
+        private int quantity;
+        private String currentStatus;
+        private String conditionStatus = "NORMAL";
+        private BigDecimal damageFee = BigDecimal.ZERO;
+        private String note;
+
+        public long getRoomEquipmentId() { return roomEquipmentId; }
+        public void setRoomEquipmentId(long roomEquipmentId) { this.roomEquipmentId = roomEquipmentId; }
+        public String getEquipmentName() { return equipmentName; }
+        public void setEquipmentName(String equipmentName) { this.equipmentName = equipmentName; }
+        public int getQuantity() { return quantity; }
+        public void setQuantity(int quantity) { this.quantity = quantity; }
+        public String getCurrentStatus() { return currentStatus; }
+        public void setCurrentStatus(String currentStatus) { this.currentStatus = currentStatus; }
+        public String getConditionStatus() { return conditionStatus; }
+        public void setConditionStatus(String conditionStatus) { this.conditionStatus = conditionStatus; }
+        public BigDecimal getDamageFee() { return damageFee; }
+        public void setDamageFee(BigDecimal damageFee) { this.damageFee = damageFee; }
+        public String getNote() { return note; }
+        public void setNote(String note) { this.note = note; }
+    }
 }

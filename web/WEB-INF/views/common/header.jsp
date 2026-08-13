@@ -64,7 +64,7 @@
             <% } %>
 
             <% if (housekeeping) { %>
-                <a href="<%= contextPath %>/housekeeping/tasks">Công việc buồng phòng</a>
+                <a href="<%= contextPath %>/housekeeping/tasks">Dọn phòng</a>
                 <a href="<%= contextPath %>/housekeeping/issues">Báo cáo sự cố</a>
             <% } %>
 
@@ -97,9 +97,6 @@
                 <a href="<%= contextPath %>/login">Đăng nhập</a>
                 <a class="nav-primary" href="<%= contextPath %>/register">Đăng ký</a>
             <% } else { %>
-                <% if (headerUser.getRoleId() == 2 || headerUser.getRoleId() == 4) { %>
-                    <a href="<%= contextPath %>/housekeeping/tasks">Housekeeping</a>
-                <% } %>
                 <a class="user-chip" href="<%= contextPath %>/profile" title="Xem hồ sơ">
                     <span class="user-avatar" aria-hidden="true">●</span>
                     <span><strong><%= escapeHtml(headerUser.getFullName()) %></strong>
