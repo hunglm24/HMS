@@ -13,7 +13,7 @@
 </head>
 <body>
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <main class="page-container">
+    <main id="main-content" class="page-container">
         <% if (dashboardUser == null) { %>
             <h1>Chào mừng đến HMS</h1>
             <p>Tìm phòng phù hợp hoặc đăng nhập để quản lý các đặt phòng của bạn.</p>

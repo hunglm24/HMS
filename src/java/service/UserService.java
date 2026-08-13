@@ -3,11 +3,13 @@ package service;
 import dao.UserDao;
 import model.User;
 import util.PasswordUtil;
+import util.TokenUtil;
 
 import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.time.LocalDateTime;
 
 public class UserService {
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
@@ -72,16 +74,28 @@ public class UserService {
                 normalizedPhone.isEmpty() ? null : normalizedPhone, PasswordUtil.hash(password));
     }
 
-    public void resetPassword(String email, String phone, String password, String confirmPassword)
+    public Optional<String> createPasswordResetToken(String email) throws SQLException {
+        String normalized = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        Optional<User> user = userDao.findByEmail(normalized);
+        if (user.isEmpty()) return Optional.empty();
+        String token = TokenUtil.randomToken();
+        userDao.savePasswordResetToken(user.get(), TokenUtil.sha256(token), LocalDateTime.now().plusMinutes(15));
+        return Optional.of(token);
+    }
+
+    public void resetPasswordWithToken(String token, String password, String confirmPassword)
             throws SQLException {
-        User user = userDao.findByEmail(email == null ? "" : email.trim().toLowerCase(Locale.ROOT))
-                .orElseThrow(() -> new IllegalArgumentException("Thông tin xác minh không chính xác."));
-        String storedPhone = user.getPhone() == null ? "" : user.getPhone().trim();
-        if (phone == null || !storedPhone.equals(phone.trim())) {
-            throw new IllegalArgumentException("Thông tin xác minh không chính xác.");
-        }
         validateNewPassword(password, confirmPassword);
-        userDao.updatePassword(user, PasswordUtil.hash(password));
+        if (token == null || token.isBlank()
+                || userDao.consumePasswordResetToken(TokenUtil.sha256(token), PasswordUtil.hash(password)).isEmpty()) {
+            throw new IllegalArgumentException("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
+        }
+    }
+
+    public User loginWithGoogle(String name, String email) throws SQLException {
+        String safeName = name == null || name.isBlank() ? email.substring(0, email.indexOf('@')) : name.trim();
+        return userDao.findOrCreateGoogleCustomer(safeName, email.toLowerCase(Locale.ROOT),
+                PasswordUtil.hash(TokenUtil.randomToken()));
     }
 
     public void changePassword(User user, String currentPassword, String newPassword,

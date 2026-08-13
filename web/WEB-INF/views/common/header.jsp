@@ -23,6 +23,7 @@
     String contextPath = request.getContextPath();
     int roleId = headerUser == null ? -1 : headerUser.getRoleId();
 %>
+<a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
 <header class="site-header">
     <div class="header-container">
         <a class="brand" href="<%= contextPath %>/" aria-label="Trang chủ HMS">

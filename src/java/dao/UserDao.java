@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 public class UserDao {
     private static final String FIND_BY_EMAIL = """
@@ -75,6 +76,85 @@ public class UserDao {
         }
         return findByEmail(email).orElseThrow(
                 () -> new SQLException("Không đọc được tài khoản vừa tạo"));
+    }
+
+    public User findOrCreateGoogleCustomer(String fullName, String email, String randomPasswordHash)
+            throws SQLException {
+        Optional<User> existing = findByEmail(email);
+        if (existing.isPresent()) return existing.get();
+        return createCustomer(fullName, email, null, randomPasswordHash);
+    }
+
+    public void savePasswordResetToken(User user, String tokenHash, LocalDateTime expiresAt)
+            throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection()) {
+            if (connection == null) throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS password_reset_token (
+                        token_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        account_type VARCHAR(10) NOT NULL,
+                        account_id INT NOT NULL,
+                        token_hash CHAR(64) NOT NULL UNIQUE,
+                        expires_at DATETIME NOT NULL,
+                        used_at DATETIME NULL,
+                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        INDEX idx_reset_token_hash (token_hash)
+                    )
+                    """);
+            }
+            try (PreparedStatement invalidate = connection.prepareStatement(
+                    "UPDATE password_reset_token SET used_at = CURRENT_TIMESTAMP "
+                            + "WHERE account_type = ? AND account_id = ? AND used_at IS NULL")) {
+                invalidate.setString(1, user.getRoleId() == 0 ? "GUEST" : "USER");
+                invalidate.setInt(2, user.getUserId());
+                invalidate.executeUpdate();
+            }
+            try (PreparedStatement insert = connection.prepareStatement(
+                    "INSERT INTO password_reset_token(account_type, account_id, token_hash, expires_at) VALUES(?,?,?,?)")) {
+                insert.setString(1, user.getRoleId() == 0 ? "GUEST" : "USER");
+                insert.setInt(2, user.getUserId());
+                insert.setString(3, tokenHash);
+                insert.setTimestamp(4, java.sql.Timestamp.valueOf(expiresAt));
+                insert.executeUpdate();
+            }
+        }
+    }
+
+    public Optional<User> consumePasswordResetToken(String tokenHash, String passwordHash)
+            throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection()) {
+            if (connection == null) throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
+            connection.setAutoCommit(false);
+            try {
+                String type;
+                int id;
+                try (PreparedStatement select = connection.prepareStatement(
+                        "SELECT account_type, account_id FROM password_reset_token "
+                                + "WHERE token_hash=? AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP FOR UPDATE")) {
+                    select.setString(1, tokenHash);
+                    try (ResultSet rs = select.executeQuery()) {
+                        if (!rs.next()) { connection.rollback(); return Optional.empty(); }
+                        type = rs.getString(1); id = rs.getInt(2);
+                    }
+                }
+                String updateSql = "GUEST".equals(type)
+                        ? "UPDATE guest SET password_hash=? WHERE guest_id=? AND has_account=1"
+                        : "UPDATE `user` SET password_hash=? WHERE user_id=?";
+                try (PreparedStatement update = connection.prepareStatement(updateSql)) {
+                    update.setString(1, passwordHash); update.setInt(2, id);
+                    if (update.executeUpdate() == 0) { connection.rollback(); return Optional.empty(); }
+                }
+                try (PreparedStatement used = connection.prepareStatement(
+                        "UPDATE password_reset_token SET used_at=CURRENT_TIMESTAMP WHERE token_hash=?")) {
+                    used.setString(1, tokenHash); used.executeUpdate();
+                }
+                connection.commit();
+                return Optional.of(new User());
+            } catch (SQLException ex) {
+                connection.rollback(); throw ex;
+            } finally { connection.setAutoCommit(true); }
+        }
     }
 
     public void updatePassword(User user, String passwordHash) throws SQLException {
