@@ -6,28 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đăng ký | HMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
-    <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; background: #f3f6fb; color: #172033; }
-        .auth-content { min-height: calc(100vh - 71px); display: grid; place-items: center; padding: 24px; }
-        .card { width: min(100%, 460px); background: #fff; border-radius: 16px; padding: 32px;
-            box-shadow: 0 16px 45px rgba(20, 38, 70, .12); }
-        h1 { margin: 0 0 8px; font-size: 28px; }
-        .subtitle { margin: 0 0 22px; color: #687386; }
-        label { display: block; margin: 14px 0 7px; font-weight: 600; }
-        input { width: 100%; padding: 12px 14px; border: 1px solid #ccd3df; border-radius: 9px; font-size: 16px; }
-        input:focus { outline: 3px solid #dce8ff; border-color: #316bd6; }
-        button { width: 100%; margin-top: 24px; padding: 13px; border: 0; border-radius: 9px;
-            background: #245ec7; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
-        button:hover { background: #194da9; }
-        .form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
-        .form-actions button { margin: 0; }
-        .reset-button { background: #eef2f7; color: #344054; }
-        .reset-button:hover { background: #dfe6ef; }
-        .error { padding: 11px 13px; margin-bottom: 16px; border-radius: 8px; background: #fff0f0; color: #a51d27; }
-        .link { text-align: center; margin: 18px 0 0; }
-        .link a { color: #245ec7; text-decoration: none; }
-    </style>
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
