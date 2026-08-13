@@ -13,44 +13,35 @@ import java.time.LocalDateTime;
 
 public class UserDao {
     private static final String FIND_BY_EMAIL = """
-            SELECT user_id, full_name, email, phone, password_hash, role_id, role_name, status, created_at
-            FROM (
-                SELECT u.user_id, u.full_name, u.email, u.phone, u.password_hash,
-                       u.role_id, r.role_name, u.status, u.created_at
-                FROM `user` u
-                INNER JOIN role r ON r.role_id = u.role_id
-                WHERE LOWER(u.email) = LOWER(?)
-                UNION ALL
-                SELECT guest_id AS user_id, full_name, email, phone, password_hash,
-                       0 AS role_id, 'Customer' AS role_name, 'ACTIVE' AS status, created_at
-                FROM guest WHERE has_account = 1 AND LOWER(email) = LOWER(?)
-            ) account
+            SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                   a.role_id, r.name AS role_name, a.status, a.created_at
+            FROM accounts a
+            INNER JOIN roles r ON r.id = a.role_id
+            WHERE LOWER(a.email) = LOWER(?)
             LIMIT 1
             """;
+    private static final String FIND_CUSTOMER_ROLE =
+            "SELECT id FROM roles WHERE name = 'CUSTOMER' LIMIT 1";
     private static final String CREATE_CUSTOMER = """
-            INSERT INTO guest (full_name, phone, email, has_account, password_hash, created_at)
-            VALUES (?, ?, ?, 1, ?, CURRENT_TIMESTAMP)
+            INSERT INTO accounts (role_id, full_name, phone, email, password, status)
+            VALUES (?, ?, ?, ?, ?, 'ACTIVE')
             """;
 
     public Optional<User> findByEmail(String email) throws SQLException {
         try (Connection connection = DBConnectionUtil.getConnection()) {
-            if (connection == null) {
-                throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
-            }
             try (PreparedStatement statement = connection.prepareStatement(FIND_BY_EMAIL)) {
                 statement.setString(1, email);
-                statement.setString(2, email);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (!resultSet.next()) {
                         return Optional.empty();
                     }
 
                     User user = new User();
-                    user.setUserId(resultSet.getInt("user_id"));
+                    user.setUserId(resultSet.getInt("id"));
                     user.setFullName(resultSet.getString("full_name"));
                     user.setEmail(resultSet.getString("email"));
                     user.setPhone(resultSet.getString("phone"));
-                    user.setPasswordHash(resultSet.getString("password_hash"));
+                    user.setPasswordHash(resultSet.getString("password"));
                     user.setRoleId(resultSet.getInt("role_id"));
                     user.setRoleName(resultSet.getString("role_name"));
                     user.setStatus(resultSet.getString("status"));
@@ -64,18 +55,31 @@ public class UserDao {
     public User createCustomer(String fullName, String email, String phone, String passwordHash)
             throws SQLException {
         try (Connection connection = DBConnectionUtil.getConnection()) {
-            if (connection == null) {
-                throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
-            }
+            connection.setAutoCommit(false);
             try (PreparedStatement statement = connection.prepareStatement(
                     CREATE_CUSTOMER, Statement.RETURN_GENERATED_KEYS)) {
-                statement.setString(1, fullName);
-                statement.setString(2, phone);
-                statement.setString(3, email);
-                statement.setString(4, passwordHash);
+                long customerRoleId;
+                try (PreparedStatement roleStatement = connection.prepareStatement(FIND_CUSTOMER_ROLE);
+                     ResultSet roleResult = roleStatement.executeQuery()) {
+                    if (!roleResult.next()) {
+                        throw new SQLException("Không tìm thấy vai trò CUSTOMER trong bảng roles");
+                    }
+                    customerRoleId = roleResult.getLong(1);
+                }
+                statement.setLong(1, customerRoleId);
+                statement.setString(2, fullName);
+                statement.setString(3, phone);
+                statement.setString(4, email);
+                statement.setString(5, passwordHash);
                 if (statement.executeUpdate() == 0) {
                     throw new SQLException("Không thể tạo tài khoản khách hàng");
                 }
+                connection.commit();
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(true);
             }
         }
         return findByEmail(email).orElseThrow(
@@ -92,7 +96,6 @@ public class UserDao {
     public void savePasswordResetToken(User user, String tokenHash, LocalDateTime expiresAt)
             throws SQLException {
         try (Connection connection = DBConnectionUtil.getConnection()) {
-            if (connection == null) throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
             try (Statement statement = connection.createStatement()) {
                 statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS password_reset_token (
@@ -110,13 +113,13 @@ public class UserDao {
             try (PreparedStatement invalidate = connection.prepareStatement(
                     "UPDATE password_reset_token SET used_at = CURRENT_TIMESTAMP "
                             + "WHERE account_type = ? AND account_id = ? AND used_at IS NULL")) {
-                invalidate.setString(1, user.getRoleId() == 0 ? "GUEST" : "USER");
+                invalidate.setString(1, "ACCOUNT");
                 invalidate.setInt(2, user.getUserId());
                 invalidate.executeUpdate();
             }
             try (PreparedStatement insert = connection.prepareStatement(
                     "INSERT INTO password_reset_token(account_type, account_id, token_hash, expires_at) VALUES(?,?,?,?)")) {
-                insert.setString(1, user.getRoleId() == 0 ? "GUEST" : "USER");
+                insert.setString(1, "ACCOUNT");
                 insert.setInt(2, user.getUserId());
                 insert.setString(3, tokenHash);
                 insert.setTimestamp(4, java.sql.Timestamp.valueOf(expiresAt));
@@ -128,7 +131,6 @@ public class UserDao {
     public Optional<User> consumePasswordResetToken(String tokenHash, String passwordHash)
             throws SQLException {
         try (Connection connection = DBConnectionUtil.getConnection()) {
-            if (connection == null) throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
             connection.setAutoCommit(false);
             try {
                 String type;
@@ -142,9 +144,7 @@ public class UserDao {
                         type = rs.getString(1); id = rs.getInt(2);
                     }
                 }
-                String updateSql = "GUEST".equals(type)
-                        ? "UPDATE guest SET password_hash=? WHERE guest_id=? AND has_account=1"
-                        : "UPDATE `user` SET password_hash=? WHERE user_id=?";
+                String updateSql = "UPDATE accounts SET password=? WHERE id=?";
                 try (PreparedStatement update = connection.prepareStatement(updateSql)) {
                     update.setString(1, passwordHash); update.setInt(2, id);
                     if (update.executeUpdate() == 0) { connection.rollback(); return Optional.empty(); }
@@ -162,18 +162,13 @@ public class UserDao {
     }
 
     public void updatePassword(User user, String passwordHash) throws SQLException {
-        String sql = user.getRoleId() == 0
-                ? "UPDATE guest SET password_hash = ? WHERE guest_id = ? AND has_account = 1"
-                : "UPDATE `user` SET password_hash = ? WHERE user_id = ?";
+        String sql = "UPDATE accounts SET password = ? WHERE id = ?";
         executeUpdate(sql, passwordHash, user.getUserId(), "Không thể cập nhật mật khẩu");
     }
 
     public void updateProfile(User user, String fullName, String phone) throws SQLException {
-        String sql = user.getRoleId() == 0
-                ? "UPDATE guest SET full_name = ?, phone = ? WHERE guest_id = ? AND has_account = 1"
-                : "UPDATE `user` SET full_name = ?, phone = ? WHERE user_id = ?";
+        String sql = "UPDATE accounts SET full_name = ?, phone = ? WHERE id = ?";
         try (Connection connection = DBConnectionUtil.getConnection()) {
-            if (connection == null) throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, fullName);
                 statement.setString(2, phone);
@@ -185,7 +180,6 @@ public class UserDao {
 
     private void executeUpdate(String sql, String value, int id, String error) throws SQLException {
         try (Connection connection = DBConnectionUtil.getConnection()) {
-            if (connection == null) throw new SQLException("Không thể kết nối tới cơ sở dữ liệu");
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, value);
                 statement.setInt(2, id);

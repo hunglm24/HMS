@@ -34,7 +34,7 @@ public class AuthenticationFilter implements Filter {
             return;
         }
         User currentUser = (User) session.getAttribute("currentUser");
-        if (currentUser.getRoleId() == 0) {
+        if ("CUSTOMER".equalsIgnoreCase(currentUser.getRoleName())) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
                     "Tài khoản khách hàng không có quyền truy cập khu vực nội bộ.");
             return;

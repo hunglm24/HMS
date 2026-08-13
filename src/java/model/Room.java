@@ -1,71 +1,8 @@
 package model;
-
-public class Room {
-    private int roomId;
-    private String roomNumber;
-    private int floor;
-    private int roomTypeId;
-    private int status;
-    private String viewType;
-
-    public Room() {
-    }
-
-    public Room(int roomId, String roomNumber, int floor, int roomTypeId, int status, String viewType) {
-        this.roomId = roomId;
-        this.roomNumber = roomNumber;
-        this.floor = floor;
-        this.roomTypeId = roomTypeId;
-        this.status = status;
-        this.viewType = viewType;
-    }
-
-    public int getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
-    public String getRoomNumber() {
-        return roomNumber;
-    }
-
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
-    }
-
-    public int getFloor() {
-        return floor;
-    }
-
-    public void setFloor(int floor) {
-        this.floor = floor;
-    }
-
-    public int getRoomTypeId() {
-        return roomTypeId;
-    }
-
-    public void setRoomTypeId(int roomTypeId) {
-        this.roomTypeId = roomTypeId;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public String getViewType() {
-        return viewType;
-    }
-
-    public void setViewType(String viewType) {
-        this.viewType = viewType;
-    }
-
+import java.sql.Timestamp;
+public class Room extends BaseEntity {
+ private long roomTypeId; private String roomNumber,status,description; private Integer floorNumber; private Timestamp updatedAt;
+ public long getRoomTypeId(){return roomTypeId;} public void setRoomTypeId(long v){roomTypeId=v;} public String getRoomNumber(){return roomNumber;} public void setRoomNumber(String v){roomNumber=v;}
+ public Integer getFloorNumber(){return floorNumber;} public void setFloorNumber(Integer v){floorNumber=v;} public String getStatus(){return status;} public void setStatus(String v){status=v;}
+ public String getDescription(){return description;} public void setDescription(String v){description=v;} public Timestamp getUpdatedAt(){return updatedAt;} public void setUpdatedAt(Timestamp v){updatedAt=v;}
 }

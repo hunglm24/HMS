@@ -7,21 +7,27 @@
                 .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
 
-    private String roleLabel(int roleId, String databaseRoleName) {
-        switch (roleId) {
-            case 1: return "Lễ tân";
-            case 2: return "Buồng phòng";
-            case 3: return "Kỹ thuật viên";
-            case 4: return "Quản lý khách sạn";
-            case 5: return "Quản trị hệ thống";
-            default: return databaseRoleName == null ? "Khách hàng" : databaseRoleName;
+    private String roleLabel(String roleName) {
+        if (roleName == null) return "Khách hàng";
+        switch (roleName.toUpperCase(java.util.Locale.ROOT)) {
+            case "ADMIN": return "Quản trị hệ thống";
+            case "CUSTOMER": return "Khách hàng";
+            case "RECEPTIONIST": return "Lễ tân";
+            case "HOUSEKEEPING": return "Buồng phòng";
+            case "HOTEL_MANAGER": return "Quản lý khách sạn";
+            default: return roleName;
         }
     }
 %>
 <%
     User headerUser = (User) session.getAttribute("currentUser");
     String contextPath = request.getContextPath();
-    int roleId = headerUser == null ? -1 : headerUser.getRoleId();
+    String roleName = headerUser == null ? "" : headerUser.getRoleName();
+    boolean customer = "CUSTOMER".equalsIgnoreCase(roleName);
+    boolean receptionist = "RECEPTIONIST".equalsIgnoreCase(roleName);
+    boolean housekeeping = "HOUSEKEEPING".equalsIgnoreCase(roleName);
+    boolean manager = "HOTEL_MANAGER".equalsIgnoreCase(roleName);
+    boolean admin = "ADMIN".equalsIgnoreCase(roleName);
 %>
 <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
 <header class="site-header">
@@ -37,14 +43,14 @@
         <nav id="main-navigation" class="main-nav" aria-label="Điều hướng chính">
             <a href="<%= contextPath %>/">Trang chủ</a>
 
-            <% if (headerUser == null || roleId == 0) { %>
+            <% if (headerUser == null || customer) { %>
                 <a href="<%= contextPath %>/search">Tìm phòng</a>
                 <% if (headerUser != null) { %>
                     <a href="<%= contextPath %>/my-bookings">Đặt phòng của tôi</a>
                 <% } %>
             <% } %>
 
-            <% if (roleId == 1) { %>
+            <% if (receptionist) { %>
                 <div class="nav-dropdown">
                     <button type="button" class="dropdown-toggle">Đặt phòng <span>▾</span></button>
                     <div class="dropdown-menu">
@@ -57,17 +63,12 @@
                 <a href="<%= contextPath %>/reception/check-out">Trả phòng</a>
             <% } %>
 
-            <% if (roleId == 2) { %>
+            <% if (housekeeping) { %>
                 <a href="<%= contextPath %>/housekeeping/tasks">Công việc buồng phòng</a>
                 <a href="<%= contextPath %>/housekeeping/issues">Báo cáo sự cố</a>
             <% } %>
 
-            <% if (roleId == 3) { %>
-                <a href="<%= contextPath %>/technician/equipment">Thiết bị</a>
-                <a href="<%= contextPath %>/technician/maintenance">Bảo trì</a>
-            <% } %>
-
-            <% if (roleId == 4) { %>
+            <% if (manager) { %>
                 <div class="nav-dropdown">
                     <button type="button" class="dropdown-toggle">Vận hành <span>▾</span></button>
                     <div class="dropdown-menu">
@@ -79,7 +80,7 @@
                 <a href="<%= contextPath %>/manager/reports">Báo cáo thống kê</a>
             <% } %>
 
-            <% if (roleId == 5) { %>
+            <% if (admin) { %>
                 <div class="nav-dropdown">
                     <button type="button" class="dropdown-toggle">Quản trị <span>▾</span></button>
                     <div class="dropdown-menu">
@@ -99,7 +100,7 @@
                 <a class="user-chip" href="<%= contextPath %>/profile" title="Xem hồ sơ">
                     <span class="user-avatar" aria-hidden="true">●</span>
                     <span><strong><%= escapeHtml(headerUser.getFullName()) %></strong>
-                        <small><%= roleLabel(roleId, headerUser.getRoleName()) %></small></span>
+                        <small><%= roleLabel(headerUser.getRoleName()) %></small></span>
                 </a>
                 <a href="<%= contextPath %>/change-password">Đổi mật khẩu</a>
                 <form class="logout-form" method="post" action="<%= contextPath %>/logout">

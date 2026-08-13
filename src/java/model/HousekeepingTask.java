@@ -1,61 +1,7 @@
 package model;
-
-public class HousekeepingTask {
-    private int taskId;
-    private int roomId;
-    private int assignedTo;
-    private String status;
-    private java.util.Date updatedAt;
-
-    public HousekeepingTask() {
-    }
-
-    public HousekeepingTask(int taskId, int roomId, int assignedTo, String status, java.util.Date updatedAt) {
-        this.taskId = taskId;
-        this.roomId = roomId;
-        this.assignedTo = assignedTo;
-        this.status = status;
-        this.updatedAt = updatedAt;
-    }
-
-    public int getTaskId() {
-        return taskId;
-    }
-
-    public void setTaskId(int taskId) {
-        this.taskId = taskId;
-    }
-
-    public int getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
-    public int getAssignedTo() {
-        return assignedTo;
-    }
-
-    public void setAssignedTo(int assignedTo) {
-        this.assignedTo = assignedTo;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public java.util.Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(java.util.Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
+import java.sql.Timestamp;
+public class HousekeepingTask extends BaseEntity {
+ private long roomId; private Long bookingRoomId,roomEquipmentId,assignedTo; private String taskType,priority,status,note; private Timestamp startedAt,completedAt;
+ public long getRoomId(){return roomId;} public void setRoomId(long v){roomId=v;} public Long getBookingRoomId(){return bookingRoomId;} public void setBookingRoomId(Long v){bookingRoomId=v;} public Long getRoomEquipmentId(){return roomEquipmentId;} public void setRoomEquipmentId(Long v){roomEquipmentId=v;} public Long getAssignedTo(){return assignedTo;} public void setAssignedTo(Long v){assignedTo=v;}
+ public String getTaskType(){return taskType;} public void setTaskType(String v){taskType=v;} public String getPriority(){return priority;} public void setPriority(String v){priority=v;} public String getStatus(){return status;} public void setStatus(String v){status=v;} public String getNote(){return note;} public void setNote(String v){note=v;} public Timestamp getStartedAt(){return startedAt;} public void setStartedAt(Timestamp v){startedAt=v;} public Timestamp getCompletedAt(){return completedAt;} public void setCompletedAt(Timestamp v){completedAt=v;}
 }

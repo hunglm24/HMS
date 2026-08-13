@@ -70,8 +70,15 @@ public class UserService {
             throw new IllegalArgumentException("Email này đã được sử dụng.");
         }
 
-        return userDao.createCustomer(normalizedName, normalizedEmail,
-                normalizedPhone.isEmpty() ? null : normalizedPhone, PasswordUtil.hash(password));
+        try {
+            return userDao.createCustomer(normalizedName, normalizedEmail,
+                    normalizedPhone.isEmpty() ? null : normalizedPhone, PasswordUtil.hash(password));
+        } catch (SQLException ex) {
+            if ("23000".equals(ex.getSQLState())) {
+                throw new IllegalArgumentException("Email này đã được sử dụng.");
+            }
+            throw ex;
+        }
     }
 
     public Optional<String> createPasswordResetToken(String email) throws SQLException {
