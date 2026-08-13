@@ -5,17 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="35c2fd85-0860-4253-9e75-835e40870cee" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/localhost_access_log.2026-08-12.txt" beforeDir="false" afterPath="$PROJECT_DIR$/logs/localhost_access_log.2026-08-12.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/controller/page/AuthServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/controller/page/AuthServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/dao/UserDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/dao/UserDao.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/filter/AuthorizationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/filter/AuthorizationFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/service/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/common/header.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/common/header.jsp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/public/login.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/public/login.jsp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/WEB-INF/views/public/register.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/WEB-INF/views/public/register.jsp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/assets/css/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/assets/css/main.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/index.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/web/index.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/Catalina/localhost/HMS.xml" beforeDir="false" afterPath="$PROJECT_DIR$/conf/Catalina/localhost/HMS.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/server.xml" beforeDir="false" afterPath="$PROJECT_DIR$/conf/server.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/tomcat-users.xml" beforeDir="false" afterPath="$PROJECT_DIR$/conf/tomcat-users.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/common/header_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/common/header_jsp.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/public_/login_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/public_/login_jsp.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/index_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/index_jsp.java" afterDir="false" />
@@ -101,10 +96,10 @@
       <entry key="W1" value="533.3390549652812" />
     </decayedShown>
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 6,
-  "fromUser": false
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3HoyOBMDT16ypS4iBpxCOEjt7jr" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -120,7 +115,7 @@
     "Smart Tomcat.Unnamed.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "doan-nam",
+    "git-widget-placeholder": "van-huy",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
@@ -131,7 +126,8 @@
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "to.speed.mode.migration.done": "true"
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RunManager">
@@ -141,18 +137,15 @@
       <predefined_log_file id="Tomcat Catalina Log" />
       <predefined_log_file id="Tomcat Manager Log" />
       <predefined_log_file id="Tomcat Host Manager Log" />
-      <option name="catalinaBase" value="C:\Users\admin\IdeaProjects\HMS" />
+      <option name="catalinaBase" value="$PROJECT_DIR$" />
       <option name="contextPath" value="/HMS" />
-      <option name="docBase" value="C:\Users\admin\IdeaProjects\HMS\web" />
-      <option name="envOptions">
-        <map />
-      </option>
+      <option name="docBase" value="$PROJECT_DIR$/web" />
       <option name="extraClassPath" value="" />
       <option name="tomcatInfo">
         <TomcatInfo>
-          <option name="name" value="Apache Tomcat/10.1.57" />
-          <option name="path" value="$PROJECT_DIR$/../../../../apache-tomcat-10.1.57" />
-          <option name="version" value="10.1.57.0" />
+          <option name="name" value="Apache Tomcat/10.1.46" />
+          <option name="path" value="C:\Program Files\Apache Software Foundation\Tomcat 10.1" />
+          <option name="version" value="10.1.46.0" />
         </TomcatInfo>
       </option>
       <option name="vmOptions" value="" />
@@ -165,8 +158,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-34e2839f716b-intellij.indexing.shared.core-IU-262.9437.185" />
-        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.9437.185" />
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.29188.72" />
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-IU-251.29188.72" />
       </set>
     </attachedChunks>
   </component>
@@ -177,6 +170,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1786548682140</updated>
+      <workItem from="1786596183438" duration="830000" />
     </task>
     <servers />
   </component>
