@@ -7,14 +7,14 @@
                 .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
 
-    private String roleLabel(int roleId) {
+    private String roleLabel(int roleId, String databaseRoleName) {
         switch (roleId) {
             case 1: return "Lễ tân";
             case 2: return "Buồng phòng";
             case 3: return "Kỹ thuật viên";
             case 4: return "Quản lý khách sạn";
             case 5: return "Quản trị hệ thống";
-            default: return "Khách hàng";
+            default: return databaseRoleName == null ? "Khách hàng" : databaseRoleName;
         }
     }
 %>
@@ -99,7 +99,7 @@
                 <a class="user-chip" href="<%= contextPath %>/profile" title="Xem hồ sơ">
                     <span class="user-avatar" aria-hidden="true">●</span>
                     <span><strong><%= escapeHtml(headerUser.getFullName()) %></strong>
-                        <small><%= roleLabel(roleId) %></small></span>
+                        <small><%= roleLabel(roleId, headerUser.getRoleName()) %></small></span>
                 </a>
                 <a href="<%= contextPath %>/change-password">Đổi mật khẩu</a>
                 <form class="logout-form" method="post" action="<%= contextPath %>/logout">

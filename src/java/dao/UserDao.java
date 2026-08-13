@@ -13,13 +13,16 @@ import java.time.LocalDateTime;
 
 public class UserDao {
     private static final String FIND_BY_EMAIL = """
-            SELECT user_id, full_name, email, phone, password_hash, role_id, status, created_at
+            SELECT user_id, full_name, email, phone, password_hash, role_id, role_name, status, created_at
             FROM (
-                SELECT user_id, full_name, email, phone, password_hash, role_id, status, created_at
-                FROM `user` WHERE LOWER(email) = LOWER(?)
+                SELECT u.user_id, u.full_name, u.email, u.phone, u.password_hash,
+                       u.role_id, r.role_name, u.status, u.created_at
+                FROM `user` u
+                INNER JOIN role r ON r.role_id = u.role_id
+                WHERE LOWER(u.email) = LOWER(?)
                 UNION ALL
                 SELECT guest_id AS user_id, full_name, email, phone, password_hash,
-                       0 AS role_id, 'ACTIVE' AS status, created_at
+                       0 AS role_id, 'Customer' AS role_name, 'ACTIVE' AS status, created_at
                 FROM guest WHERE has_account = 1 AND LOWER(email) = LOWER(?)
             ) account
             LIMIT 1
@@ -49,6 +52,7 @@ public class UserDao {
                     user.setPhone(resultSet.getString("phone"));
                     user.setPasswordHash(resultSet.getString("password_hash"));
                     user.setRoleId(resultSet.getInt("role_id"));
+                    user.setRoleName(resultSet.getString("role_name"));
                     user.setStatus(resultSet.getString("status"));
                     user.setCreatedAt(resultSet.getTimestamp("created_at"));
                     return Optional.of(user);
