@@ -76,7 +76,7 @@ public class GoogleAuthServlet extends HttpServlet {
         HttpSession authenticated = request.getSession(true);
         authenticated.setAttribute("currentUser", user);
         authenticated.setMaxInactiveInterval(30 * 60);
-        response.sendRedirect(request.getContextPath() + "/my-bookings");
+        response.sendRedirect(request.getContextPath() + "/");
     }
 
     private String callbackUrl(HttpServletRequest request) {

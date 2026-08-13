@@ -100,9 +100,7 @@ public class AuthServlet extends HttpServlet {
             session.setAttribute("currentUser", currentUser);
             session.setMaxInactiveInterval(30 * 60);
 
-            String defaultUrl = currentUser.getRoleId() == 0
-                    ? request.getContextPath() + "/my-bookings"
-                    : request.getContextPath() + "/";
+            String defaultUrl = request.getContextPath() + "/";
             response.sendRedirect(returnUrl == null ? defaultUrl : returnUrl);
         } catch (SQLException ex) {
             getServletContext().log("Đăng nhập thất bại do lỗi cơ sở dữ liệu", ex);
@@ -170,7 +168,7 @@ public class AuthServlet extends HttpServlet {
             HttpSession session = request.getSession(true);
             session.setAttribute("currentUser", user);
             session.setMaxInactiveInterval(30 * 60);
-            response.sendRedirect(request.getContextPath() + "/my-bookings");
+            response.sendRedirect(request.getContextPath() + "/");
         } catch (IllegalArgumentException ex) {
             request.setAttribute("error", ex.getMessage());
             request.getRequestDispatcher("/WEB-INF/views/public/register.jsp").forward(request, response);
