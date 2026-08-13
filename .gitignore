@@ -25,3 +25,7 @@ replay_pid*
 /nbproject/private/
 /build/
 /dist/
+/target/
+/work/
+/logs/
+/.smarttomcat/
