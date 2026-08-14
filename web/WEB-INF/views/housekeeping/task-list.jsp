@@ -59,12 +59,12 @@
 <main class="hk-page">
     <section class="hk-hero">
         <div><p class="hk-eyebrow">Vận hành phòng</p><h1>Dọn phòng</h1>
-            <p>Kiểm tra phòng sau checkout và theo dõi công việc được giao tại một nơi.</p></div>
+            <p>Kiểm tra phòng đang chờ checkout và theo dõi công việc được giao tại một nơi.</p></div>
         <div class="hk-total"><strong><%= result.totalItems() %></strong><span>kết quả</span></div>
     </section>
 
     <nav class="hk-tabs" aria-label="Nhóm công việc">
-        <a class="<%= mine ? "" : "active" %>" href="<%= contextPath %>/housekeeping/tasks?view=waiting">Phòng chờ kiểm tra</a>
+        <a class="<%= mine ? "" : "active" %>" href="<%= contextPath %>/housekeeping/tasks?view=waiting">Phòng chờ kiểm tra checkout</a>
         <a class="<%= mine ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=mine">Công việc của tôi</a>
     </nav>
 
@@ -115,7 +115,8 @@
             <td data-label="Loại phòng"><%= esc(task.getRoomTypeName()) %></td>
             <td data-label="Tầng"><%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %></td>
             <td data-label="Công việc"><%= label(task.getTaskType()) %></td>
-            <td data-label="Trạng thái"><span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= label(task.getStatus()) %></span></td>
+            <td data-label="Trạng thái"><span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= label(task.getStatus()) %></span>
+                <% if ("CLEANING".equals(task.getTaskType()) && !task.isActionReady()) { %><small class="hk-wait-note">Chờ checkout hoàn tất</small><% } %></td>
             <td class="hk-row-action"><% if (mine) { %>
                 <a href="<%= contextPath %>/housekeeping/tasks/detail?id=<%= task.getTaskId() %>">Xem chi tiết</a>
             <% } else { %><form method="post" action="<%= contextPath %>/housekeeping/tasks/claim">

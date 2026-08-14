@@ -55,7 +55,8 @@ public class HousekeepingServlet extends HttpServlet {
             taskId = parseLong(request.getParameter("taskId"));
             if (path.endsWith("/complete-inspection")) {
                 HousekeepingTask task = service.getTaskDetail(taskId, user.getUserId()).orElseThrow();
-                List<HousekeepingTask.EquipmentCheck> checks = parseChecks(request, service.getEquipment(task.getRoomId()));
+                List<HousekeepingTask.EquipmentCheck> checks = parseChecks(request,
+                        service.getEquipment(task.getRoomId(), task.getBookingRoomId()));
                 service.completeInspection(taskId, user.getUserId(), checks, request.getParameter("inspectionNote"));
             } else if (path.endsWith("/start-cleaning")) {
                 service.startCleaning(taskId, user.getUserId());
@@ -92,7 +93,8 @@ public class HousekeepingServlet extends HttpServlet {
         if (task.isEmpty()) { response.sendError(404, "Không tìm thấy công việc."); return; }
         request.setAttribute("task", task.get());
         if ("CHECKOUT_INSPECTION".equals(task.get().getTaskType())) {
-            request.setAttribute("equipment", service.getEquipment(task.get().getRoomId()));
+            request.setAttribute("equipment", service.getEquipment(
+                    task.get().getRoomId(), task.get().getBookingRoomId()));
         }
         request.getRequestDispatcher("/WEB-INF/views/housekeeping/task-detail.jsp").forward(request, response);
     }

@@ -56,8 +56,8 @@ public class HousekeepingService {
         return dao.findById(taskId, viewerId);
     }
 
-    public List<HousekeepingTask.EquipmentCheck> getEquipment(long roomId) throws SQLException {
-        return dao.findEquipment(roomId);
+    public List<HousekeepingTask.EquipmentCheck> getEquipment(long roomId, Long bookingRoomId) throws SQLException {
+        return dao.findEquipment(roomId, bookingRoomId);
     }
 
     public long claimInspection(long bookingRoomId, long staffId) throws SQLException {

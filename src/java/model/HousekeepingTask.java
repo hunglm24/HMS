@@ -21,6 +21,7 @@ public class HousekeepingTask {
     private String roomTypeName;
     private String roomStatus;
     private String assignedStaffName;
+    private boolean actionReady;
 
     public long getTaskId() { return taskId; }
     public void setTaskId(long taskId) { this.taskId = taskId; }
@@ -56,12 +57,16 @@ public class HousekeepingTask {
     public void setRoomStatus(String roomStatus) { this.roomStatus = roomStatus; }
     public String getAssignedStaffName() { return assignedStaffName; }
     public void setAssignedStaffName(String assignedStaffName) { this.assignedStaffName = assignedStaffName; }
+    public boolean isActionReady() { return actionReady; }
+    public void setActionReady(boolean actionReady) { this.actionReady = actionReady; }
 
     public static class EquipmentCheck {
         private long roomEquipmentId;
         private String equipmentName;
         private int quantity;
         private String currentStatus;
+        private String initialStatus;
+        private Integer initialQuantity;
         private String conditionStatus = "NORMAL";
         private BigDecimal damageFee = BigDecimal.ZERO;
         private String note;
@@ -74,6 +79,10 @@ public class HousekeepingTask {
         public void setQuantity(int quantity) { this.quantity = quantity; }
         public String getCurrentStatus() { return currentStatus; }
         public void setCurrentStatus(String currentStatus) { this.currentStatus = currentStatus; }
+        public String getInitialStatus() { return initialStatus; }
+        public void setInitialStatus(String initialStatus) { this.initialStatus = initialStatus; }
+        public Integer getInitialQuantity() { return initialQuantity; }
+        public void setInitialQuantity(Integer initialQuantity) { this.initialQuantity = initialQuantity; }
         public String getConditionStatus() { return conditionStatus; }
         public void setConditionStatus(String conditionStatus) { this.conditionStatus = conditionStatus; }
         public BigDecimal getDamageFee() { return damageFee; }

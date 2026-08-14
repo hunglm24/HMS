@@ -15,6 +15,7 @@
     String contextPath = request.getContextPath();
     boolean inspection = "CHECKOUT_INSPECTION".equals(task.getTaskType());
     boolean pending = "PENDING".equals(task.getStatus());
+    boolean cleaningBlocked = !inspection && pending && !task.isActionReady();
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -49,7 +50,8 @@
             <fieldset class="hk-equipment-item">
                 <legend><span class="hk-equipment-icon" aria-hidden="true">✓</span>
                     <strong><%= esc(item.getEquipmentName()) %></strong>
-                    <small>Số lượng: <%= item.getQuantity() %> · Hiện tại: <%= esc(item.getCurrentStatus()) %></small></legend>
+                    <small>Số lượng hiện có: <%= item.getQuantity() %> · Lúc check-in:
+                        <%= item.getInitialStatus() == null ? "Không có snapshot" : esc(item.getInitialStatus()) + " / SL " + item.getInitialQuantity() %></small></legend>
                 <label>Tình trạng thực tế <span class="required">*</span>
                     <select class="condition-select" name="condition_<%= id %>" required>
                         <option value="">-- Chọn tình trạng --</option>
@@ -81,10 +83,12 @@
         <div class="hk-section-heading"><div><h2>Dọn phòng sau checkout</h2>
             <p>Đảm bảo phòng sạch sẽ và sẵn sàng cho công việc vận hành tiếp theo.</p></div></div>
         <div class="hk-note-box"><strong>Ghi chú công việc</strong><p><%= esc(task.getNote()) %></p></div>
+        <% if (cleaningBlocked) { %><div class="hk-warning-box"><strong>Chưa thể bắt đầu dọn phòng</strong>
+            <p>Inspection đã hoàn tất nhưng booking vẫn đang xử lý checkout. Công việc sẽ được mở khi checkout hoàn tất.</p></div><% } %>
         <form method="post" action="<%= contextPath %>/housekeeping/tasks/<%= pending ? "start-cleaning" : "complete-cleaning" %>">
             <input type="hidden" name="taskId" value="<%= task.getTaskId() %>">
             <div class="hk-form-actions"><a href="<%= contextPath %>/housekeeping/tasks?view=mine">Quay lại</a>
-                <button class="hk-primary" type="submit"><%= pending ? "Bắt đầu dọn phòng" : "Hoàn tất dọn phòng" %></button></div>
+                <button class="hk-primary" type="submit" <%= cleaningBlocked ? "disabled" : "" %>><%= cleaningBlocked ? "Đang chờ checkout" : pending ? "Bắt đầu dọn phòng" : "Hoàn tất dọn phòng" %></button></div>
         </form>
     </section>
     <% } %>
