@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="35c2fd85-0860-4253-9e75-835e40870cee" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/Catalina/localhost/HMS.xml" beforeDir="false" afterPath="$PROJECT_DIR$/conf/Catalina/localhost/HMS.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/server.xml" beforeDir="false" afterPath="$PROJECT_DIR$/conf/server.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/tomcat-users.xml" beforeDir="false" afterPath="$PROJECT_DIR$/conf/tomcat-users.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/common/header_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/common/header_jsp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/public_/login_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/WEB_002dINF/views/public_/login_jsp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/index_jsp.java" beforeDir="false" afterPath="$PROJECT_DIR$/work/Catalina/localhost/HMS/org/apache/jsp/index_jsp.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="170" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="LogFilters">
+    <option name="FILTER_ERRORS" value="false" />
+    <option name="FILTER_WARNINGS" value="false" />
+    <option name="FILTER_INFO" value="true" />
+    <option name="FILTER_DEBUG" value="true" />
+    <option name="CUSTOM_FILTER" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.5046966124882606" />
+      <entry key="MS500" value="4.960140573329219" />
+      <entry key="S2" value="9.113213668955657" />
+      <entry key="S5" value="10.689815726570544" />
+      <entry key="S10" value="11.314939573302123" />
+      <entry key="S30" value="11.766311671956757" />
+      <entry key="S60" value="12.037618954838877" />
+      <entry key="M2" value="13.838594219054807" />
+      <entry key="M5" value="31.747041459166784" />
+      <entry key="M10" value="78.49695300712062" />
+      <entry key="M15" value="123.25548124342154" />
+      <entry key="M30" value="224.7515522636065" />
+      <entry key="H1" value="332.4732115325924" />
+      <entry key="H2" value="416.9300155048829" />
+      <entry key="H4" value="470.888808243864" />
+      <entry key="D1" value="523.519064077937" />
+      <entry key="W1" value="533.3390641412483" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.3985291644289541" />
+      <entry key="MS500" value="4.86115922796198" />
+      <entry key="S2" value="8.995619425129757" />
+      <entry key="S5" value="10.62070953523031" />
+      <entry key="S10" value="11.275515460641776" />
+      <entry key="S30" value="11.751948846354656" />
+      <entry key="S60" value="12.030229089994286" />
+      <entry key="M2" value="13.834562861284992" />
+      <entry key="M5" value="31.74462522621935" />
+      <entry key="M10" value="78.49499646738137" />
+      <entry key="M15" value="123.25373306989427" />
+      <entry key="M30" value="224.7501634025221" />
+      <entry key="H1" value="332.47223031207915" />
+      <entry key="H2" value="416.92940872593556" />
+      <entry key="H4" value="470.88846708773525" />
+      <entry key="D1" value="523.51900101108" />
+      <entry key="W1" value="533.3390549652812" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3HoyOBMDT16ypS4iBpxCOEjt7jr" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.DBConnectionUtil.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Smart Tomcat.Unnamed.executor": "Run",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "van-huy",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="Unnamed" type="com.poratu.idea.plugins.tomcat" nameIsGenerated="true">
+      <predefined_log_file enabled="true" id="Tomcat Localhost Log" />
+      <predefined_log_file enabled="true" id="Tomcat Access Log" />
+      <predefined_log_file id="Tomcat Catalina Log" />
+      <predefined_log_file id="Tomcat Manager Log" />
+      <predefined_log_file id="Tomcat Host Manager Log" />
+      <option name="catalinaBase" value="$PROJECT_DIR$" />
+      <option name="contextPath" value="/HMS" />
+      <option name="docBase" value="$PROJECT_DIR$/web" />
+      <option name="extraClassPath" value="" />
+      <option name="tomcatInfo">
+        <TomcatInfo>
+          <option name="name" value="Apache Tomcat/10.1.46" />
+          <option name="path" value="C:\Program Files\Apache Software Foundation\Tomcat 10.1" />
+          <option name="version" value="10.1.46.0" />
+        </TomcatInfo>
+      </option>
+      <option name="vmOptions" value="" />
+      <module name="HMS" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.29188.72" />
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-IU-251.29188.72" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="35c2fd85-0860-4253-9e75-835e40870cee" name="Changes" comment="" />
+      <created>1786548682140</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1786548682140</updated>
+      <workItem from="1786596183438" duration="830000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
