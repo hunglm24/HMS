@@ -22,6 +22,10 @@ public class AuthenticationFilter implements Filter {
                          FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
+        if (isPublicReceptionCheckIn(request)) {
+            chain.doFilter(request, servletResponse);
+            return;
+        }
         HttpSession session = request.getSession(false);
 
         if (session == null || session.getAttribute("currentUser") == null) {
@@ -40,5 +44,9 @@ public class AuthenticationFilter implements Filter {
             return;
         }
         chain.doFilter(request, response);
+    }
+
+    private boolean isPublicReceptionCheckIn(HttpServletRequest request) {
+        return "/reception/check-in".equals(request.getServletPath());
     }
 }
