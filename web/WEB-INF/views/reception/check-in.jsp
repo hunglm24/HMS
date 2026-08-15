@@ -71,9 +71,9 @@
                     <select name="roomTypeId">
                         <option value="">All</option>
                         <c:forEach var="roomType" items="${roomTypes}">
-                            <option value="${roomType.roomTypeId}"
-                                    ${result.roomTypeId != null && result.roomTypeId == roomType.roomTypeId ? 'selected' : ''}>
-                                ${fn:escapeXml(roomType.typeName)}
+                            <option value="${roomType.id}"
+                                    ${result.roomTypeId != null && result.roomTypeId == roomType.id ? 'selected' : ''}>
+                                ${fn:escapeXml(roomType.name)}
                             </option>
                         </c:forEach>
                     </select>
