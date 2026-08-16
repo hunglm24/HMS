@@ -21,6 +21,7 @@ import java.util.Optional;
         "/housekeeping/tasks/start-cleaning", "/housekeeping/tasks/complete-cleaning"})
 public class HousekeepingServlet extends HttpServlet {
     private static final int ROLE_HOUSEKEEPING = 4;
+    private static final int ROLE_MANAGER = 5;
     private HousekeepingService service;
 
     @Override public void init() { service = new HousekeepingService(); }
@@ -54,7 +55,7 @@ public class HousekeepingServlet extends HttpServlet {
             }
             taskId = parseLong(request.getParameter("taskId"));
             if (path.endsWith("/complete-inspection")) {
-                HousekeepingTask task = service.getTaskDetail(taskId, user.getUserId()).orElseThrow();
+                HousekeepingTask task = service.getTaskDetail(taskId, user.getUserId(), false).orElseThrow();
                 List<HousekeepingTask.EquipmentCheck> checks = parseChecks(request,
                         service.getEquipment(task.getRoomId(), task.getBookingRoomId()));
                 service.completeInspection(taskId, user.getUserId(), checks, request.getParameter("inspectionNote"));
@@ -77,22 +78,34 @@ public class HousekeepingServlet extends HttpServlet {
 
     private void showList(HttpServletRequest request, HttpServletResponse response, User user)
             throws SQLException, ServletException, IOException {
-        HousekeepingService.TaskPage result = service.getTaskPage(user.getUserId(),
-                request.getParameter("view"), request.getParameter("q"),
+        boolean manager = user.getRoleId() == ROLE_MANAGER;
+        String requestedView = manager ? "history" : request.getParameter("view");
+        HousekeepingService.TaskPage result = service.getTaskPage(user.getUserId(), manager,
+                requestedView, request.getParameter("q"),
                 parseNullableInt(request.getParameter("floor")), request.getParameter("taskType"),
                 request.getParameter("status"), request.getParameter("sort"),
                 request.getParameter("direction"), parseInt(request.getParameter("page"), 1));
         request.setAttribute("result", result);
+        request.setAttribute("isManager", manager);
         request.getRequestDispatcher("/WEB-INF/views/housekeeping/task-list.jsp").forward(request, response);
     }
 
     private void showDetail(HttpServletRequest request, HttpServletResponse response, User user)
             throws SQLException, ServletException, IOException {
         long taskId = parseLong(request.getParameter("id"));
-        Optional<HousekeepingTask> task = service.getTaskDetail(taskId, user.getUserId());
+        boolean manager = user.getRoleId() == ROLE_MANAGER;
+        Optional<HousekeepingTask> task = service.getTaskDetail(taskId, user.getUserId(), manager);
         if (task.isEmpty()) { response.sendError(404, "Không tìm thấy công việc."); return; }
+        if (manager && !"COMPLETED".equals(task.get().getStatus())
+                && !"CANCELLED".equals(task.get().getStatus())) {
+            response.sendError(403, "Manager chỉ có quyền xem lịch sử Dọn phòng."); return;
+        }
         request.setAttribute("task", task.get());
-        if ("CHECKOUT_INSPECTION".equals(task.get().getTaskType())) {
+        boolean history = "COMPLETED".equals(task.get().getStatus()) || "CANCELLED".equals(task.get().getStatus());
+        request.setAttribute("history", history);
+        if ("CHECKOUT_INSPECTION".equals(task.get().getTaskType()) && history) {
+            request.setAttribute("equipment", service.getInspectionResults(taskId));
+        } else if ("CHECKOUT_INSPECTION".equals(task.get().getTaskType())) {
             request.setAttribute("equipment", service.getEquipment(
                     task.get().getRoomId(), task.get().getBookingRoomId()));
         }
@@ -119,7 +132,7 @@ public class HousekeepingServlet extends HttpServlet {
 
     private User currentStaff(HttpServletRequest request, HttpServletResponse response) throws IOException {
         User user = (User) request.getSession(false).getAttribute("currentUser");
-        if (user.getRoleId() != ROLE_HOUSEKEEPING) {
+        if (user.getRoleId() != ROLE_HOUSEKEEPING && user.getRoleId() != ROLE_MANAGER) {
             response.sendError(403, "Bạn không có quyền truy cập chức năng Dọn Phòng.");
             return null;
         }

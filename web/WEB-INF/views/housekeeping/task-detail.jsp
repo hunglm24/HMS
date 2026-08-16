@@ -7,6 +7,13 @@
         return value.replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
+    private String statusLabel(String value) {
+        if ("PENDING".equals(value)) return "Chờ thực hiện";
+        if ("IN_PROGRESS".equals(value)) return "Đang thực hiện";
+        if ("COMPLETED".equals(value)) return "Hoàn thành";
+        if ("CANCELLED".equals(value)) return "Đã hủy";
+        return value;
+    }
 %>
 <%
     HousekeepingTask task = (HousekeepingTask) request.getAttribute("task");
@@ -16,6 +23,7 @@
     boolean inspection = "CHECKOUT_INSPECTION".equals(task.getTaskType());
     boolean pending = "PENDING".equals(task.getStatus());
     boolean cleaningBlocked = !inspection && pending && !task.isActionReady();
+    boolean history = Boolean.TRUE.equals(request.getAttribute("history"));
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -28,15 +36,26 @@
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main class="hk-page">
-    <a class="hk-back" href="<%= contextPath %>/housekeeping/tasks?view=mine">← Công việc của tôi</a>
+    <a class="hk-back" href="<%= contextPath %>/housekeeping/tasks?view=<%= history ? "history" : "mine" %>">← <%= history ? "Lịch sử" : "Công việc của tôi" %></a>
     <section class="hk-detail-heading">
         <div><p class="hk-eyebrow">Dọn phòng · Mã công việc #<%= task.getTaskId() %></p>
             <h1>Phòng <%= esc(task.getRoomNumber()) %></h1>
             <p><%= esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %></p></div>
-        <span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= pending ? "Chờ thực hiện" : "Đang thực hiện" %></span>
+        <span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= statusLabel(task.getStatus()) %></span>
     </section>
 
-    <% if (inspection) { %>
+    <% if (inspection && history) { %>
+    <section class="hk-card hk-work-form"><div class="hk-section-heading"><div><h2>Kết quả kiểm tra thiết bị</h2>
+        <p>Dữ liệu được lưu tại thời điểm hoàn tất inspection.</p></div></div>
+        <div class="hk-history-equipment"><% if (equipment != null) for (HousekeepingTask.EquipmentCheck item : equipment) { %>
+            <article><div><strong><%= esc(item.getEquipmentName()) %></strong><small>Số lượng: <%= item.getQuantity() %></small></div>
+                <span class="hk-badge condition-<%= item.getConditionStatus().toLowerCase() %>"><%= "NORMAL".equals(item.getConditionStatus()) ? "Bình thường" : "DAMAGED".equals(item.getConditionStatus()) ? "Hư hỏng" : "Thất lạc" %></span>
+                <div><strong><%= String.format("%,.0f", item.getDamageFee()) %> VND</strong><small><%= esc(item.getNote()) %></small></div></article>
+        <% } %></div>
+        <div class="hk-history-meta"><span>Bắt đầu: <strong><%= task.getStartedAt() == null ? "--" : task.getStartedAt() %></strong></span>
+            <span>Hoàn thành: <strong><%= task.getCompletedAt() == null ? "--" : task.getCompletedAt() %></strong></span></div>
+    </section>
+    <% } else if (inspection) { %>
     <form id="inspection-form" class="hk-card hk-work-form" method="post"
           action="<%= contextPath %>/housekeeping/tasks/complete-inspection" novalidate>
         <input type="hidden" name="taskId" value="<%= task.getTaskId() %>">
@@ -52,7 +71,7 @@
                     <strong><%= esc(item.getEquipmentName()) %></strong>
                     <small>Số lượng hiện có: <%= item.getQuantity() %> · Lúc check-in:
                         <%= item.getInitialStatus() == null ? "Không có snapshot" : esc(item.getInitialStatus()) + " / SL " + item.getInitialQuantity() %></small></legend>
-                <label>Tình trạng thực tế <span class="required">*</span>
+                <label><span class="hk-label-title">Tình trạng thực tế <span class="required">*</span></span>
                     <select class="condition-select" name="condition_<%= id %>" required>
                         <option value="">-- Chọn tình trạng --</option>
                         <option value="NORMAL">Bình thường</option>
@@ -60,9 +79,9 @@
                         <option value="MISSING">Thất lạc</option>
                     </select><small class="field-error">Vui lòng chọn tình trạng.</small>
                 </label>
-                <label>Phí bồi thường dự kiến
-                    <input type="number" name="fee_<%= id %>" min="0" max="9999999999999.99" step="1000" value="0">
-                    <small>Tối đa 9.999.999.999.999,99</small>
+                <label><span class="hk-label-title">Phí bồi thường dự kiến</span>
+                    <input class="fee-input" type="number" name="fee_<%= id %>" min="0" max="15000000" step="1000" value="0" disabled>
+                    <small>Tối đa: 15.000.000 VND</small>
                 </label>
                 <label class="hk-wide">Ghi chú sự cố
                     <input type="text" name="note_<%= id %>" maxlength="1000" placeholder="Mô tả vị trí, mức độ hư hỏng hoặc tình trạng thất lạc">
@@ -85,11 +104,11 @@
         <div class="hk-note-box"><strong>Ghi chú công việc</strong><p><%= esc(task.getNote()) %></p></div>
         <% if (cleaningBlocked) { %><div class="hk-warning-box"><strong>Chưa thể bắt đầu dọn phòng</strong>
             <p>Inspection đã hoàn tất nhưng booking vẫn đang xử lý checkout. Công việc sẽ được mở khi checkout hoàn tất.</p></div><% } %>
-        <form method="post" action="<%= contextPath %>/housekeeping/tasks/<%= pending ? "start-cleaning" : "complete-cleaning" %>">
+        <% if (!history) { %><form method="post" action="<%= contextPath %>/housekeeping/tasks/<%= pending ? "start-cleaning" : "complete-cleaning" %>">
             <input type="hidden" name="taskId" value="<%= task.getTaskId() %>">
             <div class="hk-form-actions"><a href="<%= contextPath %>/housekeeping/tasks?view=mine">Quay lại</a>
                 <button class="hk-primary" type="submit" <%= cleaningBlocked ? "disabled" : "" %>><%= cleaningBlocked ? "Đang chờ checkout" : pending ? "Bắt đầu dọn phòng" : "Hoàn tất dọn phòng" %></button></div>
-        </form>
+        </form><% } else if (history) { %><div class="hk-history-meta"><span>Bắt đầu: <strong><%= task.getStartedAt() == null ? "--" : task.getStartedAt() %></strong></span><span>Hoàn thành: <strong><%= task.getCompletedAt() == null ? "--" : task.getCompletedAt() %></strong></span></div><% } %>
     </section>
     <% } %>
 </main>
@@ -106,14 +125,30 @@
             group.classList.toggle('has-error', missing);
             if (missing) valid = false;
         });
+        form.querySelectorAll('.fee-input:not(:disabled)').forEach(input => {
+            const fee = Number(input.value);
+            if (!Number.isFinite(fee) || fee < 0 || fee > 15000000) {
+                input.setCustomValidity('Phí bồi thường phải từ 0 đến 15.000.000 VND.');
+                input.reportValidity();
+                valid = false;
+            } else input.setCustomValidity('');
+        });
         if (!valid) {
             event.preventDefault();
             form.querySelector('.has-error select').focus();
         }
     });
-    form.querySelectorAll('.condition-select').forEach(select => select.addEventListener('change', () => {
-        select.closest('label').classList.toggle('has-error', !select.value);
-    }));
+    form.querySelectorAll('.condition-select').forEach(select => {
+        const syncFee = () => {
+            select.closest('label').classList.toggle('has-error', !select.value);
+            const fee = select.closest('fieldset').querySelector('.fee-input');
+            const chargeable = select.value === 'DAMAGED' || select.value === 'MISSING';
+            fee.disabled = !chargeable;
+            if (!chargeable) fee.value = '0';
+        };
+        select.addEventListener('change', syncFee);
+        syncFee();
+    });
 })();
 </script>
 </body></html>

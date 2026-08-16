@@ -77,6 +77,7 @@
                         <a href="<%= contextPath %>/manager/staff">Quản lý nhân viên</a>
                     </div>
                 </div>
+                <a href="<%= contextPath %>/housekeeping/tasks?view=history">Lịch sử dọn phòng</a>
                 <a href="<%= contextPath %>/manager/reports">Báo cáo thống kê</a>
             <% } %>
 

@@ -14,7 +14,8 @@ public class HousekeepingService {
     public static final int PAGE_SIZE = 10;
     private static final Set<String> CONDITIONS = Set.of("NORMAL", "DAMAGED", "MISSING");
     private static final Set<String> TASK_TYPES = Set.of("CHECKOUT_INSPECTION", "CLEANING");
-    private static final Set<String> TASK_STATUSES = Set.of("PENDING", "IN_PROGRESS");
+    private static final Set<String> TASK_STATUSES = Set.of("PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED");
+    private static final BigDecimal MAX_DAMAGE_FEE = new BigDecimal("15000000");
     private static final Map<String, String> SORTS = Map.of(
             "room", "rm.room_number", "roomType", "rt.name", "floor", "rm.floor_number",
             "taskType", "ht.task_type", "status", "ht.status", "created", "ht.created_at");
@@ -23,10 +24,10 @@ public class HousekeepingService {
     public HousekeepingService() { this(new HousekeepingDao()); }
     public HousekeepingService(HousekeepingDao dao) { this.dao = dao; }
 
-    public TaskPage getTaskPage(long viewerId, String view, String keyword, Integer floor,
+    public TaskPage getTaskPage(long viewerId, boolean manager, String view, String keyword, Integer floor,
                                 String taskType, String status, String sort,
                                 String direction, int requestedPage) throws SQLException {
-        String selectedView = "mine".equals(view) ? "mine" : "waiting";
+        String selectedView = "history".equals(view) ? "history" : "mine".equals(view) ? "mine" : "waiting";
         String normalizedKeyword = normalizeKeyword(keyword);
         Integer normalizedFloor = floor != null && floor >= 0 && floor <= 999 ? floor : null;
         String normalizedType = taskType != null && TASK_TYPES.contains(taskType) ? taskType : null;
@@ -35,15 +36,22 @@ public class HousekeepingService {
         String normalizedDirection = "desc".equalsIgnoreCase(direction) ? "DESC" : "ASC";
         String sortColumn = "waiting".equals(selectedView) && Set.of("taskType", "status", "created").contains(normalizedSort)
                 ? "rm.room_number" : SORTS.get(normalizedSort);
-        int totalItems = "mine".equals(selectedView)
-                ? dao.countMyTasks(viewerId, normalizedKeyword, normalizedFloor, normalizedType, normalizedStatus)
-                : dao.countPendingInspectionRooms(normalizedKeyword, normalizedFloor);
+        int totalItems = "history".equals(selectedView)
+                ? dao.countHistory(viewerId, manager, normalizedKeyword, normalizedFloor, normalizedType, normalizedStatus)
+                : "mine".equals(selectedView)
+                    ? dao.countMyTasks(viewerId, normalizedKeyword, normalizedFloor, normalizedType,
+                        normalizedStatus != null && !Set.of("COMPLETED","CANCELLED").contains(normalizedStatus) ? normalizedStatus : null)
+                    : dao.countPendingInspectionRooms(normalizedKeyword, normalizedFloor);
         int totalPages = Math.max(1, (int) Math.ceil(totalItems / (double) PAGE_SIZE));
         int page = Math.min(Math.max(1, requestedPage), totalPages);
         int offset = (page - 1) * PAGE_SIZE;
-        List<HousekeepingTask> tasks = "mine".equals(selectedView)
-                ? dao.findMyTasks(viewerId, normalizedKeyword, normalizedFloor, normalizedType,
+        List<HousekeepingTask> tasks = "history".equals(selectedView)
+                ? dao.findHistory(viewerId, manager, normalizedKeyword, normalizedFloor, normalizedType,
                     normalizedStatus, sortColumn, normalizedDirection, offset, PAGE_SIZE)
+                : "mine".equals(selectedView)
+                ? dao.findMyTasks(viewerId, normalizedKeyword, normalizedFloor, normalizedType,
+                    normalizedStatus != null && Set.of("COMPLETED","CANCELLED").contains(normalizedStatus) ? null : normalizedStatus,
+                    sortColumn, normalizedDirection, offset, PAGE_SIZE)
                 : dao.findPendingInspectionRooms(normalizedKeyword, normalizedFloor, sortColumn,
                     normalizedDirection, offset, PAGE_SIZE);
         return new TaskPage(tasks, page, totalPages, totalItems, selectedView,
@@ -51,9 +59,13 @@ public class HousekeepingService {
                 normalizedSort, normalizedDirection.toLowerCase());
     }
 
-    public Optional<HousekeepingTask> getTaskDetail(long taskId, long viewerId) throws SQLException {
+    public Optional<HousekeepingTask> getTaskDetail(long taskId, long viewerId, boolean manager) throws SQLException {
         if (taskId <= 0) return Optional.empty();
-        return dao.findById(taskId, viewerId);
+        return dao.findById(taskId, viewerId, manager);
+    }
+
+    public List<HousekeepingTask.EquipmentCheck> getInspectionResults(long taskId) throws SQLException {
+        return dao.findInspectionResults(taskId);
     }
 
     public List<HousekeepingTask.EquipmentCheck> getEquipment(long roomId, Long bookingRoomId) throws SQLException {
@@ -75,7 +87,8 @@ public class HousekeepingService {
             }
             if (check.getQuantity() <= 0) throw new IllegalArgumentException("Số lượng thiết bị không hợp lệ");
             BigDecimal fee = check.getDamageFee();
-            if (fee == null || fee.signum() < 0) throw new IllegalArgumentException("Phí bồi thường không hợp lệ");
+            if (fee == null || fee.signum() < 0 || fee.compareTo(MAX_DAMAGE_FEE) > 0)
+                throw new IllegalArgumentException("Phí bồi thường phải từ 0 đến 15.000.000 VND");
             if ("NORMAL".equals(check.getConditionStatus())) check.setDamageFee(BigDecimal.ZERO);
             check.setNote(trim(check.getNote(), 1000));
         }

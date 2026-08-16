@@ -20,6 +20,8 @@
             case "IN_PROGRESS": return "Đang thực hiện";
             case "CHECKOUT_INSPECTION": return "Kiểm tra sau checkout";
             case "CLEANING": return "Dọn phòng";
+            case "COMPLETED": return "Hoàn thành";
+            case "CANCELLED": return "Đã hủy";
             default: return value;
         }
     }
@@ -44,6 +46,8 @@
     HousekeepingService.TaskPage result = (HousekeepingService.TaskPage) request.getAttribute("result");
     String contextPath = request.getContextPath();
     boolean mine = "mine".equals(result.view());
+    boolean history = "history".equals(result.view());
+    boolean isManager = Boolean.TRUE.equals(request.getAttribute("isManager"));
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -64,8 +68,9 @@
     </section>
 
     <nav class="hk-tabs" aria-label="Nhóm công việc">
-        <a class="<%= mine ? "" : "active" %>" href="<%= contextPath %>/housekeeping/tasks?view=waiting">Phòng chờ kiểm tra checkout</a>
-        <a class="<%= mine ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=mine">Công việc của tôi</a>
+        <% if (!isManager) { %><a class="<%= !mine && !history ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=waiting">Phòng chờ kiểm tra checkout</a>
+        <a class="<%= mine ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=mine">Công việc của tôi</a><% } %>
+        <a class="<%= history ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=history">Lịch sử<%= isManager ? " toàn bộ" : " của tôi" %></a>
     </nav>
 
     <form class="hk-filters" method="get" action="<%= contextPath %>/housekeeping/tasks">
@@ -77,7 +82,7 @@
         <label>Tầng
             <input type="number" name="floor" min="0" max="999" value="<%= result.floor() == null ? "" : result.floor() %>" placeholder="Tất cả">
         </label>
-        <% if (mine) { %>
+        <% if (mine || history) { %>
         <label>Loại công việc
             <select name="taskType"><option value="">Tất cả</option>
                 <option value="CHECKOUT_INSPECTION" <%= "CHECKOUT_INSPECTION".equals(result.taskType()) ? "selected" : "" %>>Kiểm tra phòng</option>
@@ -86,8 +91,10 @@
         </label>
         <label>Trạng thái
             <select name="status"><option value="">Tất cả</option>
-                <option value="PENDING" <%= "PENDING".equals(result.status()) ? "selected" : "" %>>Chờ thực hiện</option>
-                <option value="IN_PROGRESS" <%= "IN_PROGRESS".equals(result.status()) ? "selected" : "" %>>Đang thực hiện</option>
+                <% if (!history) { %><option value="PENDING" <%= "PENDING".equals(result.status()) ? "selected" : "" %>>Chờ thực hiện</option>
+                <option value="IN_PROGRESS" <%= "IN_PROGRESS".equals(result.status()) ? "selected" : "" %>>Đang thực hiện</option><% } else { %>
+                <option value="COMPLETED" <%= "COMPLETED".equals(result.status()) ? "selected" : "" %>>Hoàn thành</option>
+                <option value="CANCELLED" <%= "CANCELLED".equals(result.status()) ? "selected" : "" %>>Đã hủy</option><% } %>
             </select>
         </label>
         <% } %>
@@ -104,7 +111,7 @@
             <th class="<%= sortClass(result,"room") %>"><a href="?<%= sortUrl(result,"room") %>">Phòng</a></th>
             <th class="<%= sortClass(result,"roomType") %>"><a href="?<%= sortUrl(result,"roomType") %>">Loại phòng</a></th>
             <th class="<%= sortClass(result,"floor") %>"><a href="?<%= sortUrl(result,"floor") %>">Tầng</a></th>
-            <% if (mine) { %>
+            <% if (mine || history) { %>
             <th class="<%= sortClass(result,"taskType") %>"><a href="?<%= sortUrl(result,"taskType") %>">Công việc</a></th>
             <th class="<%= sortClass(result,"status") %>"><a href="?<%= sortUrl(result,"status") %>">Trạng thái</a></th>
             <% } else { %><th>Công việc</th><th>Trạng thái</th><% } %>
@@ -117,7 +124,7 @@
             <td data-label="Công việc"><%= label(task.getTaskType()) %></td>
             <td data-label="Trạng thái"><span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= label(task.getStatus()) %></span>
                 <% if ("CLEANING".equals(task.getTaskType()) && !task.isActionReady()) { %><small class="hk-wait-note">Chờ checkout hoàn tất</small><% } %></td>
-            <td class="hk-row-action"><% if (mine) { %>
+            <td class="hk-row-action"><% if (mine || history) { %>
                 <a href="<%= contextPath %>/housekeeping/tasks/detail?id=<%= task.getTaskId() %>">Xem chi tiết</a>
             <% } else { %><form method="post" action="<%= contextPath %>/housekeeping/tasks/claim">
                 <input type="hidden" name="bookingRoomId" value="<%= task.getBookingRoomId() %>">
