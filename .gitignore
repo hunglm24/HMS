@@ -6,7 +6,7 @@
 hs_err_pid*
 replay_pid*
 
-# Maven / build directories
+# Build output
 /target/
 /build/
 /dist/
@@ -20,10 +20,8 @@ replay_pid*
 
 # NetBeans local/private files
 /nbproject/private/
-# /nbproject/build-impl.xml
-# /nbproject/genfiles.properties
-# /nbproject/project.properties
-# /nbproject/project.xml
+/nbproject/build-impl.xml
+/nbproject/genfiles.properties
 
 # IDE / editor settings
 .idea/

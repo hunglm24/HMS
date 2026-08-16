@@ -14,14 +14,14 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
+        // TODO: Xử lý hiển thị trang JSP.
         request.getRequestDispatcher("/WEB-INF/views/public/cart.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO: Xá»­ lÃ½ logic nghiá»‡p vá»¥ vÃ  chuyá»ƒn hÆ°á»›ng/forward
+        // TODO: Xử lý logic nghiệp vụ và chuyển hướng/forward.
     }
 }
 

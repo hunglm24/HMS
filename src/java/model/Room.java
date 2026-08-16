@@ -9,6 +9,10 @@ public class Room extends BaseEntity {
     private Integer floorNumber;
     private Timestamp updatedAt;
     private String roomTypeName;
+    private Long currentBookingId;
+    private String currentBookingCode;
+    private String currentGuestName;
+    private String currentBookingStatus;
 
     public long getRoomTypeId() {
         return roomTypeId;
@@ -64,5 +68,37 @@ public class Room extends BaseEntity {
 
     public void setRoomTypeName(String roomTypeName) {
         this.roomTypeName = roomTypeName;
+    }
+
+    public Long getCurrentBookingId() {
+        return currentBookingId;
+    }
+
+    public void setCurrentBookingId(Long currentBookingId) {
+        this.currentBookingId = currentBookingId;
+    }
+
+    public String getCurrentBookingCode() {
+        return currentBookingCode;
+    }
+
+    public void setCurrentBookingCode(String currentBookingCode) {
+        this.currentBookingCode = currentBookingCode;
+    }
+
+    public String getCurrentGuestName() {
+        return currentGuestName;
+    }
+
+    public void setCurrentGuestName(String currentGuestName) {
+        this.currentGuestName = currentGuestName;
+    }
+
+    public String getCurrentBookingStatus() {
+        return currentBookingStatus;
+    }
+
+    public void setCurrentBookingStatus(String currentBookingStatus) {
+        this.currentBookingStatus = currentBookingStatus;
     }
 }
