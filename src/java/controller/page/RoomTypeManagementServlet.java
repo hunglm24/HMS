@@ -15,54 +15,55 @@ import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/manager/room-types", "/manager/room-types/save", "/manager/room-types/delete"})
 public class RoomTypeManagementServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
 
     private RoomTypeDao roomTypeDao;
 
-    // Hàm init chạy một lần khi Servlet được khởi tạo
+    // HÃ m init cháº¡y má»™t láº§n khi Servlet Ä‘Æ°á»£c khá»Ÿi táº¡o
     @Override
     public void init() throws ServletException {
-        roomTypeDao = new RoomTypeDao(); // Khởi tạo DAO để gọi các hàm tương tác database
+        roomTypeDao = new RoomTypeDao(); // Khá»Ÿi táº¡o DAO Ä‘á»ƒ gá»i cÃ¡c hÃ m tÆ°Æ¡ng tÃ¡c database
     }
 
-    // Xử lý các request dạng GET (ví dụ: gõ URL lên trình duyệt hoặc click link)
+    // Xá»­ lÃ½ cÃ¡c request dáº¡ng GET (vÃ­ dá»¥: gÃµ URL lÃªn trÃ¬nh duyá»‡t hoáº·c click link)
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String path = req.getServletPath(); // Lấy đường dẫn hiện tại (ví dụ: "/manager/room-types")
+        String path = req.getServletPath(); // Láº¥y Ä‘Æ°á»ng dáº«n hiá»‡n táº¡i (vÃ­ dá»¥: "/manager/room-types")
         
         if ("/manager/room-types".equals(path)) {
-            // Lấy toàn bộ danh sách loại phòng từ database
+            // Láº¥y toÃ n bá»™ danh sÃ¡ch loáº¡i phÃ²ng tá»« database
             List<RoomType> roomTypes = roomTypeDao.findAll();
-            // Gửi dữ liệu này sang cho JSP hiển thị thông qua request attribute
+            // Gá»­i dá»¯ liá»‡u nÃ y sang cho JSP hiá»ƒn thá»‹ thÃ´ng qua request attribute
             req.setAttribute("roomTypes", roomTypes);
-            // Điều hướng (forward) tới trang giao diện JSP
+            // Äiá»u hÆ°á»›ng (forward) tá»›i trang giao diá»‡n JSP
             req.getRequestDispatcher("/WEB-INF/views/manager/room-types.jsp").forward(req, resp);
             
         } else if ("/manager/room-types/delete".equals(path)) {
-            // Tính năng xóa loại phòng
-            String idParam = req.getParameter("id"); // Lấy ID cần xóa từ URL (ví dụ: ?id=5)
+            // TÃ­nh nÄƒng xÃ³a loáº¡i phÃ²ng
+            String idParam = req.getParameter("id"); // Láº¥y ID cáº§n xÃ³a tá»« URL (vÃ­ dá»¥: ?id=5)
             if (idParam != null && !idParam.trim().isEmpty()) {
                 long id = Long.parseLong(idParam);
                 roomTypeDao.delete(id);
-                // Lưu câu thông báo thành công vào session để hiển thị Toast
-                req.getSession().setAttribute("toastMessage", "Đã xóa loại phòng thành công");
+                // LÆ°u cÃ¢u thÃ´ng bÃ¡o thÃ nh cÃ´ng vÃ o session Ä‘á»ƒ hiá»ƒn thá»‹ Toast
+                req.getSession().setAttribute("toastMessage", "ÄÃ£ xÃ³a loáº¡i phÃ²ng thÃ nh cÃ´ng");
                 req.getSession().setAttribute("toastType", "success");
             }
-            // Chuyển hướng lại trang danh sách sau khi xóa xong
+            // Chuyá»ƒn hÆ°á»›ng láº¡i trang danh sÃ¡ch sau khi xÃ³a xong
             resp.sendRedirect(req.getContextPath() + "/manager/room-types");
             
         } else {
-            // Nếu truy cập sai URL thì báo lỗi 404
+            // Náº¿u truy cáº­p sai URL thÃ¬ bÃ¡o lá»—i 404
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
-    // Xử lý các request dạng POST (thường đến từ Form submit)
+    // Xá»­ lÃ½ cÃ¡c request dáº¡ng POST (thÆ°á»ng Ä‘áº¿n tá»« Form submit)
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
         
         if ("/manager/room-types/save".equals(path)) {
-            // Lấy tất cả thông tin người dùng nhập vào từ form thêm/sửa
+            // Láº¥y táº¥t cáº£ thÃ´ng tin ngÆ°á»i dÃ¹ng nháº­p vÃ o tá»« form thÃªm/sá»­a
             String idStr = req.getParameter("id");
             String name = req.getParameter("name");
             String description = req.getParameter("description");
@@ -70,33 +71,33 @@ public class RoomTypeManagementServlet extends HttpServlet {
             String basePriceStr = req.getParameter("basePrice");
             String status = req.getParameter("status");
 
-            // Tạo một đối tượng RoomType mới và nhét dữ liệu vào
+            // Táº¡o má»™t Ä‘á»‘i tÆ°á»£ng RoomType má»›i vÃ  nhÃ©t dá»¯ liá»‡u vÃ o
             RoomType rt = new RoomType();
             rt.setName(name);
             rt.setDescription(description);
-            rt.setCapacity(Integer.parseInt(capacityStr)); // Chuyển chuỗi thành số nguyên
-            rt.setBasePrice(new BigDecimal(basePriceStr)); // Chuyển chuỗi thành kiểu tiền tệ
+            rt.setCapacity(Integer.parseInt(capacityStr)); // Chuyá»ƒn chuá»—i thÃ nh sá»‘ nguyÃªn
+            rt.setBasePrice(new BigDecimal(basePriceStr)); // Chuyá»ƒn chuá»—i thÃ nh kiá»ƒu tiá»n tá»‡
             rt.setStatus(status);
 
             boolean success = false;
-            // Nếu có ID truyền lên thì nghĩa là mình đang SỬA, nếu không có ID là THÊM MỚI
+            // Náº¿u cÃ³ ID truyá»n lÃªn thÃ¬ nghÄ©a lÃ  mÃ¬nh Ä‘ang Sá»¬A, náº¿u khÃ´ng cÃ³ ID lÃ  THÃŠM Má»šI
             if (idStr != null && !idStr.trim().isEmpty()) {
                 rt.setId(Long.parseLong(idStr));
-                success = roomTypeDao.update(rt); // Cập nhật
+                success = roomTypeDao.update(rt); // Cáº­p nháº­t
             } else {
-                success = roomTypeDao.insert(rt); // Thêm mới
+                success = roomTypeDao.insert(rt); // ThÃªm má»›i
             }
 
-            // Ghi nhận thông báo để hiển thị trên giao diện
+            // Ghi nháº­n thÃ´ng bÃ¡o Ä‘á»ƒ hiá»ƒn thá»‹ trÃªn giao diá»‡n
             if (success) {
-                req.getSession().setAttribute("toastMessage", "Lưu thông tin loại phòng thành công");
+                req.getSession().setAttribute("toastMessage", "LÆ°u thÃ´ng tin loáº¡i phÃ²ng thÃ nh cÃ´ng");
                 req.getSession().setAttribute("toastType", "success");
             } else {
-                req.getSession().setAttribute("toastMessage", "Có lỗi xảy ra khi lưu loại phòng");
+                req.getSession().setAttribute("toastMessage", "CÃ³ lá»—i xáº£y ra khi lÆ°u loáº¡i phÃ²ng");
                 req.getSession().setAttribute("toastType", "error");
             }
             
-            // Xử lý xong thì redirect (chuyển hướng) về lại danh sách
+            // Xá»­ lÃ½ xong thÃ¬ redirect (chuyá»ƒn hÆ°á»›ng) vá» láº¡i danh sÃ¡ch
             resp.sendRedirect(req.getContextPath() + "/manager/room-types");
             
         } else {
@@ -104,3 +105,4 @@ public class RoomTypeManagementServlet extends HttpServlet {
         }
     }
 }
+

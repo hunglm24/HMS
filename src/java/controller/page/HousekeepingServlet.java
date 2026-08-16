@@ -21,6 +21,7 @@ import java.util.Optional;
         "/housekeeping/tasks/complete-inspection",
         "/housekeeping/tasks/start-cleaning", "/housekeeping/tasks/complete-cleaning"})
 public class HousekeepingServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private static final int ROLE_HOUSEKEEPING = 4;
     private static final int ROLE_MANAGER = 5;
     private HousekeepingService service;
@@ -36,8 +37,8 @@ public class HousekeepingServlet extends HttpServlet {
             if (request.getServletPath().endsWith("/detail")) showDetail(request, response, user);
             else showList(request, response, user);
         } catch (SQLException ex) {
-            getServletContext().log("Không thể tải dữ liệu Dọn Phòng", ex);
-            response.sendError(500, "Không thể tải dữ liệu Dọn Phòng.");
+            getServletContext().log("KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u Dá»n PhÃ²ng", ex);
+            response.sendError(500, "KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u Dá»n PhÃ²ng.");
         }
     }
 
@@ -78,7 +79,7 @@ public class HousekeepingServlet extends HttpServlet {
         } catch (IllegalArgumentException | java.util.NoSuchElementException ex) {
             response.sendError(400, ex.getMessage());
         } catch (SQLException ex) {
-            getServletContext().log("Không thể cập nhật công việc Dọn Phòng", ex);
+            getServletContext().log("KhÃ´ng thá»ƒ cáº­p nháº­t cÃ´ng viá»‡c Dá»n PhÃ²ng", ex);
             response.sendError(409, ex.getMessage());
         }
     }
@@ -102,10 +103,10 @@ public class HousekeepingServlet extends HttpServlet {
         long taskId = parseLong(request.getParameter("id"));
         boolean manager = user.getRoleId() == ROLE_MANAGER;
         Optional<HousekeepingTask> task = service.getTaskDetail(taskId, user.getUserId(), manager);
-        if (task.isEmpty()) { response.sendError(404, "Không tìm thấy công việc."); return; }
+        if (task.isEmpty()) { response.sendError(404, "KhÃ´ng tÃ¬m tháº¥y cÃ´ng viá»‡c."); return; }
         if (manager && !"COMPLETED".equals(task.get().getStatus())
                 && !"CANCELLED".equals(task.get().getStatus())) {
-            response.sendError(403, "Manager chỉ có quyền xem lịch sử Dọn phòng."); return;
+            response.sendError(403, "Manager chá»‰ cÃ³ quyá»n xem lá»‹ch sá»­ Dá»n phÃ²ng."); return;
         }
         request.setAttribute("task", task.get());
         request.setAttribute("workItems", service.getWorkItems(task.get().getNote()));
@@ -140,7 +141,7 @@ public class HousekeepingServlet extends HttpServlet {
             check.setConditionStatus(request.getParameter("condition_" + suffix));
             String fee = request.getParameter("fee_" + suffix);
             try { check.setDamageFee(fee == null || fee.isBlank() ? BigDecimal.ZERO : new BigDecimal(fee)); }
-            catch (NumberFormatException ex) { throw new IllegalArgumentException("Phí bồi thường không hợp lệ"); }
+            catch (NumberFormatException ex) { throw new IllegalArgumentException("PhÃ­ bá»“i thÆ°á»ng khÃ´ng há»£p lá»‡"); }
             check.setNote(request.getParameter("note_" + suffix));
             checks.add(check);
         }
@@ -150,7 +151,7 @@ public class HousekeepingServlet extends HttpServlet {
     private User currentStaff(HttpServletRequest request, HttpServletResponse response) throws IOException {
         User user = (User) request.getSession(false).getAttribute("currentUser");
         if (user.getRoleId() != ROLE_HOUSEKEEPING && user.getRoleId() != ROLE_MANAGER) {
-            response.sendError(403, "Bạn không có quyền truy cập chức năng Dọn Phòng.");
+            response.sendError(403, "Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p chá»©c nÄƒng Dá»n PhÃ²ng.");
             return null;
         }
         return user;
@@ -158,7 +159,7 @@ public class HousekeepingServlet extends HttpServlet {
 
     private long parseLong(String value) {
         try { long result = Long.parseLong(value); if (result <= 0) throw new NumberFormatException(); return result; }
-        catch (RuntimeException ex) { throw new IllegalArgumentException("ID không hợp lệ"); }
+        catch (RuntimeException ex) { throw new IllegalArgumentException("ID khÃ´ng há»£p lá»‡"); }
     }
 
     private int parseInt(String value, int fallback) {
@@ -172,3 +173,4 @@ public class HousekeepingServlet extends HttpServlet {
         catch (NumberFormatException ex) { return null; }
     }
 }
+

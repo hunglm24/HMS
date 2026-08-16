@@ -13,11 +13,10 @@
     <h1 id="auth-title">Chào mừng trở lại</h1>
     <p class="auth-subtitle">Đăng nhập để quản lý các đặt phòng của bạn.</p>
     <% if (request.getAttribute("error") != null) { %><div class="auth-message error" role="alert"><%= request.getAttribute("error") %></div><% } %>
-    <% if (request.getParameter("logout") != null) { %><div class="auth-message success" role="status">Bạn đã đăng xuất thành công.</div><% } %>
     <% if (request.getParameter("reset") != null) { %><div class="auth-message success" role="status">Đặt lại mật khẩu thành công.</div><% } %>
     <% if (request.getParameter("oauthError") != null) { %><div class="auth-message error" role="alert">Không thể đăng nhập bằng Google. Vui lòng thử lại.</div><% } %>
     <form class="auth-form" method="post" action="${pageContext.request.contextPath}/login">
-        <div class="auth-field"><label for="email">Email</label><input id="email" name="email" type="email" maxlength="150" autocomplete="username" required autofocus></div>
+        <div class="auth-field"><label for="email">Email</label><input id="email" name="email" type="email" maxlength="150" autocomplete="username" required></div>
         <div class="auth-field"><label for="password">Mật khẩu</label><div class="password-wrap"><input id="password" name="password" type="password" minlength="8" autocomplete="current-password" required><button class="password-visibility" type="button" data-toggle-password="password" aria-label="Hiện mật khẩu">Hiện</button></div></div>
         <div class="auth-meta"><a href="${pageContext.request.contextPath}/forgot-password">Quên mật khẩu?</a></div>
         <button class="auth-submit" type="submit" data-loading-label="Đang đăng nhập...">Đăng nhập</button>

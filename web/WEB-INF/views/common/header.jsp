@@ -1,6 +1,15 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="model.User" %>
 <%!
+    private String beanString(Object bean, String getterName) {
+        if (bean == null) return "";
+        try {
+            Object value = bean.getClass().getMethod(getterName).invoke(bean);
+            return value == null ? "" : String.valueOf(value);
+        } catch (ReflectiveOperationException ex) {
+            return "";
+        }
+    }
+
     private String escapeHtml(String value) {
         if (value == null) return "";
         return value.replace("&", "&amp;").replace("<", "&lt;")
@@ -20,16 +29,15 @@
     }
 %>
 <%
-    User headerUser = (User) session.getAttribute("currentUser");
+    Object headerUser = session.getAttribute("currentUser");
     String contextPath = request.getContextPath();
-    String roleName = headerUser == null ? "" : headerUser.getRoleName();
+    String roleName = beanString(headerUser, "getRoleName");
     boolean customer = "CUSTOMER".equalsIgnoreCase(roleName);
     boolean receptionist = "RECEPTIONIST".equalsIgnoreCase(roleName);
     boolean housekeeping = "HOUSEKEEPING".equalsIgnoreCase(roleName);
     boolean manager = "HOTEL_MANAGER".equalsIgnoreCase(roleName);
     boolean admin = "ADMIN".equalsIgnoreCase(roleName);
 %>
-<a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
 <header class="site-header">
     <div class="header-container">
         <a class="brand" href="<%= contextPath %>/" aria-label="Trang chủ HMS">
@@ -99,8 +107,8 @@
             <% } else { %>
                 <a class="user-chip" href="<%= contextPath %>/profile" title="Xem hồ sơ">
                     <span class="user-avatar" aria-hidden="true">●</span>
-                    <span><strong><%= escapeHtml(headerUser.getFullName()) %></strong>
-                        <small><%= roleLabel(headerUser.getRoleName()) %></small></span>
+                    <span><strong><%= escapeHtml(beanString(headerUser, "getFullName")) %></strong>
+                        <small><%= roleLabel(roleName) %></small></span>
                 </a>
                 <a href="<%= contextPath %>/change-password">Đổi mật khẩu</a>
                 <form class="logout-form" method="post" action="<%= contextPath %>/logout">

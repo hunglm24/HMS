@@ -24,7 +24,7 @@
         <form class="auth-form" method="post" action="${pageContext.request.contextPath}/register">
             <div class="auth-field">
                 <label for="fullName">Họ và tên</label>
-                <input id="fullName" name="fullName" maxlength="100" autocomplete="name" required autofocus>
+                <input id="fullName" name="fullName" maxlength="100" autocomplete="name" required>
             </div>
             <div class="auth-field">
                 <label for="email">Email</label>

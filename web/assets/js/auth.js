@@ -13,6 +13,6 @@ document.querySelectorAll('.auth-form').forEach((form) => {
         if (!form.checkValidity()) return;
         const button = form.querySelector('.auth-submit');
         button.disabled = true;
-        button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span> ' + button.dataset.loadingLabel;
+        button.textContent = button.dataset.loadingLabel || button.textContent;
     });
 });

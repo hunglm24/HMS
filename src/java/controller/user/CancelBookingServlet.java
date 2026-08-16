@@ -9,17 +9,19 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet(name = "CancelBookingServlet", urlPatterns = {"/user/cancel-booking"})
 public class CancelBookingServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO: Xử lý hiển thị trang JSP
+        // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
         request.getRequestDispatcher("/WEB-INF/jsp/user/cancel-booking.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO: Xử lý logic nghiệp vụ và chuyển hướng/forward
+        // TODO: Xá»­ lÃ½ logic nghiá»‡p vá»¥ vÃ  chuyá»ƒn hÆ°á»›ng/forward
     }
 }
+

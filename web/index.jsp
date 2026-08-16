@@ -1,7 +1,17 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="model.User" %>
-<% User dashboardUser = (User) session.getAttribute("currentUser");
-   String dashboardRole = dashboardUser == null ? "" : dashboardUser.getRoleName();
+<%!
+    private String beanString(Object bean, String getterName) {
+        if (bean == null) return "";
+        try {
+            Object value = bean.getClass().getMethod(getterName).invoke(bean);
+            return value == null ? "" : String.valueOf(value);
+        } catch (ReflectiveOperationException ex) {
+            return "";
+        }
+    }
+%>
+<% Object dashboardUser = session.getAttribute("currentUser");
+   String dashboardRole = beanString(dashboardUser, "getRoleName");
 %>
 <!DOCTYPE html>
 <html lang="vi">

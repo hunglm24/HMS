@@ -16,43 +16,44 @@ import java.util.Map;
 
 @WebServlet(urlPatterns = {"/reception/room-map"})
 public class RoomMapServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
 
     private RoomDao roomDao;
 
     @Override
     public void init() throws ServletException {
-        // Khởi tạo DAO 1 lần duy nhất khi Servlet được load vào bộ nhớ
+        // Khá»Ÿi táº¡o DAO 1 láº§n duy nháº¥t khi Servlet Ä‘Æ°á»£c load vÃ o bá»™ nhá»›
         roomDao = new RoomDao();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         
-        // BƯỚC 1: LẤY TẤT CẢ DỮ LIỆU TỪ DATABASE
+        // BÆ¯á»šC 1: Láº¤Y Táº¤T Cáº¢ Dá»® LIá»†U Tá»ª DATABASE
         List<Room> allRooms = roomDao.findAllWithRoomTypeName();
 
-        // BƯỚC 2: ĐỌC VÀ CHUẨN HÓA CÁC THAM SỐ FILTER TỪ GIAO DIỆN (URL / Form)
-        String search = req.getParameter("search");           // Ô tìm kiếm từ khóa
-        String status = req.getParameter("status");           // Trạng thái (AVAILABLE, OCCUPIED...)
-        Integer floor = parseIntSafely(req.getParameter("floor"));             // Tầng (1, 2, 3...)
-        Integer roomTypeId = parseIntSafely(req.getParameter("roomTypeId"));   // ID loại phòng
+        // BÆ¯á»šC 2: Äá»ŒC VÃ€ CHUáº¨N HÃ“A CÃC THAM Sá» FILTER Tá»ª GIAO DIá»†N (URL / Form)
+        String search = req.getParameter("search");           // Ã” tÃ¬m kiáº¿m tá»« khÃ³a
+        String status = req.getParameter("status");           // Tráº¡ng thÃ¡i (AVAILABLE, OCCUPIED...)
+        Integer floor = parseIntSafely(req.getParameter("floor"));             // Táº§ng (1, 2, 3...)
+        Integer roomTypeId = parseIntSafely(req.getParameter("roomTypeId"));   // ID loáº¡i phÃ²ng
 
-        // Chuẩn hóa chuỗi để so sánh không phân biệt hoa/thường, cắt khoảng trắng thừa
+        // Chuáº©n hÃ³a chuá»—i Ä‘á»ƒ so sÃ¡nh khÃ´ng phÃ¢n biá»‡t hoa/thÆ°á»ng, cáº¯t khoáº£ng tráº¯ng thá»«a
         if (search != null) search = search.trim().toLowerCase();
         if (status != null) status = status.trim().toUpperCase();
 
-        // BƯỚC 3: KHỞI TẠO CÁC BIẾN CHỨA KẾT QUẢ
-        // Biến đếm thống kê cho các thẻ badge trên cùng
+        // BÆ¯á»šC 3: KHá»žI Táº O CÃC BIáº¾N CHá»¨A Káº¾T QUáº¢
+        // Biáº¿n Ä‘áº¿m thá»‘ng kÃª cho cÃ¡c tháº» badge trÃªn cÃ¹ng
         long available = 0, occupied = 0, cleaning = 0, maintenance = 0;
         
-        // Map gom nhóm phòng theo tầng: Key = Số tầng (int), Value = Danh sách phòng của tầng đó
-        // Dùng LinkedHashMap để giữ đúng thứ tự tầng khi duyệt
+        // Map gom nhÃ³m phÃ²ng theo táº§ng: Key = Sá»‘ táº§ng (int), Value = Danh sÃ¡ch phÃ²ng cá»§a táº§ng Ä‘Ã³
+        // DÃ¹ng LinkedHashMap Ä‘á»ƒ giá»¯ Ä‘Ãºng thá»© tá»± táº§ng khi duyá»‡t
         Map<Integer, List<Room>> roomsByFloor = new LinkedHashMap<>();
 
-        // BƯỚC 4: VÒNG LẶP DUY NHẤT (Vừa thống kê tổng thể, vừa lọc và gom nhóm)
+        // BÆ¯á»šC 4: VÃ’NG Láº¶P DUY NHáº¤T (Vá»«a thá»‘ng kÃª tá»•ng thá»ƒ, vá»«a lá»c vÃ  gom nhÃ³m)
         for (Room r : allRooms) {
             
-            // 4.1. Thống kê số lượng (Luôn đếm trên toàn bộ allRooms)
+            // 4.1. Thá»‘ng kÃª sá»‘ lÆ°á»£ng (LuÃ´n Ä‘áº¿m trÃªn toÃ n bá»™ allRooms)
             String rStatus = (r.getStatus() != null) ? r.getStatus().toUpperCase() : "";
             switch (rStatus) {
                 case "AVAILABLE":
@@ -68,66 +69,66 @@ public class RoomMapServlet extends HttpServlet {
         maintenance++;
         break;
     default:
-        // Xử lý các trạng thái lạ hoặc không xác định
+        // Xá»­ lÃ½ cÃ¡c tráº¡ng thÃ¡i láº¡ hoáº·c khÃ´ng xÃ¡c Ä‘á»‹nh
         break;
             }
 
-            // 4.2. Kiểm tra các điều kiện lọc (Ai không đạt tiêu chuẩn thì 'continue' bỏ qua)
+            // 4.2. Kiá»ƒm tra cÃ¡c Ä‘iá»u kiá»‡n lá»c (Ai khÃ´ng Ä‘áº¡t tiÃªu chuáº©n thÃ¬ 'continue' bá» qua)
             
-            // Lọc theo trạng thái
+            // Lá»c theo tráº¡ng thÃ¡i
             if (status != null && !status.isEmpty() && !"ALL".equals(status) && !status.equals(rStatus)) {
                 continue;
             }
 
-            // Lọc theo tầng
+            // Lá»c theo táº§ng
             if (floor != null && (r.getFloorNumber() == null || !floor.equals(r.getFloorNumber()))) {
                 continue;
             }
 
-            // Lọc theo loại phòng (So sánh an toàn cho cả int và Integer)
+            // Lá»c theo loáº¡i phÃ²ng (So sÃ¡nh an toÃ n cho cáº£ int vÃ  Integer)
             if (roomTypeId != null && roomTypeId.intValue() != r.getRoomTypeId()) {
                 continue;
             }
 
-            // Lọc theo từ khóa tìm kiếm (Số phòng hoặc Tên loại phòng)
+            // Lá»c theo tá»« khÃ³a tÃ¬m kiáº¿m (Sá»‘ phÃ²ng hoáº·c TÃªn loáº¡i phÃ²ng)
             if (search != null && !search.isEmpty()) {
                 boolean matchRoomNum = r.getRoomNumber() != null && r.getRoomNumber().toLowerCase().contains(search);
                 boolean matchTypeName = r.getRoomTypeName() != null && r.getRoomTypeName().toLowerCase().contains(search);
                 
-                // Nếu cả số phòng và tên loại phòng đều không khớp từ khóa -> Bỏ qua
+                // Náº¿u cáº£ sá»‘ phÃ²ng vÃ  tÃªn loáº¡i phÃ²ng Ä‘á»u khÃ´ng khá»›p tá»« khÃ³a -> Bá» qua
                 if (!matchRoomNum && !matchTypeName) {
                     continue;
                 }
             }
 
-            // 4.3. Phòng nào sống sót qua các bộ lọc thì gom vào tầng tương ứng
+            // 4.3. PhÃ²ng nÃ o sá»‘ng sÃ³t qua cÃ¡c bá»™ lá»c thÃ¬ gom vÃ o táº§ng tÆ°Æ¡ng á»©ng
             int floorNum = (r.getFloorNumber() != null) ? r.getFloorNumber() : 0;
             roomsByFloor.computeIfAbsent(floorNum, k -> new ArrayList<>()).add(r);
         }
 
-        // BƯỚC 5: TRUYỀN DỮ LIỆU SANG JSP
-        // 5.1. Dữ liệu hiển thị sơ đồ phòng
+        // BÆ¯á»šC 5: TRUYá»€N Dá»® LIá»†U SANG JSP
+        // 5.1. Dá»¯ liá»‡u hiá»ƒn thá»‹ sÆ¡ Ä‘á»“ phÃ²ng
         req.setAttribute("roomsByFloor", roomsByFloor);
 
-        // 5.2. Số lượng thống kê tổng quan
+        // 5.2. Sá»‘ lÆ°á»£ng thá»‘ng kÃª tá»•ng quan
         req.setAttribute("availableCount", available);
         req.setAttribute("occupiedCount", occupied);
         req.setAttribute("cleaningCount", cleaning);
         req.setAttribute("maintenanceCount", maintenance);
         req.setAttribute("totalCount", allRooms.size());
 
-        // 5.3. Giữ lại giá trị vừa filter để hiển thị lại trên Form (Selected / Value)
+        // 5.3. Giá»¯ láº¡i giÃ¡ trá»‹ vá»«a filter Ä‘á»ƒ hiá»ƒn thá»‹ láº¡i trÃªn Form (Selected / Value)
         req.setAttribute("currentSearch", req.getParameter("search"));
         req.setAttribute("currentStatus", (status == null || status.isEmpty()) ? "ALL" : status);
         req.setAttribute("currentFloor", req.getParameter("floor"));
         req.setAttribute("currentRoomTypeId", req.getParameter("roomTypeId"));
 
-        // Chuyển tiếp tới trang JSP giao diện
+        // Chuyá»ƒn tiáº¿p tá»›i trang JSP giao diá»‡n
         req.getRequestDispatcher("/WEB-INF/views/reception/room-map.jsp").forward(req, resp);
     }
 
     /**
-     * Hàm phụ trợ chuyển đổi String sang Integer an toàn, tránh văng lỗi NumberFormatException
+     * HÃ m phá»¥ trá»£ chuyá»ƒn Ä‘á»•i String sang Integer an toÃ n, trÃ¡nh vÄƒng lá»—i NumberFormatException
      */
     private Integer parseIntSafely(String value) {
         if (value == null || value.trim().isEmpty()) {

@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDao {
     private static final String FIND_BY_EMAIL = """
@@ -49,6 +51,141 @@ public class UserDao {
                     return Optional.of(user);
                 }
             }
+        }
+    }
+
+    public List<User> findAll(String keyword, String roleName, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+                SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                       a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+                FROM accounts a
+                INNER JOIN roles r ON r.id = a.role_id
+                WHERE 1 = 1
+                """);
+        List<String> values = new ArrayList<>();
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (LOWER(a.full_name) LIKE ? OR LOWER(a.email) LIKE ? OR a.phone LIKE ?) ");
+            String like = "%" + keyword.trim().toLowerCase(java.util.Locale.ROOT) + "%";
+            values.add(like);
+            values.add(like);
+            values.add("%" + keyword.trim() + "%");
+        }
+        if (roleName != null && !roleName.isBlank()) {
+            sql.append(" AND r.name = ? ");
+            values.add(roleName.trim());
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND a.status = ? ");
+            values.add(status.trim());
+        }
+        sql.append(" ORDER BY a.created_at DESC, a.id DESC");
+
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < values.size(); i++) {
+                statement.setString(i + 1, values.get(i));
+            }
+            try (ResultSet rs = statement.executeQuery()) {
+                List<User> users = new ArrayList<>();
+                while (rs.next()) {
+                    users.add(mapUser(rs));
+                }
+                return users;
+            }
+        }
+    }
+
+    public Optional<User> findById(long id) throws SQLException {
+        String sql = """
+                SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                       a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+                FROM accounts a
+                INNER JOIN roles r ON r.id = a.role_id
+                WHERE a.id = ?
+                """;
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, id);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? Optional.of(mapUser(rs)) : Optional.empty();
+            }
+        }
+    }
+
+    public long createAccount(String fullName, String email, String phone, long roleId,
+                              String status, String passwordHash) throws SQLException {
+        String sql = """
+                INSERT INTO accounts (role_id, full_name, phone, email, password, status)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """;
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setLong(1, roleId);
+            statement.setString(2, fullName);
+            statement.setString(3, phone);
+            statement.setString(4, email);
+            statement.setString(5, passwordHash);
+            statement.setString(6, status);
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getLong(1);
+                }
+            }
+        }
+        throw new SQLException("Cannot create account");
+    }
+
+    public void updateAccount(long id, String fullName, String email, String phone,
+                              long roleId, String status) throws SQLException {
+        String sql = """
+                UPDATE accounts
+                SET role_id = ?, full_name = ?, phone = ?, email = ?, status = ?
+                WHERE id = ?
+                """;
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, roleId);
+            statement.setString(2, fullName);
+            statement.setString(3, phone);
+            statement.setString(4, email);
+            statement.setString(5, status);
+            statement.setLong(6, id);
+            if (statement.executeUpdate() == 0) {
+                throw new SQLException("Account not found");
+            }
+        }
+    }
+
+    public void updateStatus(long id, String status) throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE accounts SET status = ? WHERE id = ?")) {
+            statement.setString(1, status);
+            statement.setLong(2, id);
+            if (statement.executeUpdate() == 0) {
+                throw new SQLException("Account not found");
+            }
+        }
+    }
+
+    public void updatePassword(long id, String passwordHash) throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE accounts SET password = ? WHERE id = ?")) {
+            statement.setString(1, passwordHash);
+            statement.setLong(2, id);
+            if (statement.executeUpdate() == 0) {
+                throw new SQLException("Account not found");
+            }
+        }
+    }
+
+    public void deleteAccount(long id) throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement("DELETE FROM accounts WHERE id = ?")) {
+            statement.setLong(1, id);
+            statement.executeUpdate();
         }
     }
 
@@ -186,5 +323,24 @@ public class UserDao {
                 if (statement.executeUpdate() == 0) throw new SQLException(error);
             }
         }
+    }
+
+    private User mapUser(ResultSet resultSet) throws SQLException {
+        User user = new User();
+        user.setUserId(resultSet.getInt("id"));
+        user.setFullName(resultSet.getString("full_name"));
+        user.setEmail(resultSet.getString("email"));
+        user.setPhone(resultSet.getString("phone"));
+        user.setPasswordHash(resultSet.getString("password"));
+        user.setRoleId(resultSet.getInt("role_id"));
+        user.setRoleName(resultSet.getString("role_name"));
+        user.setStatus(resultSet.getString("status"));
+        user.setCreatedAt(resultSet.getTimestamp("created_at"));
+        try {
+            user.setUpdatedAt(resultSet.getTimestamp("updated_at"));
+        } catch (SQLException ignored) {
+            // Some legacy queries do not select updated_at.
+        }
+        return user;
     }
 }

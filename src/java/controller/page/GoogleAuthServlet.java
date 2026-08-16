@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 
 @WebServlet(urlPatterns = {"/auth/google", "/auth/google/callback"})
 public class GoogleAuthServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private static final String AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String TOKEN = "https://oauth2.googleapis.com/token";
     private static final String USER_INFO = "https://openidconnect.googleapis.com/v1/userinfo";
@@ -32,7 +33,7 @@ public class GoogleAuthServlet extends HttpServlet {
             if ("/auth/google".equals(request.getServletPath())) start(request, response);
             else callback(request, response);
         } catch (Exception ex) {
-            getServletContext().log("Google Sign-In thất bại", ex);
+            getServletContext().log("Google Sign-In tháº¥t báº¡i", ex);
             response.sendRedirect(request.getContextPath() + "/login?oauthError=1");
         }
     }
@@ -53,7 +54,7 @@ public class GoogleAuthServlet extends HttpServlet {
         String actual = request.getParameter("state");
         if (expected == null || actual == null || !java.security.MessageDigest.isEqual(
                 expected.getBytes(StandardCharsets.UTF_8), actual.getBytes(StandardCharsets.UTF_8))) {
-            throw new SecurityException("OAuth state không hợp lệ");
+            throw new SecurityException("OAuth state khÃ´ng há»£p lá»‡");
         }
         session.removeAttribute("googleOauthState");
         String form = "code=" + enc(request.getParameter("code"))
@@ -69,7 +70,7 @@ public class GoogleAuthServlet extends HttpServlet {
                 .header("Authorization", "Bearer " + accessToken).GET().build(), HttpResponse.BodyHandlers.ofString());
         if (profileResponse.statusCode() != 200) throw new IOException("Google userinfo HTTP " + profileResponse.statusCode());
         String email = jsonString(profileResponse.body(), "email");
-        if (!jsonBoolean(profileResponse.body(), "email_verified")) throw new SecurityException("Email Google chưa xác minh");
+        if (!jsonBoolean(profileResponse.body(), "email_verified")) throw new SecurityException("Email Google chÆ°a xÃ¡c minh");
         User user = userService.loginWithGoogle(jsonString(profileResponse.body(), "name"), email);
         user.setPasswordHash(null);
         session.invalidate();
@@ -88,12 +89,12 @@ public class GoogleAuthServlet extends HttpServlet {
     private static String enc(String value) { return URLEncoder.encode(value, StandardCharsets.UTF_8); }
     private static String required(String key) {
         String value = System.getenv(key);
-        if (value == null || value.isBlank()) throw new IllegalStateException("Thiếu biến môi trường " + key);
+        if (value == null || value.isBlank()) throw new IllegalStateException("Thiáº¿u biáº¿n mÃ´i trÆ°á»ng " + key);
         return value;
     }
     private static String jsonString(String json, String key) {
         Matcher matcher = Pattern.compile("\\\"" + Pattern.quote(key) + "\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"").matcher(json);
-        if (!matcher.find()) throw new IllegalArgumentException("Thiếu JSON field " + key);
+        if (!matcher.find()) throw new IllegalArgumentException("Thiáº¿u JSON field " + key);
         return matcher.group(1).replace("\\\"", "\"").replace("\\\\", "\\");
     }
     private static boolean jsonBoolean(String json, String key) {
@@ -101,3 +102,4 @@ public class GoogleAuthServlet extends HttpServlet {
         return matcher.find() && Boolean.parseBoolean(matcher.group(1));
     }
 }
+

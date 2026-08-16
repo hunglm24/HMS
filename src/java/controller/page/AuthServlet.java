@@ -16,6 +16,7 @@ import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/login", "/register", "/forgot-password", "/reset-password", "/logout"})
 public class AuthServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private UserService userService;
 
     @Override
@@ -82,12 +83,12 @@ public class AuthServlet extends HttpServlet {
         try {
             Optional<User> authenticated = userService.authenticate(email, password);
             if (authenticated.isEmpty()) {
-                request.setAttribute("error", "Email, mật khẩu không đúng hoặc tài khoản đã bị khóa.");
+                request.setAttribute("error", "Email, máº­t kháº©u khÃ´ng Ä‘Ãºng hoáº·c tÃ i khoáº£n Ä‘Ã£ bá»‹ khÃ³a.");
                 request.getRequestDispatcher("/WEB-INF/views/public/login.jsp").forward(request, response);
                 return;
             }
 
-            // Chống session fixation: bỏ session cũ trước khi tạo session đăng nhập.
+            // Chá»‘ng session fixation: bá» session cÅ© trÆ°á»›c khi táº¡o session Ä‘Äƒng nháº­p.
             HttpSession oldSession = request.getSession(false);
             String returnUrl = oldSession == null ? null
                     : (String) oldSession.getAttribute("loginReturnUrl");
@@ -103,8 +104,8 @@ public class AuthServlet extends HttpServlet {
             String defaultUrl = request.getContextPath() + "/";
             response.sendRedirect(returnUrl == null ? defaultUrl : returnUrl);
         } catch (SQLException ex) {
-            getServletContext().log("Đăng nhập thất bại do lỗi cơ sở dữ liệu", ex);
-            request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
+            getServletContext().log("ÄÄƒng nháº­p tháº¥t báº¡i do lá»—i cÆ¡ sá»Ÿ dá»¯ liá»‡u", ex);
+            request.setAttribute("error", "Há»‡ thá»‘ng Ä‘ang báº­n. Vui lÃ²ng thá»­ láº¡i sau.");
             request.getRequestDispatcher("/WEB-INF/views/public/login.jsp").forward(request, response);
         }
     }
@@ -122,11 +123,11 @@ public class AuthServlet extends HttpServlet {
                         + java.net.URLEncoder.encode(token.get(), java.nio.charset.StandardCharsets.UTF_8);
                 MailUtil.sendPasswordReset(email.trim(), resetUrl);
             }
-            request.setAttribute("success", "Nếu email tồn tại, hệ thống đã gửi liên kết đặt lại mật khẩu.");
+            request.setAttribute("success", "Náº¿u email tá»“n táº¡i, há»‡ thá»‘ng Ä‘Ã£ gá»­i liÃªn káº¿t Ä‘áº·t láº¡i máº­t kháº©u.");
             request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
         } catch (SQLException | IllegalStateException | IOException ex) {
-            getServletContext().log("Gửi email đặt lại mật khẩu thất bại", ex);
-            request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
+            getServletContext().log("Gá»­i email Ä‘áº·t láº¡i máº­t kháº©u tháº¥t báº¡i", ex);
+            request.setAttribute("error", "Há»‡ thá»‘ng Ä‘ang báº­n. Vui lÃ²ng thá»­ láº¡i sau.");
             request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
         }
     }
@@ -142,8 +143,8 @@ public class AuthServlet extends HttpServlet {
             request.setAttribute("token", request.getParameter("token"));
             request.getRequestDispatcher("/WEB-INF/views/public/reset-password.jsp").forward(request, response);
         } catch (SQLException ex) {
-            getServletContext().log("Đặt lại mật khẩu thất bại", ex);
-            request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
+            getServletContext().log("Äáº·t láº¡i máº­t kháº©u tháº¥t báº¡i", ex);
+            request.setAttribute("error", "Há»‡ thá»‘ng Ä‘ang báº­n. Vui lÃ²ng thá»­ láº¡i sau.");
             request.getRequestDispatcher("/WEB-INF/views/public/reset-password.jsp").forward(request, response);
         }
     }
@@ -173,8 +174,8 @@ public class AuthServlet extends HttpServlet {
             request.setAttribute("error", ex.getMessage());
             request.getRequestDispatcher("/WEB-INF/views/public/register.jsp").forward(request, response);
         } catch (SQLException ex) {
-            getServletContext().log("Đăng ký thất bại do lỗi cơ sở dữ liệu", ex);
-            request.setAttribute("error", "Không thể tạo tài khoản. Vui lòng thử lại sau.");
+            getServletContext().log("ÄÄƒng kÃ½ tháº¥t báº¡i do lá»—i cÆ¡ sá»Ÿ dá»¯ liá»‡u", ex);
+            request.setAttribute("error", "KhÃ´ng thá»ƒ táº¡o tÃ i khoáº£n. Vui lÃ²ng thá»­ láº¡i sau.");
             request.getRequestDispatcher("/WEB-INF/views/public/register.jsp").forward(request, response);
         }
     }
@@ -184,7 +185,7 @@ public class AuthServlet extends HttpServlet {
         if (session != null) {
             session.invalidate();
         }
-        response.sendRedirect(request.getContextPath() + "/login?logout=1");
+        response.sendRedirect(request.getContextPath() + "/login");
     }
 
     private String validReturnUrl(HttpServletRequest request, String returnUrl) {
@@ -196,3 +197,4 @@ public class AuthServlet extends HttpServlet {
         return null;
     }
 }
+
