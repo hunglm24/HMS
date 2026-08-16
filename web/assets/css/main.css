@@ -54,6 +54,25 @@ p {
 a {
     color: var(--color-primary-600);
 }
+@import url("design-tokens.css");
+@import url("components.css");
+
+:root {
+    --header-blue: var(--color-primary-600);
+    --header-blue-dark: var(--color-primary-500);
+    --header-blue-surface: #1e4fd8;
+    --header-blue-border: #1d4ed8;
+    --header-text: #ffffff;
+    --header-muted: rgba(255, 255, 255, .78);
+    --header-border: var(--header-blue-border);
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; font-family: Inter, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--color-text-primary); background: var(--color-bg-base); }
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 2000; padding: 10px 14px; border-radius: 8px;
+    background: var(--color-text-primary); color: var(--color-text-inverse); transform: translateY(-150%); transition: transform .15s; }
+.skip-link:focus { transform: translateY(0); }
 
 .site-header {
     position: sticky;
@@ -64,6 +83,9 @@ a {
     border-bottom: 1px solid var(--color-border);
     box-shadow: var(--elevation-1);
     backdrop-filter: blur(10px);
+    background: var(--header-blue-surface);
+    border-bottom: 1px solid var(--header-border);
+    box-shadow: 0 4px 18px rgba(30, 79, 216, .18);
 }
 
 .header-container {
@@ -79,6 +101,9 @@ a {
 .brand { display: inline-flex; align-items: center; gap: var(--space-3); color: var(--color-text-primary); text-decoration: none; }
 .brand-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius-md);
     background: var(--color-primary-600); color: #fff; font-size: 22px; font-weight: 800; }
+.brand { display: inline-flex; align-items: center; gap: 11px; color: var(--header-text); text-decoration: none; }
+.brand-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 11px;
+    background: rgba(255, 255, 255, .18); color: #fff; font-size: 22px; font-weight: 800; }
 .brand-copy { display: grid; line-height: 1.05; }
 .brand-copy strong { font-size: 18px; letter-spacing: 0; }
 .brand-copy small { margin-top: 4px; color: var(--color-text-secondary); font-size: 11px; }
@@ -94,6 +119,17 @@ a {
 .dropdown-toggle { width: auto; margin: 0; padding: 10px 13px; border: 0; border-radius: var(--radius-md);
     background: transparent; color: #344054; font: inherit; font-weight: 600; cursor: pointer; }
 .dropdown-toggle:hover, .nav-dropdown.is-open .dropdown-toggle { background: var(--color-primary-100); color: var(--color-primary-600); }
+.main-nav { display: flex; align-items: center; gap: 8px; }
+.main-nav > a { padding: 10px 13px; border: 1px solid transparent; border-radius: 12px; color: #fff; font-weight: 600;
+    text-decoration: none; transition: background .18s, border-color .18s, color .18s; }
+.main-nav > a:hover { border-color: rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .14); color: #fff; }
+.main-nav > .nav-primary { border-color: #fff; background: #fff; color: var(--header-blue); box-shadow: var(--shadow-1); }
+.main-nav > .nav-primary:hover { border-color: #dbeafe; background: #dbeafe; color: var(--header-blue); }
+
+.nav-dropdown { position: relative; }
+.dropdown-toggle { width: auto; margin: 0; padding: 10px 13px; border: 1px solid transparent; border-radius: 12px;
+    background: transparent; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.dropdown-toggle:hover, .nav-dropdown.is-open .dropdown-toggle { border-color: rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .14); color: #fff; }
 .dropdown-toggle span { margin-left: 3px; font-size: 11px; }
 .dropdown-menu { display: none; position: absolute; top: calc(100% + 8px); left: 0; min-width: 220px;
     padding: 7px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: #fff;
@@ -114,6 +150,16 @@ a {
 .logout-form button:hover { background: var(--color-error-100); border-color: #fecaca; color: var(--color-error-700); }
 .nav-toggle { display: none; width: auto; margin: 0; padding: 8px 10px; border: 1px solid var(--color-border);
     border-radius: var(--radius-md); background: #fff; color: var(--color-text-primary); font-size: 21px; cursor: pointer; }
+.user-chip small { margin-top: 3px; color: var(--header-muted); font-size: 11px; }
+.user-avatar { color: #fff; font-size: 22px; }
+.logout-form { margin: 0; }
+.logout-form button { width: auto; margin: 0; padding: 9px 12px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 12px;
+    background: rgba(255, 255, 255, .12); color: #fff; box-shadow: var(--shadow-1); font: inherit; font-weight: 600; cursor: pointer;
+    transition: background .18s, border-color .18s, box-shadow .18s, color .18s, transform .18s; }
+.logout-form button:hover { border-color: var(--color-error-600); background: var(--color-error-100); color: var(--color-error-600);
+    box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.nav-toggle { display: none; width: auto; margin: 0; padding: 8px 10px; border: 1px solid var(--header-border);
+    border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff; box-shadow: var(--shadow-1); font-size: 21px; cursor: pointer; }
 
 .page-container { width: min(var(--content-max), calc(100% - 48px)); margin: 0 auto; padding: var(--space-7) 0; }
 
@@ -197,6 +243,13 @@ a {
     margin: var(--space-5) 0 0;
     text-align: center;
 }
+.action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-top: 28px; }
+.action-card { display: flex; min-height: 130px; padding: 20px; flex-direction: column; justify-content: space-between;
+    border: 1px solid var(--header-border); border-radius: 13px; background: #fff; color: var(--color-text-primary);
+    text-decoration: none; box-shadow: 0 7px 20px rgba(20, 38, 70, .06); transition: transform .18s, box-shadow .18s; }
+.action-card:hover { transform: translateY(-2px); box-shadow: 0 11px 26px rgba(20, 38, 70, .11); }
+.action-card strong { color: var(--header-blue); font-size: 17px; }
+.action-card span { margin-top: 8px; color: var(--header-muted); font-size: 14px; line-height: 1.45; }
 
 @media (max-width: 720px) {
     .header-container { width: min(100% - 28px, var(--content-max)); min-height: 62px; flex-wrap: wrap; }
