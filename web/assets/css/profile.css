@@ -21,3 +21,12 @@
     .profile-actions { flex-direction: column-reverse; }
     .profile-actions .button { width: 100%; }
 }
+
+.profile-layout { grid-template-columns: 240px minmax(0, 680px); gap: 28px; }
+.profile-summary, .profile-card { border-radius: var(--radius-lg); box-shadow: var(--elevation-1); }
+.profile-summary { padding: 28px 20px; }
+.profile-card { padding: 28px; }
+@media (max-width: 767px) {
+    .profile-layout { grid-template-columns: 1fr; gap: 16px; }
+    .profile-card { padding: 20px; }
+}

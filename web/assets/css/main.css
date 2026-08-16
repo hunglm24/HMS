@@ -1,12 +1,13 @@
-@import url("./design-tokens.css");
-@import url("./components.css");
-@import url("./layout.css");
+@import url("./design-tokens.css?v=20260816-4");
+@import url("./components.css?v=20260816-4");
+@import url("./layout.css?v=20260816-4");
 
 * { box-sizing: border-box; }
 
 html {
     min-height: 100%;
     background: var(--color-bg-base);
+    overflow-x: clip;
 }
 
 body {
@@ -16,6 +17,7 @@ body {
     color: var(--color-text-primary);
     font: 400 var(--text-body) / var(--line-body) var(--font-sans);
     text-rendering: optimizeLegibility;
+    overflow-x: clip;
 }
 
 h1,
@@ -70,6 +72,123 @@ a {
 * { box-sizing: border-box; }
 
 body { margin: 0; font-family: Inter, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--color-text-primary); background: var(--color-bg-base); }
+body { display: flex; flex-direction: column; }
+body > main { width: 100%; flex: 1 0 auto; }
+
+/* Safe page edges for full-width public sections. */
+.public-page > .hero-section {
+    width: 100vw;
+    margin-right: calc(50% - 50vw);
+    margin-left: calc(50% - 50vw);
+    padding-right: max(32px, calc((100vw - 1180px) / 2));
+    padding-left: max(32px, calc((100vw - 1180px) / 2));
+}
+
+.hero-content {
+    width: min(720px, 100%);
+    min-width: 0;
+}
+
+.hero-content h1 {
+    max-width: 680px;
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 720px) {
+    .public-page > .hero-section {
+        padding-right: 20px;
+        padding-left: 20px;
+    }
+
+    .hero-content h1 {
+        font-size: clamp(34px, 10vw, 42px);
+        line-height: 1.12;
+    }
+}
+
+/* Light-blue header shared by every screen. */
+.site-header {
+    background: linear-gradient(135deg, #dbeafe 0%, #eaf4ff 100%);
+    border-bottom-color: #bfdbfe;
+    box-shadow: 0 4px 16px rgba(30, 79, 216, .12);
+}
+
+.brand,
+.brand-copy strong {
+    color: #173b8f;
+}
+
+.brand-copy small {
+    color: #5d74a4;
+}
+
+.brand-mark {
+    border: 1px solid rgba(30, 79, 216, .18);
+    background: #1e4fd8;
+    color: #fff;
+}
+
+.main-nav > a,
+.dropdown-toggle,
+.main-nav > .nav-current,
+.user-chip,
+.user-chip strong {
+    color: #173b8f;
+}
+
+.main-nav > a:hover,
+.dropdown-toggle:hover,
+.nav-dropdown.is-open .dropdown-toggle,
+.main-nav > .nav-current {
+    border-color: rgba(30, 79, 216, .18);
+    background: rgba(255, 255, 255, .65);
+    color: #1e4fd8;
+}
+
+.main-nav > .nav-primary,
+.main-nav > .nav-current.nav-primary {
+    border-color: #1e4fd8;
+    background: #1e4fd8;
+    color: #fff;
+}
+
+.main-nav > .nav-primary:hover {
+    border-color: #3b6bf0;
+    background: #3b6bf0;
+    color: #fff;
+}
+
+.user-chip {
+    border-left-color: rgba(30, 79, 216, .2);
+}
+
+.user-chip small {
+    color: #6478a2;
+}
+
+.user-avatar {
+    background: #fff;
+    color: #1e4fd8;
+}
+
+.logout-form button,
+.nav-toggle {
+    border-color: rgba(30, 79, 216, .25);
+    background: rgba(255, 255, 255, .7);
+    color: #173b8f;
+}
+
+.logout-form button:hover {
+    border-color: #dc2626;
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+@media (max-width: 720px) {
+    .user-chip {
+        border-top-color: rgba(30, 79, 216, .2);
+    }
+}
 .skip-link { position: fixed; top: 8px; left: 8px; z-index: 2000; padding: 10px 14px; border-radius: 8px;
     background: var(--color-text-primary); color: var(--color-text-inverse); transform: translateY(-150%); transition: transform .15s; }
 .skip-link:focus { transform: translateY(0); }
@@ -268,4 +387,268 @@ body { margin: 0; font-family: Inter, -apple-system, "Segoe UI", Roboto, sans-se
     h1 { font-size: 28px; line-height: 36px; }
     .auth-content .card { padding: var(--space-5); }
     .form-actions { grid-template-columns: 1fr; }
+}
+
+/* Shared visual balance across public and internal screens. */
+main {
+    min-width: 0;
+}
+
+.page-container,
+.public-page,
+.app-shell,
+.dashboard-page {
+    width: min(1180px, calc(100% - 48px));
+}
+
+.page-container,
+.public-page {
+    padding-top: 32px;
+    padding-bottom: 48px;
+}
+
+.section-head {
+    align-items: center;
+    margin: 0 0 24px;
+}
+
+.section-head + * {
+    margin-top: 0;
+}
+
+.kpi-grid,
+.feature-grid,
+.room-card-grid,
+.dashboard-grid,
+.action-grid {
+    gap: 20px;
+}
+
+.card,
+.panel,
+.metric-card,
+.feature-card,
+.preview-card,
+.empty-card,
+.action-card,
+.room-showcase-card,
+.toolbar-card,
+.form-panel,
+.placeholder-table {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elevation-1);
+}
+
+.metric-card,
+.feature-card,
+.preview-card,
+.empty-card,
+.action-card,
+.form-panel {
+    padding: 24px;
+}
+
+.preview-card,
+.feature-card,
+.action-card,
+.room-showcase-card {
+    height: 100%;
+}
+
+.preview-card > :last-child,
+.feature-card > :last-child,
+.empty-card > :last-child,
+.action-card > :last-child {
+    margin-bottom: 0;
+}
+
+.action-card span {
+    color: var(--color-text-secondary);
+}
+
+.btn,
+.button,
+button,
+input[type="submit"],
+input[type="button"],
+.secondary-action {
+    min-height: 42px;
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+}
+
+input,
+select,
+textarea,
+.form-control {
+    min-height: 42px;
+    border-radius: var(--radius-sm);
+}
+
+form label {
+    line-height: 1.4;
+}
+
+.form-grid {
+    gap: 20px;
+}
+
+.form-actions,
+.placeholder-actions {
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.placeholder-table,
+.table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-surface);
+}
+
+.placeholder-table table,
+.table-wrap table {
+    min-width: 680px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+th,
+td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+@media (max-width: 980px) {
+    .page-container,
+    .public-page,
+    .app-shell,
+    .dashboard-page {
+        width: min(100% - 32px, 1180px);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .page-container,
+    .public-page,
+    .app-shell,
+    .dashboard-page {
+        width: min(100% - 24px, 1180px);
+        padding-top: 24px;
+        padding-bottom: 32px;
+    }
+
+    .section-head {
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    .section-head .btn,
+    .section-head button,
+    .form-actions > *,
+    .placeholder-actions > * {
+        width: 100%;
+    }
+
+    .dashboard-grid,
+    .kpi-grid,
+    .feature-grid,
+    .room-card-grid,
+    .action-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .metric-card,
+    .feature-card,
+    .preview-card,
+    .empty-card,
+    .action-card,
+    .form-panel,
+    .card,
+    .panel {
+        padding: 18px;
+    }
+
+    h1 {
+        font-size: 26px;
+        line-height: 34px;
+    }
+
+    h2 {
+        font-size: 22px;
+        line-height: 30px;
+    }
+}
+
+/* Final header theme override. */
+.site-header {
+    background: linear-gradient(135deg, #dbeafe 0%, #eaf4ff 100%);
+    border-bottom-color: #bfdbfe;
+    box-shadow: 0 4px 16px rgba(30, 79, 216, .12);
+}
+
+.site-header .brand,
+.site-header .brand-copy strong,
+.site-header .main-nav > a,
+.site-header .dropdown-toggle,
+.site-header .main-nav > .nav-current,
+.site-header .user-chip,
+.site-header .user-chip strong {
+    color: #173b8f;
+}
+
+.site-header .brand-copy small,
+.site-header .user-chip small {
+    color: #6478a2;
+}
+
+.site-header .brand-mark {
+    border-color: rgba(30, 79, 216, .18);
+    background: #1e4fd8;
+    color: #fff;
+}
+
+.site-header .main-nav > a:hover,
+.site-header .dropdown-toggle:hover,
+.site-header .nav-dropdown.is-open .dropdown-toggle,
+.site-header .main-nav > .nav-current {
+    border-color: rgba(30, 79, 216, .2);
+    background: rgba(255, 255, 255, .72);
+    color: #1e4fd8;
+}
+
+.site-header .main-nav > .nav-primary,
+.site-header .main-nav > .nav-current.nav-primary {
+    border-color: #1e4fd8;
+    background: #1e4fd8;
+    color: #fff;
+}
+
+.site-header .main-nav > .nav-primary:hover {
+    border-color: #3b6bf0;
+    background: #3b6bf0;
+    color: #fff;
+}
+
+.site-header .user-chip {
+    border-left-color: rgba(30, 79, 216, .2);
+}
+
+.site-header .user-avatar {
+    background: #fff;
+    color: #1e4fd8;
+}
+
+.site-header .logout-form button,
+.site-header .nav-toggle {
+    border-color: rgba(30, 79, 216, .25);
+    background: rgba(255, 255, 255, .72);
+    color: #173b8f;
 }

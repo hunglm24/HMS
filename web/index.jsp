@@ -21,7 +21,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />

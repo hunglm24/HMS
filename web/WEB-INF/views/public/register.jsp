@@ -15,8 +15,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đăng ký | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css?v=20260816-4">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -48,7 +48,7 @@
         <h1 id="auth-title">Đăng ký</h1>
         <p class="auth-form-note">Tạo tài khoản để theo dõi và quản lý đặt phòng.</p>
         <% if (request.getAttribute("error") != null) { %>
-            <div class="auth-message error" role="alert"><%= h(request.getAttribute("error")) %></div>
+            <div class="auth-message error" role="alert"><%= escapeAttr(request.getAttribute("error")) %></div>
         <% } %>
 
         <form class="auth-form" method="post" action="${pageContext.request.contextPath}/register">

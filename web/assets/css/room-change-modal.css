@@ -265,3 +265,11 @@
         min-width: 0;
     }
 }
+
+.room-change-modal { border-radius: var(--radius-lg); }
+.room-change-modal__header { padding: 22px 24px; }
+.room-change-modal__close { border-radius: var(--radius-full); }
+@media (max-width: 720px) {
+    .room-change-modal { width: calc(100vw - 24px); max-height: calc(100vh - 24px); }
+    .room-change-modal__header { padding: 18px; }
+}
