@@ -3,6 +3,7 @@ package controller.page;
 import dao.RoomDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,9 +28,19 @@ public class RoomMapServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        
-        // BƯỚC 1: LẤY TẤT CẢ DỮ LIỆU TỪ DATABASE
-        List<Room> allRooms = roomDao.findAllWithRoomTypeName();
+        List<Room> allRooms = roomDao.findAllWithRoomTypeNameAndBookingInfo();
+
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            Object flashMessage = session.getAttribute("flashMessage");
+            Object flashType = session.getAttribute("flashType");
+            if (flashMessage != null) {
+                req.setAttribute("flashMessage", flashMessage);
+                req.setAttribute("flashType", flashType == null ? "success" : flashType);
+                session.removeAttribute("flashMessage");
+                session.removeAttribute("flashType");
+            }
+        }
 
         // BƯỚC 2: ĐỌC VÀ CHUẨN HÓA CÁC THAM SỐ FILTER TỪ GIAO DIỆN (URL / Form)
         String search = req.getParameter("search");           // Ô tìm kiếm từ khóa
