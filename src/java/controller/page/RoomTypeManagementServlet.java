@@ -19,51 +19,51 @@ public class RoomTypeManagementServlet extends HttpServlet {
 
     private RoomTypeDao roomTypeDao;
 
-    // HÃ m init cháº¡y má»™t láº§n khi Servlet Ä‘Æ°á»£c khá»Ÿi táº¡o
+    // This method runs once when the servlet is initialized.
     @Override
     public void init() throws ServletException {
-        roomTypeDao = new RoomTypeDao(); // Khá»Ÿi táº¡o DAO Ä‘á»ƒ gá»i cÃ¡c hÃ m tÆ°Æ¡ng tÃ¡c database
+        roomTypeDao = new RoomTypeDao(); // Initialize the DAO for database operations.
     }
 
-    // Xá»­ lÃ½ cÃ¡c request dáº¡ng GET (vÃ­ dá»¥: gÃµ URL lÃªn trÃ¬nh duyá»‡t hoáº·c click link)
+    // Handle GET requests, such as opening the page in a browser or clicking a link.
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String path = req.getServletPath(); // Láº¥y Ä‘Æ°á»ng dáº«n hiá»‡n táº¡i (vÃ­ dá»¥: "/manager/room-types")
-        
+        String path = req.getServletPath(); // Get the current request path.
+
         if ("/manager/room-types".equals(path)) {
-            // Láº¥y toÃ n bá»™ danh sÃ¡ch loáº¡i phÃ²ng tá»« database
+            // Load the full list of room types from the database.
             List<RoomType> roomTypes = roomTypeDao.findAll();
-            // Gá»­i dá»¯ liá»‡u nÃ y sang cho JSP hiá»ƒn thá»‹ thÃ´ng qua request attribute
+            // Pass the data to the JSP through a request attribute.
             req.setAttribute("roomTypes", roomTypes);
-            // Äiá»u hÆ°á»›ng (forward) tá»›i trang giao diá»‡n JSP
+            // Forward to the JSP view.
             req.getRequestDispatcher("/WEB-INF/views/manager/room-types.jsp").forward(req, resp);
-            
+
         } else if ("/manager/room-types/delete".equals(path)) {
-            // TÃ­nh nÄƒng xÃ³a loáº¡i phÃ²ng
-            String idParam = req.getParameter("id"); // Láº¥y ID cáº§n xÃ³a tá»« URL (vÃ­ dá»¥: ?id=5)
+            // Delete room type functionality.
+            String idParam = req.getParameter("id"); // Read the ID to delete from the URL.
             if (idParam != null && !idParam.trim().isEmpty()) {
                 long id = Long.parseLong(idParam);
                 roomTypeDao.delete(id);
-                // LÆ°u cÃ¢u thÃ´ng bÃ¡o thÃ nh cÃ´ng vÃ o session Ä‘á»ƒ hiá»ƒn thá»‹ Toast
-                req.getSession().setAttribute("toastMessage", "ÄÃ£ xÃ³a loáº¡i phÃ²ng thÃ nh cÃ´ng");
+                // Store a success message in the session for Toast display.
+                req.getSession().setAttribute("toastMessage", "Đã xóa loại phòng thành công");
                 req.getSession().setAttribute("toastType", "success");
             }
-            // Chuyá»ƒn hÆ°á»›ng láº¡i trang danh sÃ¡ch sau khi xÃ³a xong
+            // Redirect back to the list page after deletion.
             resp.sendRedirect(req.getContextPath() + "/manager/room-types");
-            
+
         } else {
-            // Náº¿u truy cáº­p sai URL thÃ¬ bÃ¡o lá»—i 404
+            // Return 404 if the URL is invalid.
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
-    // Xá»­ lÃ½ cÃ¡c request dáº¡ng POST (thÆ°á»ng Ä‘áº¿n tá»« Form submit)
+    // Handle POST requests, typically from form submissions.
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
-        
+
         if ("/manager/room-types/save".equals(path)) {
-            // Láº¥y táº¥t cáº£ thÃ´ng tin ngÆ°á»i dÃ¹ng nháº­p vÃ o tá»« form thÃªm/sá»­a
+            // Read all values entered by the user in the add/edit form.
             String idStr = req.getParameter("id");
             String name = req.getParameter("name");
             String description = req.getParameter("description");
@@ -71,38 +71,37 @@ public class RoomTypeManagementServlet extends HttpServlet {
             String basePriceStr = req.getParameter("basePrice");
             String status = req.getParameter("status");
 
-            // Táº¡o má»™t Ä‘á»‘i tÆ°á»£ng RoomType má»›i vÃ  nhÃ©t dá»¯ liá»‡u vÃ o
+            // Create a new RoomType object and populate it.
             RoomType rt = new RoomType();
             rt.setName(name);
             rt.setDescription(description);
-            rt.setCapacity(Integer.parseInt(capacityStr)); // Chuyá»ƒn chuá»—i thÃ nh sá»‘ nguyÃªn
-            rt.setBasePrice(new BigDecimal(basePriceStr)); // Chuyá»ƒn chuá»—i thÃ nh kiá»ƒu tiá»n tá»‡
+            rt.setCapacity(Integer.parseInt(capacityStr)); // Convert the value to integer.
+            rt.setBasePrice(new BigDecimal(basePriceStr)); // Convert the value to decimal.
             rt.setStatus(status);
 
             boolean success = false;
-            // Náº¿u cÃ³ ID truyá»n lÃªn thÃ¬ nghÄ©a lÃ  mÃ¬nh Ä‘ang Sá»¬A, náº¿u khÃ´ng cÃ³ ID lÃ  THÃŠM Má»šI
+            // If an ID is provided, update the record; otherwise insert a new one.
             if (idStr != null && !idStr.trim().isEmpty()) {
                 rt.setId(Long.parseLong(idStr));
-                success = roomTypeDao.update(rt); // Cáº­p nháº­t
+                success = roomTypeDao.update(rt); // Update.
             } else {
-                success = roomTypeDao.insert(rt); // ThÃªm má»›i
+                success = roomTypeDao.insert(rt); // Insert.
             }
 
-            // Ghi nháº­n thÃ´ng bÃ¡o Ä‘á»ƒ hiá»ƒn thá»‹ trÃªn giao diá»‡n
+            // Store a message so the JSP can show a toast notification.
             if (success) {
-                req.getSession().setAttribute("toastMessage", "LÆ°u thÃ´ng tin loáº¡i phÃ²ng thÃ nh cÃ´ng");
+                req.getSession().setAttribute("toastMessage", "Lưu thông tin loại phòng thành công");
                 req.getSession().setAttribute("toastType", "success");
             } else {
-                req.getSession().setAttribute("toastMessage", "CÃ³ lá»—i xáº£y ra khi lÆ°u loáº¡i phÃ²ng");
+                req.getSession().setAttribute("toastMessage", "Có lỗi xảy ra khi lưu loại phòng");
                 req.getSession().setAttribute("toastType", "error");
             }
-            
-            // Xá»­ lÃ½ xong thÃ¬ redirect (chuyá»ƒn hÆ°á»›ng) vá» láº¡i danh sÃ¡ch
+
+            // Redirect back to the list page after processing.
             resp.sendRedirect(req.getContextPath() + "/manager/room-types");
-            
+
         } else {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 }
-
