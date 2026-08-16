@@ -14,6 +14,7 @@ import java.sql.SQLException;
 
 @WebServlet(urlPatterns = {"/profile", "/change-password"})
 public class AccountServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private UserService userService;
 
     @Override
@@ -36,17 +37,17 @@ public class AccountServlet extends HttpServlet {
         try {
             if ("/profile".equals(request.getServletPath())) {
                 userService.updateProfile(user, request.getParameter("fullName"), request.getParameter("phone"));
-                request.setAttribute("success", "Cập nhật hồ sơ thành công.");
+                request.setAttribute("success", "Cáº­p nháº­t há»“ sÆ¡ thÃ nh cÃ´ng.");
             } else {
                 userService.changePassword(user, request.getParameter("currentPassword"),
                         request.getParameter("password"), request.getParameter("confirmPassword"));
-                request.setAttribute("success", "Đổi mật khẩu thành công.");
+                request.setAttribute("success", "Äá»•i máº­t kháº©u thÃ nh cÃ´ng.");
             }
         } catch (IllegalArgumentException ex) {
             request.setAttribute("error", ex.getMessage());
         } catch (SQLException ex) {
-            getServletContext().log("Cập nhật tài khoản thất bại", ex);
-            request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
+            getServletContext().log("Cáº­p nháº­t tÃ i khoáº£n tháº¥t báº¡i", ex);
+            request.setAttribute("error", "Há»‡ thá»‘ng Ä‘ang báº­n. Vui lÃ²ng thá»­ láº¡i sau.");
         }
         forward(request, response);
     }
@@ -66,3 +67,4 @@ public class AccountServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/public/" + view).forward(request, response);
     }
 }
+

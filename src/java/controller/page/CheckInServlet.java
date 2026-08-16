@@ -16,6 +16,7 @@ import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/reception/check-in"})
 public class CheckInServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private CheckInService checkInService;
 
     @Override
@@ -44,7 +45,7 @@ public class CheckInServlet extends HttpServlet {
             request.setAttribute("selectedBooking", findSelectedBooking(bookingId).orElse(null));
             request.getRequestDispatcher("/WEB-INF/views/reception/check-in.jsp").forward(request, response);
         } catch (SQLException ex) {
-            getServletContext().log("KhÃ´ng thá»ƒ táº£i danh sÃ¡ch booking check-in", ex);
+            getServletContext().log("KhÃƒÂ´ng thÃ¡Â»Æ’ tÃ¡ÂºÂ£i danh sÃƒÂ¡ch booking check-in", ex);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
@@ -66,3 +67,4 @@ public class CheckInServlet extends HttpServlet {
         return parsed > 0 ? parsed : null;
     }
 }
+

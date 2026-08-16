@@ -1,7 +1,2 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<Context docBase="E:/FU Learning/Sem 11.5/HMS/web" path="/HMS">
-  <Resources cacheMaxSize="10240">
-    <PostResources base="E:/FU Learning/Sem 11.5/HMS/web/WEB-INF/lib/mysql-connector-j-26.7.0.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/mysql-connector-j-26.7.0.jar"/>
-    <PreResources base="E:/FU Learning/Sem 11.5/HMS/out/production/HMS" className="org.apache.catalina.webresources.DirResourceSet" webAppMount="/WEB-INF/classes"/>
-  </Resources>
-</Context>
+<Context docBase="D:\SWP391\HMS\web" path="/HMS"/>

@@ -34,8 +34,4 @@
 .auth-message { margin: 16px 0 0; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
 .auth-message.error { color: #991b1b; background: #fee2e2; }
 .auth-message.success { color: #166534; background: #dcfce7; }
-.button-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.45);
-    border-top-color: #fff; border-radius: 50%; vertical-align: -3px; animation: auth-spin .7s linear infinite; }
-@keyframes auth-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .button-spinner { animation: none; } }
 @media (max-width: 575px) { .auth-page { align-items: start; padding-top: 24px; } .auth-card { padding: 20px; } }
