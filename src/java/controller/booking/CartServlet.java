@@ -15,7 +15,7 @@ public class CartServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
-        request.getRequestDispatcher("/WEB-INF/jsp/booking/cart.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/public/cart.jsp").forward(request, response);
     }
 
     @Override

@@ -1,4 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%!
+    private String h(Object value) {
+        if (value == null) return "";
+        return String.valueOf(value).replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
+    }
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -12,35 +19,39 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main id="main-content" class="auth-page">
     <section class="auth-card" aria-labelledby="auth-title">
-        <nav class="auth-tabs" aria-label="Tài khoản">
+        <nav class="auth-tabs" aria-label="Tai khoan">
             <a class="auth-tab" href="${pageContext.request.contextPath}/login">Đăng nhập</a>
-            <a class="auth-tab active" href="${pageContext.request.contextPath}/register" aria-current="page">Đăng ký</a>
+            <span class="auth-tab active" aria-current="page">Đăng ký</span>
         </nav>
         <h1 id="auth-title">Tạo tài khoản</h1>
-        <p class="auth-subtitle">Đăng ký để theo dõi và quản lý đặt phòng.</p>
+        <p class="auth-subtitle">Đăng ký để theo dõi và quản lý booking của bạn.</p>
+
         <% if (request.getAttribute("error") != null) { %>
-            <div class="auth-message error" role="alert"><%= request.getAttribute("error") %></div>
+            <div class="auth-message error" role="alert"><%= h(request.getAttribute("error")) %></div>
         <% } %>
+
         <form class="auth-form" method="post" action="${pageContext.request.contextPath}/register">
             <div class="auth-field">
                 <label for="fullName">Họ và tên</label>
-                <input id="fullName" name="fullName" maxlength="100" autocomplete="name" required>
+                <input id="fullName" name="fullName" maxlength="100" autocomplete="name"
+                       value="<%= h(request.getAttribute("fullName")) %>" required>
             </div>
             <div class="auth-field">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" maxlength="150" autocomplete="email" required>
+                <input id="email" name="email" type="email" maxlength="150" autocomplete="email"
+                       value="<%= h(request.getAttribute("email")) %>" required>
             </div>
             <div class="auth-field">
                 <label for="phone">Số điện thoại</label>
-                <input id="phone" name="phone" type="tel" maxlength="20" autocomplete="tel">
+                <input id="phone" name="phone" type="tel" maxlength="20" autocomplete="tel"
+                       value="<%= h(request.getAttribute("phone")) %>">
             </div>
             <div class="auth-field">
                 <label for="password">Mật khẩu</label>
                 <div class="password-wrap">
                     <input id="password" name="password" type="password" minlength="8" maxlength="255"
                            autocomplete="new-password" required>
-                    <button class="password-visibility" type="button" data-toggle-password="password"
-                            aria-label="Hiện mật khẩu">Hiện</button>
+                    <button class="password-visibility" type="button" data-toggle-password="password" aria-label="Hiện mật khẩu">Hiện</button>
                 </div>
             </div>
             <div class="auth-field">

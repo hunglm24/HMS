@@ -15,7 +15,7 @@ public class ManageBookingServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
-        request.getRequestDispatcher("/WEB-INF/jsp/receptionist/manage-booking.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/reception/booking-list.jsp").forward(request, response);
     }
 
     @Override

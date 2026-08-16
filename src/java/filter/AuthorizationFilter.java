@@ -20,34 +20,34 @@ public class AuthorizationFilter implements Filter {
                          FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
-        if ("/reception/check-in".equals(request.getServletPath())) {
-            chain.doFilter(request, servletResponse);
-            return;
-        }
         HttpSession session = request.getSession(false);
         if (session == null || !(session.getAttribute("currentUser") instanceof User)) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        // Tạm tắt phần authorization theo role để test luồng vào lại trang nội bộ.
-        // Khi test xong, bật lại block bên dưới.
-        /*
         User user = (User) session.getAttribute("currentUser");
+        String role = user.getRoleName();
         String path = request.getServletPath();
-        String requiredRole = path.startsWith("/reception/") ? "RECEPTIONIST"
-                : path.startsWith("/housekeeping/") ? "HOUSEKEEPING"
-                : path.startsWith("/technician/") ? "HOUSEKEEPING"
-                : path.startsWith("/manager/") ? "HOTEL_MANAGER"
-                : path.startsWith("/admin/") ? "ADMIN" : null;
 
-        if (requiredRole != null && !requiredRole.equalsIgnoreCase(user.getRoleName())) {
+        if (!isAllowed(path, role)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "Ban khong co quyen truy cap chuc nang nay.");
+                    "Bạn không có quyền truy cập chức năng này.");
             return;
         }
-        */
 
         chain.doFilter(request, response);
+    }
+
+    private boolean isAllowed(String path, String role) {
+        if (role == null) return false;
+        if (path.startsWith("/admin/")) return "ADMIN".equalsIgnoreCase(role);
+        if (path.startsWith("/manager/")) return "HOTEL_MANAGER".equalsIgnoreCase(role);
+        if (path.startsWith("/reception/")) return "RECEPTIONIST".equalsIgnoreCase(role);
+        if (path.startsWith("/technician/")) return "HOUSEKEEPING".equalsIgnoreCase(role)
+                || "HOTEL_MANAGER".equalsIgnoreCase(role);
+        if (path.startsWith("/housekeeping/")) return "HOUSEKEEPING".equalsIgnoreCase(role)
+                || "HOTEL_MANAGER".equalsIgnoreCase(role);
+        return true;
     }
 }

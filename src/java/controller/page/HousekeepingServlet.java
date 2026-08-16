@@ -5,12 +5,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import model.HousekeepingTask;
 import model.User;
 import service.HousekeepingService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +29,10 @@ public class HousekeepingServlet extends HttpServlet {
     private static final int ROLE_MANAGER = 5;
     private HousekeepingService service;
 
-    @Override public void init() { service = new HousekeepingService(); }
+    @Override
+    public void init() {
+        service = new HousekeepingService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -34,11 +40,14 @@ public class HousekeepingServlet extends HttpServlet {
         User user = currentStaff(request, response);
         if (user == null) return;
         try {
-            if (request.getServletPath().endsWith("/detail")) showDetail(request, response, user);
-            else showList(request, response, user);
+            if (request.getServletPath().endsWith("/detail")) {
+                showDetail(request, response, user);
+            } else {
+                showList(request, response, user);
+            }
         } catch (SQLException ex) {
-            getServletContext().log("KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u Dá»n PhÃ²ng", ex);
-            response.sendError(500, "KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u Dá»n PhÃ²ng.");
+            getServletContext().log("Không thể tải dữ liệu dọn phòng", ex);
+            response.sendError(500, "Không thể tải dữ liệu dọn phòng.");
         }
     }
 
@@ -79,7 +88,7 @@ public class HousekeepingServlet extends HttpServlet {
         } catch (IllegalArgumentException | java.util.NoSuchElementException ex) {
             response.sendError(400, ex.getMessage());
         } catch (SQLException ex) {
-            getServletContext().log("KhÃ´ng thá»ƒ cáº­p nháº­t cÃ´ng viá»‡c Dá»n PhÃ²ng", ex);
+            getServletContext().log("Không thể cập nhật công việc dọn phòng", ex);
             response.sendError(409, ex.getMessage());
         }
     }
@@ -103,10 +112,14 @@ public class HousekeepingServlet extends HttpServlet {
         long taskId = parseLong(request.getParameter("id"));
         boolean manager = user.getRoleId() == ROLE_MANAGER;
         Optional<HousekeepingTask> task = service.getTaskDetail(taskId, user.getUserId(), manager);
-        if (task.isEmpty()) { response.sendError(404, "KhÃ´ng tÃ¬m tháº¥y cÃ´ng viá»‡c."); return; }
+        if (task.isEmpty()) {
+            response.sendError(404, "Không tìm thấy công việc.");
+            return;
+        }
         if (manager && !"COMPLETED".equals(task.get().getStatus())
                 && !"CANCELLED".equals(task.get().getStatus())) {
-            response.sendError(403, "Manager chá»‰ cÃ³ quyá»n xem lá»‹ch sá»­ Dá»n phÃ²ng."); return;
+            response.sendError(403, "Quản lý chỉ có quyền xem lịch sử dọn phòng.");
+            return;
         }
         request.setAttribute("task", task.get());
         request.setAttribute("workItems", service.getWorkItems(task.get().getNote()));
@@ -140,8 +153,11 @@ public class HousekeepingServlet extends HttpServlet {
             check.setQuantity(source.getQuantity());
             check.setConditionStatus(request.getParameter("condition_" + suffix));
             String fee = request.getParameter("fee_" + suffix);
-            try { check.setDamageFee(fee == null || fee.isBlank() ? BigDecimal.ZERO : new BigDecimal(fee)); }
-            catch (NumberFormatException ex) { throw new IllegalArgumentException("PhÃ­ bá»“i thÆ°á»ng khÃ´ng há»£p lá»‡"); }
+            try {
+                check.setDamageFee(fee == null || fee.isBlank() ? BigDecimal.ZERO : new BigDecimal(fee));
+            } catch (NumberFormatException ex) {
+                throw new IllegalArgumentException("Phí bồi thường không hợp lệ");
+            }
             check.setNote(request.getParameter("note_" + suffix));
             checks.add(check);
         }
@@ -149,28 +165,46 @@ public class HousekeepingServlet extends HttpServlet {
     }
 
     private User currentStaff(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        User user = (User) request.getSession(false).getAttribute("currentUser");
+        HttpSession session = request.getSession(false);
+        User user = session == null ? null : (User) session.getAttribute("currentUser");
+        if (user == null) {
+            String target = request.getRequestURI()
+                    + (request.getQueryString() == null ? "" : "?" + request.getQueryString());
+            response.sendRedirect(request.getContextPath() + "/login?returnUrl="
+                    + URLEncoder.encode(target, StandardCharsets.UTF_8));
+            return null;
+        }
         if (user.getRoleId() != ROLE_HOUSEKEEPING && user.getRoleId() != ROLE_MANAGER) {
-            response.sendError(403, "Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p chá»©c nÄƒng Dá»n PhÃ²ng.");
+            response.sendError(403, "Bạn không có quyền truy cập chức năng dọn phòng.");
             return null;
         }
         return user;
     }
 
     private long parseLong(String value) {
-        try { long result = Long.parseLong(value); if (result <= 0) throw new NumberFormatException(); return result; }
-        catch (RuntimeException ex) { throw new IllegalArgumentException("ID khÃ´ng há»£p lá»‡"); }
+        try {
+            long result = Long.parseLong(value);
+            if (result <= 0) throw new NumberFormatException();
+            return result;
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("ID không hợp lệ");
+        }
     }
 
     private int parseInt(String value, int fallback) {
-        try { return value == null ? fallback : Integer.parseInt(value); }
-        catch (NumberFormatException ex) { return fallback; }
+        try {
+            return value == null ? fallback : Integer.parseInt(value);
+        } catch (NumberFormatException ex) {
+            return fallback;
+        }
     }
 
     private Integer parseNullableInt(String value) {
         if (value == null || value.isBlank()) return null;
-        try { return Integer.valueOf(value); }
-        catch (NumberFormatException ex) { return null; }
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }
-

@@ -15,7 +15,7 @@ public class CancelBookingServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
-        request.getRequestDispatcher("/WEB-INF/jsp/user/cancel-booking.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/public/booking-detail-guest.jsp").forward(request, response);
     }
 
     @Override

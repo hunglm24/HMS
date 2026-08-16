@@ -1,0 +1,5 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chi tiet booking | HMS</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css"></head>
+<body><jsp:include page="/WEB-INF/views/common/header.jsp" /><main class="public-page"><section class="section-head"><div><p class="section-kicker">Chi tiết booking</p><h1>BK-1024</h1><p>Thông tin đặt phòng và lịch sử thanh toán.</p></div></section><section class="kpi-grid"><div class="metric-card"><span>Trạng thái</span><strong>Đã xác nhận</strong></div><div class="metric-card"><span>Tổng tiền</span><strong>4.6M</strong></div><div class="metric-card"><span>Số đêm</span><strong>2</strong></div></section><div class="placeholder-actions"><a class="btn btn-secondary" href="${pageContext.request.contextPath}/my-bookings">Quay lại</a></div></main><jsp:include page="/WEB-INF/views/common/footer.jsp" /></body></html>

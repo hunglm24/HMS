@@ -15,7 +15,7 @@ public class PaymentServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
-        request.getRequestDispatcher("/WEB-INF/jsp/booking/payment.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/public/payment-redirect.jsp").forward(request, response);
     }
 
     @Override

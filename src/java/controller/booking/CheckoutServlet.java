@@ -15,7 +15,7 @@ public class CheckoutServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
-        request.getRequestDispatcher("/WEB-INF/jsp/booking/checkout.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/public/checkout.jsp").forward(request, response);
     }
 
     @Override

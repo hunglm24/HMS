@@ -17,7 +17,7 @@
     }
 
     private String roleLabel(String roleName) {
-        if (roleName == null) return "Khách hàng";
+        if (roleName == null || roleName.trim().isEmpty()) return "Khách hàng";
         switch (roleName.toUpperCase(java.util.Locale.ROOT)) {
             case "ADMIN": return "Quản trị hệ thống";
             case "CUSTOMER": return "Khách hàng";
@@ -32,85 +32,61 @@
     Object headerUser = session.getAttribute("currentUser");
     String contextPath = request.getContextPath();
     String roleName = beanString(headerUser, "getRoleName");
+    boolean signedIn = headerUser != null;
     boolean customer = "CUSTOMER".equalsIgnoreCase(roleName);
-    boolean receptionist = "RECEPTIONIST".equalsIgnoreCase(roleName);
     boolean housekeeping = "HOUSEKEEPING".equalsIgnoreCase(roleName);
     boolean manager = "HOTEL_MANAGER".equalsIgnoreCase(roleName);
-    boolean admin = "ADMIN".equalsIgnoreCase(roleName);
+    boolean internal = signedIn && !customer;
+    String currentPath = request.getServletPath();
+    String fullName = escapeHtml(beanString(headerUser, "getFullName"));
+    String avatar = fullName.isEmpty() ? "U" : fullName.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
 %>
-<header class="site-header">
+<header class="site-header <%= internal ? "site-header--internal" : "" %>">
     <div class="header-container">
-        <a class="brand" href="<%= contextPath %>/" aria-label="Trang chủ HMS">
+        <a class="brand" href="<%= contextPath %>/" aria-label="HMS home">
             <span class="brand-mark" aria-hidden="true">H</span>
-            <span class="brand-copy"><strong>HMS</strong><small>Hotel Management System</small></span>
+            <span class="brand-copy"><strong>HMS</strong><small>Quản lý khách sạn</small></span>
         </a>
 
         <button class="nav-toggle" type="button" aria-expanded="false"
                 aria-controls="main-navigation" aria-label="Mở menu">☰</button>
 
         <nav id="main-navigation" class="main-nav" aria-label="Điều hướng chính">
-            <a href="<%= contextPath %>/">Trang chủ</a>
-
-            <% if (headerUser == null || customer) { %>
+            <% if (!signedIn || customer) { %>
+                <a href="<%= contextPath %>/">Trang chủ</a>
                 <a href="<%= contextPath %>/search">Tìm phòng</a>
-                <% if (headerUser != null) { %>
+                <% if (signedIn) { %>
                     <a href="<%= contextPath %>/my-bookings">Đặt phòng của tôi</a>
+                    <a href="<%= contextPath %>/cart">Giỏ phòng</a>
                 <% } %>
             <% } %>
 
-            <% if (receptionist) { %>
-                <div class="nav-dropdown">
-                    <button type="button" class="dropdown-toggle">Đặt phòng <span>▾</span></button>
-                    <div class="dropdown-menu">
-                        <a href="<%= contextPath %>/reception/bookings">Danh sách đặt phòng</a>
-                        <a href="<%= contextPath %>/reception/walk-in">Đặt phòng tại quầy</a>
-                        <a href="<%= contextPath %>/reception/room-map">Sơ đồ phòng</a>
-                    </div>
-                </div>
-                <a href="<%= contextPath %>/reception/check-in">Nhận phòng</a>
-                <a href="<%= contextPath %>/reception/check-out">Trả phòng</a>
-            <% } %>
-
             <% if (housekeeping) { %>
-                <a href="<%= contextPath %>/housekeeping/tasks">Dọn phòng</a>
+                <a href="<%= contextPath %>/housekeeping/tasks">Công việc phòng</a>
             <% } %>
 
             <% if (manager) { %>
-                <div class="nav-dropdown">
-                    <button type="button" class="dropdown-toggle">Vận hành <span>▾</span></button>
-                    <div class="dropdown-menu">
-                        <a href="<%= contextPath %>/manager/room-types">Phòng và loại phòng</a>
-                        <a href="<%= contextPath %>/manager/pricing">Giá và dịch vụ</a>
-                        <a href="<%= contextPath %>/manager/staff">Quản lý nhân viên</a>
-                    </div>
-                </div>
-                <a href="<%= contextPath %>/housekeeping/tasks?view=history">Lịch sử dọn phòng</a>
-                <a href="<%= contextPath %>/manager/reports">Báo cáo thống kê</a>
+                <a href="<%= contextPath %>/manager/reports">Báo cáo</a>
+                <a href="<%= contextPath %>/manager/rooms">Phòng</a>
+                <a href="<%= contextPath %>/housekeeping/tasks?view=history">Nhiệm vụ dọn phòng</a>
             <% } %>
 
-            <% if (admin) { %>
-                <div class="nav-dropdown">
-                    <button type="button" class="dropdown-toggle">Quản trị <span>▾</span></button>
-                    <div class="dropdown-menu">
-                        <a href="<%= contextPath %>/admin/users">Người dùng</a>
-                        <a href="<%= contextPath %>/admin/roles">Vai trò và quyền</a>
-                        <a href="<%= contextPath %>/admin/system-config">Cấu hình hệ thống</a>
-                        <a href="<%= contextPath %>/admin/backup">Sao lưu</a>
-                    </div>
-                </div>
-                <a href="<%= contextPath %>/admin/logs">Nhật ký hệ thống</a>
-            <% } %>
-
-            <% if (headerUser == null) { %>
-                <a href="<%= contextPath %>/login">Đăng nhập</a>
-                <a class="nav-primary" href="<%= contextPath %>/register">Đăng ký</a>
+            <% if (!signedIn) { %>
+                <% if ("/login".equals(currentPath)) { %>
+                    <span class="nav-current">Đăng nhập</span>
+                <% } else { %>
+                    <a href="<%= contextPath %>/login">Đăng nhập</a>
+                <% } %>
+                <% if ("/register".equals(currentPath)) { %>
+                    <span class="nav-current nav-primary">Đăng ký</span>
+                <% } else { %>
+                    <a class="nav-primary" href="<%= contextPath %>/register">Đăng ký</a>
+                <% } %>
             <% } else { %>
-                <a class="user-chip" href="<%= contextPath %>/profile" title="Xem hồ sơ">
-                    <span class="user-avatar" aria-hidden="true">●</span>
-                    <span><strong><%= escapeHtml(beanString(headerUser, "getFullName")) %></strong>
-                        <small><%= roleLabel(roleName) %></small></span>
+                <a class="user-chip" href="<%= contextPath %>/profile" title="Hồ sơ">
+                    <span class="user-avatar" aria-hidden="true"><%= avatar %></span>
+                    <span><strong><%= fullName %></strong><small><%= roleLabel(roleName) %></small></span>
                 </a>
-                <a href="<%= contextPath %>/change-password">Đổi mật khẩu</a>
                 <form class="logout-form" method="post" action="<%= contextPath %>/logout">
                     <button type="submit">Đăng xuất</button>
                 </form>
@@ -118,24 +94,21 @@
         </nav>
     </div>
 </header>
+<% if (internal) { %>
+    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
+<% } %>
 <script>
     (() => {
-        const header = document.currentScript.previousElementSibling;
+        const header = document.querySelector('.site-header');
+        if (!header) return;
         const toggle = header.querySelector('.nav-toggle');
         const nav = header.querySelector('.main-nav');
+        if (!toggle || !nav) return;
         toggle.addEventListener('click', () => {
             const open = nav.classList.toggle('is-open');
             toggle.setAttribute('aria-expanded', String(open));
             toggle.setAttribute('aria-label', open ? 'Đóng menu' : 'Mở menu');
         });
-        header.querySelectorAll('.dropdown-toggle').forEach(button => {
-            button.addEventListener('click', event => {
-                event.stopPropagation();
-                button.parentElement.classList.toggle('is-open');
-            });
-        });
-        document.addEventListener('click', () => {
-            header.querySelectorAll('.nav-dropdown.is-open').forEach(item => item.classList.remove('is-open'));
-        });
     })();
 </script>
+<script src="<%= contextPath %>/assets/js/booking-validation.js"></script>

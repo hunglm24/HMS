@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "RoomTypeDetailServlet", urlPatterns = {"/room-type-detail"})
+@WebServlet(name = "RoomTypeDetailServlet", urlPatterns = {"/room-type-detail", "/room-detail"})
 public class RoomTypeDetailServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -15,7 +15,7 @@ public class RoomTypeDetailServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
-        request.getRequestDispatcher("/WEB-INF/jsp/search/room-type-detail.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/public/room-detail.jsp").forward(request, response);
     }
 
     @Override
