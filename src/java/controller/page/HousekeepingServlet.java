@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/housekeeping/tasks", "/housekeeping/tasks/detail",
-        "/housekeeping/tasks/claim", "/housekeeping/tasks/complete-inspection",
+        "/housekeeping/tasks/claim", "/housekeeping/tasks/claim-cleaning",
+        "/housekeeping/tasks/complete-inspection",
         "/housekeeping/tasks/start-cleaning", "/housekeeping/tasks/complete-cleaning"})
 public class HousekeepingServlet extends HttpServlet {
     private static final int ROLE_HOUSEKEEPING = 4;
@@ -53,12 +54,18 @@ public class HousekeepingServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/housekeeping/tasks/detail?id=" + taskId);
                 return;
             }
+            if (path.endsWith("/claim-cleaning")) {
+                taskId = service.claimCleaning(parseLong(request.getParameter("taskId")), user.getUserId());
+                response.sendRedirect(request.getContextPath() + "/housekeeping/tasks/detail?id=" + taskId);
+                return;
+            }
             taskId = parseLong(request.getParameter("taskId"));
             if (path.endsWith("/complete-inspection")) {
                 HousekeepingTask task = service.getTaskDetail(taskId, user.getUserId(), false).orElseThrow();
                 List<HousekeepingTask.EquipmentCheck> checks = parseChecks(request,
                         service.getEquipment(task.getRoomId(), task.getBookingRoomId()));
-                service.completeInspection(taskId, user.getUserId(), checks, request.getParameter("inspectionNote"));
+                service.completeInspection(taskId, user.getUserId(), checks,
+                        parameterValues(request, "cleaningItem"), request.getParameter("inspectionNote"));
             } else if (path.endsWith("/start-cleaning")) {
                 service.startCleaning(taskId, user.getUserId());
             } else if (path.endsWith("/complete-cleaning")) {
@@ -101,6 +108,8 @@ public class HousekeepingServlet extends HttpServlet {
             response.sendError(403, "Manager chỉ có quyền xem lịch sử Dọn phòng."); return;
         }
         request.setAttribute("task", task.get());
+        request.setAttribute("workItems", service.getWorkItems(task.get().getNote()));
+        request.setAttribute("inspectionMessage", service.getInspectionMessage(task.get().getNote()));
         boolean history = "COMPLETED".equals(task.get().getStatus()) || "CANCELLED".equals(task.get().getStatus());
         request.setAttribute("history", history);
         if ("CHECKOUT_INSPECTION".equals(task.get().getTaskType()) && history) {
@@ -108,8 +117,16 @@ public class HousekeepingServlet extends HttpServlet {
         } else if ("CHECKOUT_INSPECTION".equals(task.get().getTaskType())) {
             request.setAttribute("equipment", service.getEquipment(
                     task.get().getRoomId(), task.get().getBookingRoomId()));
+            request.setAttribute("cleaningChecklist", service.getCleaningChecklist());
+        } else if ("CLEANING".equals(task.get().getTaskType())) {
+            request.setAttribute("equipment", service.getCleaningEquipment(taskId));
         }
         request.getRequestDispatcher("/WEB-INF/views/housekeeping/task-detail.jsp").forward(request, response);
+    }
+
+    private List<String> parameterValues(HttpServletRequest request, String name) {
+        String[] values = request.getParameterValues(name);
+        return values == null ? List.of() : List.of(values);
     }
 
     private List<HousekeepingTask.EquipmentCheck> parseChecks(HttpServletRequest request,

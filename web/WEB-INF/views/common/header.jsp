@@ -65,7 +65,6 @@
 
             <% if (housekeeping) { %>
                 <a href="<%= contextPath %>/housekeeping/tasks">Dọn phòng</a>
-                <a href="<%= contextPath %>/housekeeping/issues">Báo cáo sự cố</a>
             <% } %>
 
             <% if (manager) { %>

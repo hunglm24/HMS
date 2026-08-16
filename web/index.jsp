@@ -34,8 +34,7 @@
                 <a class="action-card" href="${pageContext.request.contextPath}/reception/check-in"><strong>Nhận phòng</strong><span>Xác minh khách và gán phòng thực tế.</span></a>
                 <a class="action-card" href="${pageContext.request.contextPath}/reception/check-out"><strong>Trả phòng</strong><span>Tổng hợp chi phí, thanh toán và xuất hóa đơn.</span></a>
             <% } else if ("HOUSEKEEPING".equalsIgnoreCase(dashboardRole)) { %>
-                <a class="action-card" href="${pageContext.request.contextPath}/housekeeping/tasks"><strong>Phòng cần xử lý</strong><span>Nhận việc và cập nhật Dirty → Cleaning → Clean.</span></a>
-                <a class="action-card" href="${pageContext.request.contextPath}/housekeeping/issues"><strong>Báo cáo sự cố</strong><span>Ghi nhận vấn đề phòng hoặc thiết bị.</span></a>
+                <a class="action-card" href="${pageContext.request.contextPath}/housekeeping/tasks"><strong>Dọn phòng</strong><span>Nhận kiểm tra, nhận dọn phòng và theo dõi công việc.</span></a>
             <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(dashboardRole)) { %>
                 <a class="action-card" href="${pageContext.request.contextPath}/manager/reports"><strong>Báo cáo vận hành</strong><span>Xem công suất phòng, doanh thu và thống kê.</span></a>
                 <a class="action-card" href="${pageContext.request.contextPath}/manager/pricing"><strong>Giá và chính sách</strong><span>Cấu hình giá, giảm giá và chính sách hủy.</span></a>

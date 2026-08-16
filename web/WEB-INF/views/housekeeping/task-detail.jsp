@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
 <%@ page import="model.HousekeepingTask" %>
 <%!
     private String esc(String value) {
@@ -22,8 +23,11 @@
     String contextPath = request.getContextPath();
     boolean inspection = "CHECKOUT_INSPECTION".equals(task.getTaskType());
     boolean pending = "PENDING".equals(task.getStatus());
-    boolean cleaningBlocked = !inspection && pending && !task.isActionReady();
     boolean history = Boolean.TRUE.equals(request.getAttribute("history"));
+    List<String> workItems = (List<String>) request.getAttribute("workItems");
+    String inspectionMessage = (String) request.getAttribute("inspectionMessage");
+    Map<String, String> cleaningChecklist =
+            (Map<String, String>) request.getAttribute("cleaningChecklist");
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -63,6 +67,18 @@
             <p>Kiểm tra lần lượt từng thiết bị trước khi xác nhận hoàn tất.</p></div>
             <span><%= equipment == null ? 0 : equipment.size() %> thiết bị</span></div>
 
+        <section class="hk-inspection-checklist" aria-labelledby="cleaning-checklist-title">
+            <div><h3 id="cleaning-checklist-title">Khu vực cần dọn</h3>
+                <p>Đánh dấu những khu vực housekeeper cần ưu tiên xử lý.</p></div>
+            <div class="hk-check-grid">
+                <% if (cleaningChecklist != null) for (Map.Entry<String, String> item : cleaningChecklist.entrySet()) { %>
+                <label><input type="checkbox" name="cleaningItem" value="<%= esc(item.getKey()) %>">
+                    <span><strong><%= esc(item.getValue()) %></strong><small>Thêm vào danh sách việc cần làm</small></span>
+                </label>
+                <% } %>
+            </div>
+        </section>
+
         <div class="hk-equipment-list">
         <% if (equipment != null) for (HousekeepingTask.EquipmentCheck item : equipment) {
             String id = String.valueOf(item.getRoomEquipmentId()); %>
@@ -98,17 +114,37 @@
             <button class="hk-primary" type="submit">Hoàn tất kiểm tra</button></div>
     </form>
     <% } else { %>
-    <section class="hk-card hk-cleaning-card">
-        <div class="hk-section-heading"><div><h2>Dọn phòng sau checkout</h2>
-            <p>Đảm bảo phòng sạch sẽ và sẵn sàng cho công việc vận hành tiếp theo.</p></div></div>
-        <div class="hk-note-box"><strong>Ghi chú công việc</strong><p><%= esc(task.getNote()) %></p></div>
-        <% if (cleaningBlocked) { %><div class="hk-warning-box"><strong>Chưa thể bắt đầu dọn phòng</strong>
-            <p>Inspection đã hoàn tất nhưng booking vẫn đang xử lý checkout. Công việc sẽ được mở khi checkout hoàn tất.</p></div><% } %>
+    <section class="hk-cleaning-layout">
+      <div class="hk-card hk-cleaning-main">
+        <div class="hk-section-heading"><div><h2>Những việc cần làm</h2>
+            <p>Hoàn thành lần lượt các nội dung được ghi nhận khi inspection.</p></div></div>
+        <ol class="hk-work-list">
+            <% if (workItems != null && !workItems.isEmpty()) for (String item : workItems) { %>
+                <li><span aria-hidden="true">✓</span><strong><%= esc(item) %></strong></li>
+            <% } else { %><li><span aria-hidden="true">✓</span><strong>Dọn vệ sinh tổng quát và kiểm tra lại phòng</strong></li><% } %>
+        </ol>
+        <% if (inspectionMessage != null) { %><div class="hk-note-box"><strong>Lời nhắn từ người inspection</strong>
+            <p><%= esc(inspectionMessage) %></p></div><% } %>
         <% if (!history) { %><form method="post" action="<%= contextPath %>/housekeeping/tasks/<%= pending ? "start-cleaning" : "complete-cleaning" %>">
             <input type="hidden" name="taskId" value="<%= task.getTaskId() %>">
             <div class="hk-form-actions"><a href="<%= contextPath %>/housekeeping/tasks?view=mine">Quay lại</a>
-                <button class="hk-primary" type="submit" <%= cleaningBlocked ? "disabled" : "" %>><%= cleaningBlocked ? "Đang chờ checkout" : pending ? "Bắt đầu dọn phòng" : "Hoàn tất dọn phòng" %></button></div>
+                <button class="hk-primary" type="submit"><%= pending ? "Bắt đầu dọn phòng" : "Hoàn tất dọn phòng" %></button></div>
         </form><% } else if (history) { %><div class="hk-history-meta"><span>Bắt đầu: <strong><%= task.getStartedAt() == null ? "--" : task.getStartedAt() %></strong></span><span>Hoàn thành: <strong><%= task.getCompletedAt() == null ? "--" : task.getCompletedAt() %></strong></span></div><% } %>
+      </div>
+      <aside class="hk-card hk-maintenance-check">
+        <div class="hk-section-heading"><div><h2>Kiểm tra thiết bị</h2>
+            <p>Housekeeper chỉ xác nhận tình trạng hiện tại, không thực hiện sửa chữa tại đây.</p></div></div>
+        <% if (equipment == null || equipment.isEmpty()) { %>
+            <div class="hk-all-clear"><span aria-hidden="true">✓</span><p>Không có thiết bị hỏng hoặc thất lạc được ghi nhận.</p></div>
+        <% } else { %><div class="hk-maintenance-list">
+            <% for (HousekeepingTask.EquipmentCheck item : equipment) {
+                boolean repaired = "NORMAL".equals(item.getCurrentStatus()); %>
+            <article><div><strong><%= esc(item.getEquipmentName()) %></strong>
+                <small><%= esc(item.getNote()) %></small></div>
+                <span class="hk-badge <%= repaired ? "condition-normal" : "condition-damaged" %>"><%= repaired ? "Đã xử lý" : "Chưa xử lý" %></span></article>
+            <% } %>
+        </div><p class="hk-maintenance-help">Nếu thiết bị chưa được xử lý, phòng vẫn có thể dọn xong nhưng sẽ ở trạng thái NOT_READY hoặc MAINTENANCE.</p><% } %>
+      </aside>
     </section>
     <% } %>
 </main>
