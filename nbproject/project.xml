@@ -7,45 +7,15 @@
             <minimum-ant-version>1.6.5</minimum-ant-version>
             <web-module-libraries>
                 <library dirs="200">
-                    <file>${file.reference.mysql-connector-j-26.7.0.jar}</file>
-                    <path-in-war>WEB-INF/lib</path-in-war>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/annotations-api.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/catalina.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/ecj-4.27.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/el-api.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/jasper.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/jasper-el.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/jsp-api.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/servlet-api.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/tomcat-api.jar}</file>
-                </library>
-                <library dirs="200">
-                    <file>${${j2ee.server.home}/lib/tomcat-util.jar}</file>
-                </library>
-                <library dirs="200">
                     <file>${file.reference.jakarta.servlet.jsp.jstl-2.0.0.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
                     <file>${file.reference.jakarta.servlet.jsp.jstl-api-2.0.0.jar}</file>
+                    <path-in-war>WEB-INF/lib</path-in-war>
+                </library>
+                <library dirs="200">
+                    <file>${file.reference.jbcrypt-0.4.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
             </web-module-libraries>
