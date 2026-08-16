@@ -1,52 +1,35 @@
 package dao;
 
+import model.Room;
+import util.DBConnectionUtil;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Date;
-import model.Room;
-import util.DBConnectionUtil;
+import java.util.Optional;
 
-public class RoomDAO {
+public class RoomDao {
 
-    // UC10, UC11: Tìm kiếm phòng
-    public List<Room> searchRooms(Date checkIn, Date checkOut, int guests, int roomTypeId) {
+    // Lấy danh sách tất cả các phòng kèm theo tên loại phòng tương ứng
+    public List<Room> findAllWithRoomTypeName() {
         List<Room> rooms = new ArrayList<>();
-        String sql = "SELECT r.* FROM room r JOIN room_type rt ON r.room_type_id = rt.room_type_id " +
-                     "WHERE rt.max_occupancy >= ? AND r.status = 'Available' " +
-                     "AND r.room_id NOT IN (" +
-                     "    SELECT room_id FROM booking_room br JOIN booking b ON br.booking_id = b.booking_id " +
-                     "    WHERE (b.check_in_date < ? AND b.check_out_date > ?) AND br.status != 'Cancelled'" +
-                     ")";
-        if (roomTypeId > 0) {
-            sql += " AND r.room_type_id = ?";
-        }
-        
+        String sql = "SELECT r.*, rt.name AS room_type_name "
+                + "FROM rooms r "
+                + "JOIN room_types rt ON r.room_type_id = rt.id "
+                + "ORDER BY r.room_number ASC";
+
         try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-            ps.setInt(1, guests);
-            ps.setDate(2, new java.sql.Date(checkOut.getTime()));
-            ps.setDate(3, new java.sql.Date(checkIn.getTime()));
-            
-            if (roomTypeId > 0) {
-                ps.setInt(4, roomTypeId);
-            }
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Room room = new Room();
-                    room.setRoomId(rs.getInt("room_id"));
-                    room.setRoomNumber(rs.getString("room_number"));
-                    room.setFloor(rs.getInt("floor"));
-                    room.setRoomTypeId(rs.getInt("room_type_id"));
-                    room.setStatus(rs.getString("status"));
-                    room.setViewType(rs.getString("view_type"));
-                    rooms.add(room);
-                }
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Room room = mapRow(rs);
+                room.setRoomTypeName(rs.getString("room_type_name"));
+                rooms.add(room);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -54,26 +37,135 @@ public class RoomDAO {
         return rooms;
     }
 
-    // UC27: Xem sơ đồ phòng
-    public List<Room> getAllRooms() {
+    // Lấy danh sách các phòng, chỉ dữ liệu thuần của bảng rooms
+    public List<Room> findAll() {
         List<Room> rooms = new ArrayList<>();
-        String sql = "SELECT * FROM room";
+        String sql = "SELECT * FROM rooms ORDER BY room_number ASC";
+
         try (Connection conn = DBConnectionUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                Room room = new Room();
-                room.setRoomId(rs.getInt("room_id"));
-                room.setRoomNumber(rs.getString("room_number"));
-                room.setFloor(rs.getInt("floor"));
-                room.setRoomTypeId(rs.getInt("room_type_id"));
-                room.setStatus(rs.getString("status"));
-                room.setViewType(rs.getString("view_type"));
-                rooms.add(room);
+                rooms.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return rooms;
+    }
+
+    // Tìm một phòng cụ thể theo ID
+    public Optional<Room> findById(long id) {
+        String sql = "SELECT * FROM rooms WHERE id = ?";
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    // Thêm mới một phòng vật lý
+    public boolean insert(Room room) {
+        String sql = "INSERT INTO rooms (room_type_id, room_number, floor_number, status, description) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, room.getRoomTypeId());
+            ps.setString(2, room.getRoomNumber());
+
+            // Nếu người dùng không nhập tầng thì lưu NULL vào database
+            if (room.getFloorNumber() != null) {
+                ps.setInt(3, room.getFloorNumber());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+
+            ps.setString(4, room.getStatus());
+            ps.setString(5, room.getDescription());
+
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        // Cập nhật ID tự sinh cho đối tượng Room
+                        room.setId(rs.getLong(1));
+                    }
+                }
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Cập nhật thông tin phòng vật lý
+    public boolean update(Room room) {
+        String sql = "UPDATE rooms SET room_type_id = ?, room_number = ?, floor_number = ?, status = ?, description = ? "
+                + "WHERE id = ?";
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, room.getRoomTypeId());
+            ps.setString(2, room.getRoomNumber());
+
+            // Tương tự insert, nếu tầng rỗng thì lưu NULL
+            if (room.getFloorNumber() != null) {
+                ps.setInt(3, room.getFloorNumber());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+
+            ps.setString(4, room.getStatus());
+            ps.setString(5, room.getDescription());
+            ps.setLong(6, room.getId());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Xóa một phòng
+    public boolean delete(long id) {
+        String sql = "DELETE FROM rooms WHERE id = ?";
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Hàm phụ trợ chuyển đổi ResultSet thành đối tượng Room
+    private Room mapRow(ResultSet rs) throws SQLException {
+        Room room = new Room();
+        room.setId(rs.getLong("id"));
+        room.setRoomTypeId(rs.getLong("room_type_id"));
+        room.setRoomNumber(rs.getString("room_number"));
+
+        // getInt có thể trả về 0 nếu giá trị trong database là NULL
+        int floorNumber = rs.getInt("floor_number");
+        // wasNull() kiểm tra cột vừa đọc có phải NULL hay không
+        room.setFloorNumber(rs.wasNull() ? null : floorNumber);
+
+        room.setStatus(rs.getString("status"));
+        room.setDescription(rs.getString("description"));
+        room.setCreatedAt(rs.getTimestamp("created_at"));
+        room.setUpdatedAt(rs.getTimestamp("updated_at"));
+        return room;
     }
 }

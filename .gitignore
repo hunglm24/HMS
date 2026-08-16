@@ -20,6 +20,10 @@ replay_pid*
 
 # NetBeans local/private files
 /nbproject/private/
+# /nbproject/build-impl.xml
+# /nbproject/genfiles.properties
+# /nbproject/project.properties
+# /nbproject/project.xml
 
 # IDE / editor settings
 .idea/

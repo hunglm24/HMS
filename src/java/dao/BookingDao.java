@@ -1,6 +1,5 @@
 package dao;
 
-import model.Booking;
 import model.CheckInBookingSummary;
 import model.RoomType;
 import util.DBConnectionUtil;
@@ -9,119 +8,69 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import model.Booking;
-import util.DBConnectionUtil;
-
-public class BookingDAO {
-
-    // UC16, UC17, UC26: Tạo booking
-    public int createBooking(Booking booking) {
-        String sql = "INSERT INTO booking (guest_id, booking_type, check_in_date, check_out_date, status, total_amount, deposit_amount) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, booking.getGuestId());
-            ps.setString(2, booking.getBookingType());
-            ps.setDate(3, new java.sql.Date(booking.getCheckInDate().getTime()));
-            ps.setDate(4, new java.sql.Date(booking.getCheckOutDate().getTime()));
-            ps.setString(5, booking.getStatus());
-            ps.setDouble(6, booking.getTotalAmount());
-            ps.setDouble(7, booking.getDepositAmount());
-            
-            int affectedRows = ps.executeUpdate();
-            if (affectedRows > 0) {
-                try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1); // Return new booking_id
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return -1;
-    }
-
-    // UC20: Lịch sử đặt phòng của Khách
-    public List<Booking> getBookingsByGuestId(int guestId) {
-        List<Booking> bookings = new ArrayList<>();
-        String sql = "SELECT * FROM booking WHERE guest_id = ? ORDER BY created_at DESC";
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, guestId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Booking b = new Booking();
-                    b.setBookingId(rs.getInt("booking_id"));
-                    b.setGuestId(rs.getInt("guest_id"));
-                    b.setStatus(rs.getString("status"));
-                    b.setTotalAmount(rs.getDouble("total_amount"));
-                    // ... set other fields
-                    bookings.add(b);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return bookings;
-    }
-
-    // UC23, UC24, UC25: Quản lý booking của Lễ tân
-    public void updateBookingStatus(int bookingId, String status) {
-        String sql = "UPDATE booking SET status = ? WHERE booking_id = ?";
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
-            ps.setInt(2, bookingId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class BookingDao {
     private static final String BASE_SELECT = """
-            SELECT b.booking_id,
-                   CONCAT('BK', LPAD(b.booking_id, 6, '0')) AS booking_code,
-                   b.guest_id,
-                   g.full_name AS guest_name,
-                   g.phone,
-                   g.email,
-                   b.booking_type,
+            SELECT b.id AS booking_id,
+                   b.booking_code,
+                   b.customer_id,
+                   COALESCE(bg.full_name, a.full_name, '') AS guest_name,
+                   COALESCE(bg.phone, a.phone, '') AS phone,
+                   COALESCE(a.email, '') AS email,
+                   b.booking_source AS booking_type,
                    b.check_in_date,
                    b.check_out_date,
                    b.status,
                    b.total_amount,
-                   b.deposit_amount,
+                   COALESCE((
+                       SELECT SUM(p.amount)
+                       FROM payments p
+                       WHERE p.booking_id = b.id
+                         AND p.payment_type = 'DEPOSIT'
+                         AND p.status = 'SUCCESS'
+                   ), 0) AS deposit_amount,
                    b.created_at,
-                   COUNT(DISTINCT br.booking_room_id) AS room_count,
-                   GROUP_CONCAT(DISTINCT rt.type_name ORDER BY rt.type_name SEPARATOR ', ') AS room_types,
+                   COUNT(DISTINCT br.id) AS room_count,
+                   GROUP_CONCAT(DISTINCT rt.name ORDER BY rt.name SEPARATOR ', ') AS room_types,
                    GROUP_CONCAT(DISTINCT r.room_number ORDER BY r.room_number SEPARATOR ', ') AS room_numbers
-            FROM booking b
-            JOIN guest g ON g.guest_id = b.guest_id
-            LEFT JOIN booking_room br ON br.booking_id = b.booking_id
-            LEFT JOIN room r ON r.room_id = br.room_id
-            LEFT JOIN room_type rt ON rt.room_type_id = r.room_type_id
+            FROM bookings b
+            LEFT JOIN booking_guests bg
+                   ON bg.booking_id = b.id
+                  AND bg.is_primary_guest = TRUE
+            LEFT JOIN accounts a
+                   ON a.id = b.customer_id
+            LEFT JOIN booking_rooms br
+                   ON br.booking_id = b.id
+            LEFT JOIN rooms r
+                   ON r.id = br.room_id
+            LEFT JOIN room_types rt
+                   ON rt.id = r.room_type_id
             """;
+
     private static final String BASE_COUNT = """
-            SELECT COUNT(DISTINCT b.booking_id)
-            FROM booking b
-            JOIN guest g ON g.guest_id = b.guest_id
-            LEFT JOIN booking_room br ON br.booking_id = b.booking_id
-            LEFT JOIN room r ON r.room_id = br.room_id
-            LEFT JOIN room_type rt ON rt.room_type_id = r.room_type_id
+            SELECT COUNT(DISTINCT b.id)
+            FROM bookings b
+            LEFT JOIN booking_guests bg
+                   ON bg.booking_id = b.id
+                  AND bg.is_primary_guest = TRUE
+            LEFT JOIN accounts a
+                   ON a.id = b.customer_id
+            LEFT JOIN booking_rooms br
+                   ON br.booking_id = b.id
+            LEFT JOIN rooms r
+                   ON r.id = br.room_id
+            LEFT JOIN room_types rt
+                   ON rt.id = r.room_type_id
             """;
 
     public List<RoomType> findRoomTypes() throws SQLException {
         String sql = """
-                SELECT room_type_id, type_name, description, base_price, max_occupancy, image_url
-                FROM room_type
-                ORDER BY type_name
+                SELECT id, name, description, capacity, base_price, status, created_at, updated_at
+                FROM room_types
+                ORDER BY name
                 """;
         try (Connection connection = requireConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
@@ -129,12 +78,14 @@ public class BookingDao {
             List<RoomType> roomTypes = new ArrayList<>();
             while (resultSet.next()) {
                 RoomType roomType = new RoomType();
-                roomType.setRoomTypeId(resultSet.getInt("room_type_id"));
-                roomType.setTypeName(resultSet.getString("type_name"));
+                roomType.setId(resultSet.getLong("id"));
+                roomType.setName(resultSet.getString("name"));
                 roomType.setDescription(resultSet.getString("description"));
-                roomType.setBasePrice(resultSet.getDouble("base_price"));
-                roomType.setMaxOccupancy(resultSet.getInt("max_occupancy"));
-                roomType.setImageUrl(resultSet.getString("image_url"));
+                roomType.setCapacity(resultSet.getInt("capacity"));
+                roomType.setBasePrice(resultSet.getBigDecimal("base_price"));
+                roomType.setStatus(resultSet.getString("status"));
+                roomType.setCreatedAt(resultSet.getTimestamp("created_at"));
+                roomType.setUpdatedAt(resultSet.getTimestamp("updated_at"));
                 roomTypes.add(roomType);
             }
             return roomTypes;
@@ -143,9 +94,9 @@ public class BookingDao {
 
     public Optional<CheckInBookingSummary> findCheckInBookingById(int bookingId) throws SQLException {
         QueryParts query = filters(null, null, null, null, bookingId);
-        String sql = BASE_SELECT + query.whereClause() + " GROUP BY "
-                + "b.booking_id, g.guest_id, g.full_name, g.phone, g.email, b.booking_type, "
-                + "b.check_in_date, b.check_out_date, b.status, b.total_amount, b.deposit_amount, b.created_at"
+        String sql = BASE_SELECT + query.whereClause()
+                + " GROUP BY b.id, b.booking_code, b.customer_id, guest_name, phone, email,"
+                + " b.booking_source, b.check_in_date, b.check_out_date, b.status, b.total_amount, b.created_at"
                 + " LIMIT 1";
         try (Connection connection = requireConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -162,9 +113,10 @@ public class BookingDao {
                                                            int offset, int limit) throws SQLException {
         QueryParts query = filters(keyword, bookingStatus, roomTypeId, scope, null);
         String sql = BASE_SELECT + query.whereClause()
-                + " GROUP BY b.booking_id, g.guest_id, g.full_name, g.phone, g.email, b.booking_type,"
-                + " b.check_in_date, b.check_out_date, b.status, b.total_amount, b.deposit_amount, b.created_at"
-                + " ORDER BY " + sortColumn + " " + sortDirection + ", b.booking_id DESC"
+                + " GROUP BY b.id, b.booking_code, b.customer_id, guest_name, phone, email,"
+                + " b.booking_source, b.check_in_date, b.check_out_date, b.status, b.total_amount, b.created_at"
+                + " ORDER BY " + normalizeSortColumn(sortColumn) + " " + normalizeSortDirection(sortDirection)
+                + ", b.id DESC"
                 + " LIMIT ? OFFSET ?";
         try (Connection connection = requireConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -199,19 +151,21 @@ public class BookingDao {
                                String scope, Integer bookingId) {
         List<String> conditions = new ArrayList<>();
         List<Object> parameters = new ArrayList<>();
-        conditions.add("b.status IN ('Pending', 'Confirmed', 'CheckedIn')");
+        conditions.add("b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')");
+
         if (bookingId != null && bookingId > 0) {
-            conditions.add("b.booking_id = ?");
+            conditions.add("b.id = ?");
             parameters.add(bookingId);
         }
+
         if (keyword != null) {
             conditions.add("""
                     (
-                        LOWER(g.full_name) LIKE ?
-                        OR LOWER(g.phone) LIKE ?
-                        OR LOWER(g.email) LIKE ?
-                        OR LOWER(CONCAT('bk', LPAD(b.booking_id, 6, '0'))) LIKE ?
-                        OR CAST(b.booking_id AS CHAR) LIKE ?
+                        LOWER(COALESCE(bg.full_name, a.full_name, '')) LIKE ?
+                        OR LOWER(COALESCE(bg.phone, a.phone, '')) LIKE ?
+                        OR LOWER(COALESCE(a.email, '')) LIKE ?
+                        OR LOWER(b.booking_code) LIKE ?
+                        OR CAST(b.id AS CHAR) LIKE ?
                     )
                     """);
             String pattern = "%" + keyword.toLowerCase() + "%";
@@ -221,25 +175,70 @@ public class BookingDao {
             parameters.add(pattern);
             parameters.add(pattern);
         }
-        if (bookingStatus != null) {
+
+        String normalizedStatus = normalizeBookingStatus(bookingStatus);
+        if (normalizedStatus != null) {
             conditions.add("b.status = ?");
-            parameters.add(bookingStatus);
+            parameters.add(normalizedStatus);
         }
+
         if (roomTypeId != null) {
-            conditions.add("EXISTS (SELECT 1 FROM booking_room br2 JOIN room r2 ON r2.room_id = br2.room_id WHERE br2.booking_id = b.booking_id AND r2.room_type_id = ?)");
+            conditions.add("""
+                    EXISTS (
+                        SELECT 1
+                        FROM booking_rooms br2
+                        JOIN rooms r2 ON r2.id = br2.room_id
+                        WHERE br2.booking_id = b.id
+                          AND r2.room_type_id = ?
+                    )
+                    """);
             parameters.add(roomTypeId);
         }
+
         if (scope != null) {
             switch (scope) {
                 case "today" -> conditions.add("DATE(b.check_in_date) = CURDATE()");
                 case "upcoming" -> conditions.add("DATE(b.check_in_date) > CURDATE()");
-                case "overdue" -> conditions.add("DATE(b.check_in_date) < CURDATE() AND b.status IN ('Pending', 'Confirmed')");
+                case "overdue" -> conditions.add("DATE(b.check_in_date) < CURDATE() AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED')");
                 default -> {
                 }
             }
         }
+
         String whereClause = conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
         return new QueryParts(whereClause, parameters);
+    }
+
+    private String normalizeBookingStatus(String bookingStatus) {
+        if (bookingStatus == null || bookingStatus.isBlank()) {
+            return null;
+        }
+        return switch (bookingStatus) {
+            case "Pending" -> "PENDING_PAYMENT";
+            case "Confirmed" -> "CONFIRMED";
+            case "CheckedIn" -> "CHECKED_IN";
+            case "Cancelled" -> "CANCELLED";
+            default -> bookingStatus;
+        };
+    }
+
+    private String normalizeSortColumn(String sortColumn) {
+        if (sortColumn == null || sortColumn.isBlank()) {
+            return "b.created_at";
+        }
+        return switch (sortColumn) {
+            case "b.created_at" -> "b.created_at";
+            case "b.check_in_date" -> "b.check_in_date";
+            case "b.check_out_date" -> "b.check_out_date";
+            case "g.full_name" -> "guest_name";
+            case "b.status" -> "b.status";
+            case "room_types" -> "room_types";
+            default -> "b.created_at";
+        };
+    }
+
+    private String normalizeSortDirection(String sortDirection) {
+        return "ASC".equalsIgnoreCase(sortDirection) ? "ASC" : "DESC";
     }
 
     private int bind(PreparedStatement statement, List<Object> parameters) throws SQLException {
@@ -258,13 +257,13 @@ public class BookingDao {
         CheckInBookingSummary booking = new CheckInBookingSummary();
         booking.setBookingId(resultSet.getInt("booking_id"));
         booking.setBookingCode(resultSet.getString("booking_code"));
-        booking.setGuestId(resultSet.getInt("guest_id"));
+        booking.setGuestId(resultSet.getInt("customer_id"));
         booking.setGuestName(resultSet.getString("guest_name"));
         booking.setPhone(resultSet.getString("phone"));
         booking.setEmail(resultSet.getString("email"));
         booking.setBookingType(resultSet.getString("booking_type"));
-        booking.setCheckInDate(resultSet.getTimestamp("check_in_date"));
-        booking.setCheckOutDate(resultSet.getTimestamp("check_out_date"));
+        booking.setCheckInDate(resultSet.getDate("check_in_date"));
+        booking.setCheckOutDate(resultSet.getDate("check_out_date"));
         booking.setStatus(resultSet.getString("status"));
         booking.setTotalAmount(resultSet.getDouble("total_amount"));
         booking.setDepositAmount(resultSet.getDouble("deposit_amount"));
@@ -278,7 +277,7 @@ public class BookingDao {
     private Connection requireConnection() throws SQLException {
         Connection connection = DBConnectionUtil.getConnection();
         if (connection == null) {
-            throw new SQLException("KhÃ´ng thá»ƒ káº¿t ná»‘i cÆ¡ sá»Ÿ dá»¯ liá»‡u");
+            throw new SQLException("Could not connect to database");
         }
         return connection;
     }
