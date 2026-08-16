@@ -3,56 +3,61 @@ package dao;
 import model.Room;
 import util.DBConnectionUtil;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class RoomDao {
 
-    // Lấy danh sách tất cả các phòng KÈM THEO tên loại phòng tương ứng
-    // Hàm này rất hữu ích khi muốn hiển thị tên loại phòng (ví dụ: Standard) thay vì ID loại phòng (ví dụ: 1) ra giao diện
+    // Lấy danh sách tất cả các phòng kèm theo tên loại phòng tương ứng
     public List<Room> findAllWithRoomTypeName() {
-        List<Room> list = new ArrayList<>();
-        // JOIN bảng rooms (viết tắt là r) và bảng room_types (viết tắt là rt)
-        // Điều kiện nối là: r.room_type_id = rt.id
-        String sql = "SELECT r.*, rt.name as room_type_name FROM rooms r JOIN room_types rt ON r.room_type_id = rt.id ORDER BY r.room_number ASC";
-        
+        List<Room> rooms = new ArrayList<>();
+        String sql = "SELECT r.*, rt.name AS room_type_name "
+                + "FROM rooms r "
+                + "JOIN room_types rt ON r.room_type_id = rt.id "
+                + "ORDER BY r.room_number ASC";
+
         try (Connection conn = DBConnectionUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            
             while (rs.next()) {
-                Room r = mapRow(rs); // Chuyển dữ liệu của bảng rooms thành đối tượng Room
-                // Lấy thêm cái tên loại phòng từ câu lệnh SQL và gán vào thuộc tính phụ (transient)
-                r.setRoomTypeName(rs.getString("room_type_name")); 
-                list.add(r);
+                Room room = mapRow(rs);
+                room.setRoomTypeName(rs.getString("room_type_name"));
+                rooms.add(room);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return list;
+        return rooms;
     }
-    
-    // Lấy danh sách các phòng (chỉ dữ liệu thuần của bảng rooms)
+
+    // Lấy danh sách các phòng, chỉ dữ liệu thuần của bảng rooms
     public List<Room> findAll() {
-        List<Room> list = new ArrayList<>();
+        List<Room> rooms = new ArrayList<>();
         String sql = "SELECT * FROM rooms ORDER BY room_number ASC";
+
         try (Connection conn = DBConnectionUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(mapRow(rs));
+                rooms.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return list;
+        return rooms;
     }
 
     // Tìm một phòng cụ thể theo ID
     public Optional<Room> findById(long id) {
         String sql = "SELECT * FROM rooms WHERE id = ?";
+
         try (Connection conn = DBConnectionUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
@@ -69,78 +74,33 @@ public class RoomDao {
 
     // Thêm mới một phòng vật lý
     public boolean insert(Room room) {
-        String sql = "INSERT INTO rooms (room_type_id, room_number, floor_number, status, description) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO rooms (room_type_id, room_number, floor_number, status, description) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
         try (Connection conn = DBConnectionUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            
             ps.setLong(1, room.getRoomTypeId());
             ps.setString(2, room.getRoomNumber());
-            
-            // Xử lý tầng: Nếu người dùng không nhập tầng (null) thì set giá trị NULL trong SQL
+
+            // Nếu người dùng không nhập tầng thì lưu NULL vào database
             if (room.getFloorNumber() != null) {
                 ps.setInt(3, room.getFloorNumber());
             } else {
-                ps.setNull(3, Types.INTEGER); // Gán giá trị NULL của kiểu INTEGER
+                ps.setNull(3, Types.INTEGER);
             }
-            
+
             ps.setString(4, room.getStatus());
             ps.setString(5, room.getDescription());
-            
+
             int affected = ps.executeUpdate();
             if (affected > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
-                        room.setId(rs.getLong(1)); // Cập nhật ID tự động sinh
+                        // Cập nhật ID tự sinh cho đối tượng Room
+                        room.setId(rs.getLong(1));
                     }
                 }
                 return true;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Date;
-import model.Room;
-import util.DBConnectionUtil;
-
-public class RoomDAO {
-
-    // UC10, UC11: Tìm kiếm phòng
-    public List<Room> searchRooms(Date checkIn, Date checkOut, int guests, int roomTypeId) {
-        List<Room> rooms = new ArrayList<>();
-        String sql = "SELECT r.* FROM room r JOIN room_type rt ON r.room_type_id = rt.room_type_id " +
-                     "WHERE rt.max_occupancy >= ? AND r.status = 'Available' " +
-                     "AND r.room_id NOT IN (" +
-                     "    SELECT room_id FROM booking_room br JOIN booking b ON br.booking_id = b.booking_id " +
-                     "    WHERE (b.check_in_date < ? AND b.check_out_date > ?) AND br.status != 'Cancelled'" +
-                     ")";
-        if (roomTypeId > 0) {
-            sql += " AND r.room_type_id = ?";
-        }
-        
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-            ps.setInt(1, guests);
-            ps.setDate(2, new java.sql.Date(checkOut.getTime()));
-            ps.setDate(3, new java.sql.Date(checkIn.getTime()));
-            
-            if (roomTypeId > 0) {
-                ps.setInt(4, roomTypeId);
-            }
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Room room = new Room();
-                    room.setRoomId(rs.getInt("room_id"));
-                    room.setRoomNumber(rs.getString("room_number"));
-                    room.setFloor(rs.getInt("floor"));
-                    room.setRoomTypeId(rs.getInt("room_type_id"));
-                    room.setStatus(rs.getString("status"));
-                    room.setViewType(rs.getString("view_type"));
-                    rooms.add(room);
-                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -150,24 +110,25 @@ public class RoomDAO {
 
     // Cập nhật thông tin phòng vật lý
     public boolean update(Room room) {
-        String sql = "UPDATE rooms SET room_type_id = ?, room_number = ?, floor_number = ?, status = ?, description = ? WHERE id = ?";
+        String sql = "UPDATE rooms SET room_type_id = ?, room_number = ?, floor_number = ?, status = ?, description = ? "
+                + "WHERE id = ?";
+
         try (Connection conn = DBConnectionUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
             ps.setLong(1, room.getRoomTypeId());
             ps.setString(2, room.getRoomNumber());
-            
-            // Tương tự hàm insert, nếu tầng rỗng thì set NULL
+
+            // Tương tự insert, nếu tầng rỗng thì lưu NULL
             if (room.getFloorNumber() != null) {
                 ps.setInt(3, room.getFloorNumber());
             } else {
                 ps.setNull(3, Types.INTEGER);
             }
-            
+
             ps.setString(4, room.getStatus());
             ps.setString(5, room.getDescription());
-            ps.setLong(6, room.getId()); // ID của phòng cần cập nhật
-            
+            ps.setLong(6, room.getId());
+
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -175,9 +136,10 @@ public class RoomDAO {
         return false;
     }
 
-    // Xóa một phòng (nhớ cẩn thận vì có thể phòng này đang có người đặt)
+    // Xóa một phòng
     public boolean delete(long id) {
         String sql = "DELETE FROM rooms WHERE id = ?";
+
         try (Connection conn = DBConnectionUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
@@ -190,44 +152,20 @@ public class RoomDAO {
 
     // Hàm phụ trợ chuyển đổi ResultSet thành đối tượng Room
     private Room mapRow(ResultSet rs) throws SQLException {
-        Room r = new Room();
-        r.setId(rs.getLong("id"));
-        r.setRoomTypeId(rs.getLong("room_type_id"));
-        r.setRoomNumber(rs.getString("room_number"));
-        
-        // Cần kiểm tra kĩ vì getInt("floor_number") có thể trả về 0 nếu trong database là NULL
-        int floor = rs.getInt("floor_number");
-        // rs.wasNull() kiểm tra xem cái cột đọc ra ngay trước đó (tức là floor_number) có phải bị NULL hay không
-        r.setFloorNumber(rs.wasNull() ? null : floor); 
-        
-        r.setStatus(rs.getString("status"));
-        r.setDescription(rs.getString("description"));
-        r.setCreatedAt(rs.getTimestamp("created_at"));
-        r.setUpdatedAt(rs.getTimestamp("updated_at"));
-        return r;
-        return rooms;
-    }
+        Room room = new Room();
+        room.setId(rs.getLong("id"));
+        room.setRoomTypeId(rs.getLong("room_type_id"));
+        room.setRoomNumber(rs.getString("room_number"));
 
-    // UC27: Xem sơ đồ phòng
-    public List<Room> getAllRooms() {
-        List<Room> rooms = new ArrayList<>();
-        String sql = "SELECT * FROM room";
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Room room = new Room();
-                room.setRoomId(rs.getInt("room_id"));
-                room.setRoomNumber(rs.getString("room_number"));
-                room.setFloor(rs.getInt("floor"));
-                room.setRoomTypeId(rs.getInt("room_type_id"));
-                room.setStatus(rs.getString("status"));
-                room.setViewType(rs.getString("view_type"));
-                rooms.add(room);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return rooms;
+        // getInt có thể trả về 0 nếu giá trị trong database là NULL
+        int floorNumber = rs.getInt("floor_number");
+        // wasNull() kiểm tra cột vừa đọc có phải NULL hay không
+        room.setFloorNumber(rs.wasNull() ? null : floorNumber);
+
+        room.setStatus(rs.getString("status"));
+        room.setDescription(rs.getString("description"));
+        room.setCreatedAt(rs.getTimestamp("created_at"));
+        room.setUpdatedAt(rs.getTimestamp("updated_at"));
+        return room;
     }
 }
