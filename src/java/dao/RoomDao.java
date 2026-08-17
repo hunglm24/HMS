@@ -128,6 +128,61 @@ public class RoomDao {
         return false;
     }
 
+    // Lấy danh sách các phòng trống trong khoảng thời gian cụ thể (Walk-in)
+    public List<Room> findAvailableRoomsForWalkIn(Date checkIn, Date checkOut, Long roomTypeId, Integer guests) {
+        List<Room> list = new ArrayList<>();
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT r.*, rt.name as room_type_name, rt.capacity FROM rooms r ");
+        sql.append("JOIN room_types rt ON r.room_type_id = rt.id ");
+        sql.append("WHERE r.status != 'MAINTENANCE' ");
+        sql.append("AND rt.status = 'ACTIVE' ");
+        
+        if (roomTypeId != null) {
+            sql.append("AND r.room_type_id = ? ");
+        }
+        
+        // Không cho phép đặt lố số khách mặc định
+        if (guests != null) {
+            sql.append("AND rt.capacity >= ? ");
+        }
+        
+        sql.append("AND r.id NOT IN ( ");
+        sql.append("  SELECT br.room_id FROM booking_rooms br ");
+        sql.append("  JOIN bookings b ON br.booking_id = b.id ");
+        sql.append("  WHERE b.status NOT IN ('CANCELLED', 'NO_SHOW', 'CHECKED_OUT') ");
+        sql.append("  AND (b.check_in_date < ? AND b.check_out_date > ?) ");
+        sql.append(") ORDER BY r.room_number ASC");
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            if (roomTypeId != null) {
+                ps.setLong(paramIndex++, roomTypeId);
+            }
+            if (guests != null) {
+                ps.setInt(paramIndex++, guests);
+            }
+            
+            ps.setDate(paramIndex++, checkOut);
+            ps.setDate(paramIndex++, checkIn);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room r = mapRow(rs);
+                    r.setRoomTypeName(rs.getString("room_type_name"));
+                    // Dùng description tạm để pass capacity cho frontend hiển thị
+                    r.setDescription("Sức chứa: " + rs.getInt("capacity") + " khách");
+                    list.add(r);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // Xóa một phòng (nhớ cẩn thận vì có thể phòng này đang có người đặt)
     public boolean delete(long id) {
         String sql = "DELETE FROM rooms WHERE id = ?";

@@ -36,8 +36,32 @@ public class MyBookingsServlet extends HttpServlet {
             return;
         }
         
-        List<Booking> bookings = bookingDao.findByCustomerId(user.getId());
+        String status = request.getParameter("status");
+        if (status == null || status.isEmpty()) {
+            status = "ALL";
+        }
+        String bookingCode = request.getParameter("bookingCode");
+        
+        java.sql.Date fromDate = null;
+        try {
+            if (request.getParameter("fromDate") != null && !request.getParameter("fromDate").isEmpty()) {
+                fromDate = java.sql.Date.valueOf(request.getParameter("fromDate"));
+            }
+        } catch (IllegalArgumentException ignored) {}
+        
+        java.sql.Date toDate = null;
+        try {
+            if (request.getParameter("toDate") != null && !request.getParameter("toDate").isEmpty()) {
+                toDate = java.sql.Date.valueOf(request.getParameter("toDate"));
+            }
+        } catch (IllegalArgumentException ignored) {}
+        
+        List<Booking> bookings = bookingDao.findByCustomerIdWithFilters(user.getId(), status, bookingCode, fromDate, toDate);
         request.setAttribute("bookings", bookings);
+        request.setAttribute("currentStatus", status);
+        request.setAttribute("bookingCode", bookingCode);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
         
         request.getRequestDispatcher("/WEB-INF/views/public/my-bookings.jsp").forward(request, response);
     }

@@ -31,8 +31,6 @@
                 <a class="action-card" href="${pageContext.request.contextPath}/my-bookings"><strong>Đặt phòng của tôi</strong><span>Xem trạng thái, lịch sử hoặc hủy đặt phòng.</span></a>
             <% } else if ("RECEPTIONIST".equalsIgnoreCase(dashboardRole)) { %>
                 <a class="action-card" href="${pageContext.request.contextPath}/reception/walk-in"><strong>Đặt phòng tại quầy</strong><span>Tạo booking cho khách đến trực tiếp.</span></a>
-                <a class="action-card" href="${pageContext.request.contextPath}/reception/check-in"><strong>Nhận phòng</strong><span>Xác minh khách và gán phòng thực tế.</span></a>
-                <a class="action-card" href="${pageContext.request.contextPath}/reception/check-out"><strong>Trả phòng</strong><span>Tổng hợp chi phí, thanh toán và xuất hóa đơn.</span></a>
             <% } else if ("HOUSEKEEPING".equalsIgnoreCase(dashboardRole)) { %>
                 <a class="action-card" href="${pageContext.request.contextPath}/housekeeping/tasks"><strong>Phòng cần xử lý</strong><span>Nhận việc và cập nhật Dirty → Cleaning → Clean.</span></a>
                 <a class="action-card" href="${pageContext.request.contextPath}/housekeeping/issues"><strong>Báo cáo sự cố</strong><span>Ghi nhận vấn đề phòng hoặc thiết bị.</span></a>

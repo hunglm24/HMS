@@ -1,105 +1,134 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.Map" %>
 <%@ page import="model.Room" %>
+<%@ page import="model.RoomType" %>
+<%@ page import="java.util.List" %>
 <%
-    Map<Integer, List<Room>> roomsByFloor = (Map<Integer, List<Room>>) request.getAttribute("roomsByFloor");
-    Long availableCount = (Long) request.getAttribute("availableCount");
-    Long occupiedCount = (Long) request.getAttribute("occupiedCount");
-    Long cleaningCount = (Long) request.getAttribute("cleaningCount");
-    Long maintenanceCount = (Long) request.getAttribute("maintenanceCount");
-    Integer totalCount = (Integer) request.getAttribute("totalCount");
+    List<Room> rooms = (List<Room>) request.getAttribute("rooms");
+    List<RoomType> roomTypes = (List<RoomType>) request.getAttribute("roomTypes");
+    
+    Long statAvailable = (Long) request.getAttribute("statAvailable");
+    Long statOccupied = (Long) request.getAttribute("statOccupied");
+    Long statCleaning = (Long) request.getAttribute("statCleaning");
+    Long statMaintenance = (Long) request.getAttribute("statMaintenance");
+    Integer statTotal = (Integer) request.getAttribute("statTotal");
+    
+    String currentFloor = (String) request.getAttribute("currentFloor");
+    String currentRoomType = (String) request.getAttribute("currentRoomType");
+    String currentStatus = (String) request.getAttribute("currentStatus");
+    if (currentStatus == null) currentStatus = "ALL";
 %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sơ đồ phòng - HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
+    <title>Sơ đồ Phòng - HMS</title>
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/main.css">
     <style>
-        .map-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
-        .stats-row { display: flex; gap: 15px; margin-top: 15px; }
-        .stat-badge { padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; border: 1px solid var(--color-border); }
-        .stat-available { background: var(--color-success-100); color: #166534; border-color: #bbf7d0; }
-        .stat-occupied { background: var(--color-primary-100); color: var(--color-primary-600); border-color: #bfdbfe; }
-        .stat-cleaning { background: #fef3c7; color: #b45309; border-color: #fde68a; }
-        .stat-maintenance { background: var(--color-error-100); color: #991b1b; border-color: #fca5a5; }
+        .stats-container { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stat-card { flex: 1; padding: 15px; border-radius: 8px; text-align: center; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stat-card h3 { margin: 0; font-size: 2em; }
+        .stat-card p { margin: 5px 0 0 0; font-weight: bold; }
+        .stat-available { background: #28a745; }
+        .stat-occupied { background: #dc3545; }
+        .stat-cleaning { background: #ffc107; color: #333 !important; }
+        .stat-maintenance { background: #6c757d; }
+        .stat-total { background: #007bff; }
         
-        .floor-section { margin-bottom: 30px; }
-        .floor-title { margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--color-border); color: var(--color-text-secondary); }
+        .filters { background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; }
+        .filter-group { display: flex; flex-direction: column; flex: 1; }
+        .filter-group label { margin-bottom: 5px; font-weight: bold; }
+        .filter-group select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
         
-        .room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
-        .room-card { border-radius: 12px; padding: 16px; border: 2px solid transparent; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s; }
-        .room-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        
-        .room-card.AVAILABLE { background: var(--color-success-100); border-color: #bbf7d0; }
-        .room-card.OCCUPIED { background: var(--color-primary-100); border-color: #bfdbfe; }
-        .room-card.CLEANING { background: #fef3c7; border-color: #fde68a; }
-        .room-card.MAINTENANCE { background: var(--color-error-100); border-color: #fca5a5; }
-        .room-card.NOT_READY, .room-card.INSPECTION { background: #f3f4f6; border-color: #e5e7eb; }
-        
-        .room-number { font-size: 24px; font-weight: 800; margin-bottom: 4px; color: var(--color-text-primary); }
-        .room-type { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 12px; }
-        
-        .room-status { font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05); }
-        .AVAILABLE .room-status { color: #166534; }
-        .OCCUPIED .room-status { color: var(--color-primary-600); }
-        .CLEANING .room-status { color: #b45309; }
-        .MAINTENANCE .room-status { color: #991b1b; }
+        .room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .room-box { border-radius: 8px; padding: 20px 10px; text-align: center; color: white; cursor: pointer; transition: transform 0.2s; position: relative; }
+        .room-box:hover { transform: scale(1.05); }
+        .room-box h2 { margin: 0; font-size: 1.5em; }
+        .room-box .type { font-size: 0.85em; margin-top: 5px; opacity: 0.9; }
+        .room-box.AVAILABLE { background: #28a745; }
+        .room-box.OCCUPIED { background: #dc3545; }
+        .room-box.CLEANING { background: #ffc107; color: #333; }
+        .room-box.MAINTENANCE { background: #6c757d; }
     </style>
 </head>
 <body>
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <main class="page-container">
+    <main class="page-container" style="max-width: 1400px;">
+        <h1>Sơ đồ Phòng</h1>
         
-        <div class="map-header">
-            <div>
-                <h2>Sơ đồ phòng</h2>
-                <div class="stats-row">
-                    <div class="stat-badge stat-available">Trống: <%= availableCount %></div>
-                    <div class="stat-badge stat-occupied">Đang có khách: <%= occupiedCount %></div>
-                    <div class="stat-badge stat-cleaning">Đang dọn: <%= cleaningCount %></div>
-                    <div class="stat-badge stat-maintenance">Bảo trì: <%= maintenanceCount %></div>
-                    <div class="stat-badge">Tổng: <%= totalCount %></div>
-                </div>
+        <div class="stats-container">
+            <div class="stat-card stat-total">
+                <h3><%= statTotal %></h3>
+                <p>Tổng số phòng</p>
             </div>
-            <div>
-                <!-- Add filters if needed in the future -->
+            <div class="stat-card stat-available">
+                <h3><%= statAvailable %></h3>
+                <p>Trống (AVAILABLE)</p>
+            </div>
+            <div class="stat-card stat-occupied">
+                <h3><%= statOccupied %></h3>
+                <p>Có khách (OCCUPIED)</p>
+            </div>
+            <div class="stat-card stat-cleaning">
+                <h3><%= statCleaning %></h3>
+                <p>Đang dọn (CLEANING)</p>
+            </div>
+            <div class="stat-card stat-maintenance">
+                <h3><%= statMaintenance %></h3>
+                <p>Bảo trì (MAINTENANCE)</p>
             </div>
         </div>
-
-        <% if (roomsByFloor != null && !roomsByFloor.isEmpty()) { 
-            for (Map.Entry<Integer, List<Room>> entry : roomsByFloor.entrySet()) {
-                Integer floor = entry.getKey();
-                List<Room> floorRooms = entry.getValue();
-        %>
-            <div class="floor-section">
-                <h3 class="floor-title"><%= floor == 0 ? "Không rõ tầng" : "Tầng " + floor %></h3>
-                <div class="room-grid">
-                    <% for (Room r : floorRooms) { 
-                        String statusLabel = "Không rõ";
-                        switch (r.getStatus()) {
-                            case "AVAILABLE": statusLabel = "Trống"; break;
-                            case "OCCUPIED": statusLabel = "Có khách"; break;
-                            case "CLEANING": statusLabel = "Đang dọn"; break;
-                            case "MAINTENANCE": statusLabel = "Bảo trì"; break;
-                            case "NOT_READY": statusLabel = "Chưa sẵn sàng"; break;
-                            case "INSPECTION": statusLabel = "Chờ kiểm tra"; break;
-                        }
-                    %>
-                    <div class="room-card <%= r.getStatus() %>" onclick="alert('Phòng <%= r.getRoomNumber() %> - Trạng thái: <%= statusLabel %>')">
-                        <div class="room-number"><%= r.getRoomNumber() %></div>
-                        <div class="room-type"><%= r.getRoomTypeName() %></div>
-                        <div class="room-status"><%= statusLabel %></div>
-                    </div>
-                    <% } %>
-                </div>
+        
+        <form class="filters" action="<%= request.getContextPath() %>/reception/room-map" method="GET">
+            <div class="filter-group">
+                <label>Trạng thái</label>
+                <select name="status" onchange="this.form.submit()">
+                    <option value="ALL">Tất cả</option>
+                    <option value="AVAILABLE" <%= "AVAILABLE".equals(currentStatus) ? "selected" : "" %>>Trống</option>
+                    <option value="OCCUPIED" <%= "OCCUPIED".equals(currentStatus) ? "selected" : "" %>>Có khách</option>
+                    <option value="CLEANING" <%= "CLEANING".equals(currentStatus) ? "selected" : "" %>>Đang dọn</option>
+                    <option value="MAINTENANCE" <%= "MAINTENANCE".equals(currentStatus) ? "selected" : "" %>>Bảo trì</option>
+                </select>
             </div>
-        <%  }
-        } else { %>
-            <p>Không có phòng nào trong hệ thống.</p>
-        <% } %>
+            <div class="filter-group">
+                <label>Tầng</label>
+                <select name="floor" onchange="this.form.submit()">
+                    <option value="">Tất cả các tầng</option>
+                    <% for (int i = 1; i <= 10; i++) { %>
+                        <option value="<%= i %>" <%= String.valueOf(i).equals(currentFloor) ? "selected" : "" %>>Tầng <%= i %></option>
+                    <% } %>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Loại phòng</label>
+                <select name="roomType" onchange="this.form.submit()">
+                    <option value="">Tất cả loại phòng</option>
+                    <% if (roomTypes != null) { 
+                        for (RoomType rt : roomTypes) { %>
+                            <option value="<%= rt.getId() %>" <%= String.valueOf(rt.getId()).equals(currentRoomType) ? "selected" : "" %>><%= rt.getName() %></option>
+                    <%  } 
+                       } %>
+                </select>
+            </div>
+            <div class="filter-group" style="flex: 0 0 auto;">
+                <button type="submit" class="btn btn-primary" style="height: 38px;">Lọc</button>
+            </div>
+        </form>
+        
+        <div class="room-grid">
+            <% if (rooms != null && !rooms.isEmpty()) { 
+                   for (Room r : rooms) { %>
+                    <div class="room-box <%= r.getStatus() %>" title="<%= r.getDescription() %>">
+                        <h2><%= r.getRoomNumber() %></h2>
+                        <div class="type"><%= r.getRoomTypeName() %></div>
+                    </div>
+            <%     }
+               } else { %>
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #f9f9f9; border-radius: 8px;">
+                    <p>Không có phòng nào phù hợp với bộ lọc.</p>
+                </div>
+            <% } %>
+        </div>
+        
     </main>
 </body>
 </html>

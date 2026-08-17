@@ -3,6 +3,14 @@ import java.math.BigDecimal; import java.sql.Date; import java.sql.Timestamp;
 public class Booking extends BaseEntity {
  private String bookingCode,bookingSource,status,cancellationReason; private Long customerId,createdBy; private Date checkInDate,checkOutDate; private Timestamp checkInDatetime,checkOutDatetime,cancelledAt,updatedAt;
  private BigDecimal totalRoomAmount,totalServiceAmount,totalDamageAmount,discountAmount,totalAmount;
+ 
+ // Transient fields for UI display
+ private String customerName, customerPhone, customerEmail, roomNumbers;
+ public String getCustomerName() { return customerName; } public void setCustomerName(String v) { customerName = v; }
+ public String getCustomerPhone() { return customerPhone; } public void setCustomerPhone(String v) { customerPhone = v; }
+ public String getCustomerEmail() { return customerEmail; } public void setCustomerEmail(String v) { customerEmail = v; }
+ public String getRoomNumbers() { return roomNumbers; } public void setRoomNumbers(String v) { roomNumbers = v; }
+ 
  public String getBookingCode(){return bookingCode;} public void setBookingCode(String v){bookingCode=v;} public Long getCustomerId(){return customerId;} public void setCustomerId(Long v){customerId=v;}
  public String getBookingSource(){return bookingSource;} public void setBookingSource(String v){bookingSource=v;} public Date getCheckInDate(){return checkInDate;} public void setCheckInDate(Date v){checkInDate=v;} public Date getCheckOutDate(){return checkOutDate;} public void setCheckOutDate(Date v){checkOutDate=v;}
  public Timestamp getCheckInDatetime(){return checkInDatetime;} public void setCheckInDatetime(Timestamp v){checkInDatetime=v;} public Timestamp getCheckOutDatetime(){return checkOutDatetime;} public void setCheckOutDatetime(Timestamp v){checkOutDatetime=v;}

@@ -59,8 +59,6 @@
                         <a href="<%= contextPath %>/reception/room-map">Sơ đồ phòng</a>
                     </div>
                 </div>
-                <a href="<%= contextPath %>/reception/check-in">Nhận phòng</a>
-                <a href="<%= contextPath %>/reception/check-out">Trả phòng</a>
             <% } %>
 
             <% if (housekeeping) { %>

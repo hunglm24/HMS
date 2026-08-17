@@ -31,6 +31,43 @@
     <main class="page-container">
         <h1>Lịch sử Đặt phòng của tôi</h1>
         
+        <%
+            String currentStatus = (String) request.getAttribute("currentStatus");
+            if (currentStatus == null) currentStatus = "ALL";
+            String bookingCode = (String) request.getAttribute("bookingCode");
+            java.sql.Date fromDate = (java.sql.Date) request.getAttribute("fromDate");
+            java.sql.Date toDate = (java.sql.Date) request.getAttribute("toDate");
+        %>
+        
+        <form action="<%= request.getContextPath() %>/my-bookings" method="GET" style="margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" name="bookingCode" placeholder="Mã đơn đặt phòng..." value="<%= bookingCode != null ? bookingCode : "" %>" style="flex: 1; padding: 8px;">
+                <input type="date" name="fromDate" value="<%= fromDate != null ? fromDate.toString() : "" %>" style="padding: 8px;">
+                <input type="date" name="toDate" value="<%= toDate != null ? toDate.toString() : "" %>" style="padding: 8px;">
+                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            </div>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                <input type="hidden" name="status" id="statusField" value="<%= currentStatus %>">
+                <%
+                    String[][] tabs = {
+                        {"ALL", "Tất cả"},
+                        {"PENDING_PAYMENT", "Chờ thanh toán"},
+                        {"CONFIRMED", "Đã xác nhận"},
+                        {"CHECKED_IN", "Đang ở"},
+                        {"CHECKED_OUT", "Đã hoàn thành"},
+                        {"CANCELLED", "Đã hủy"}
+                    };
+                    for (String[] tab : tabs) {
+                        String activeClass = tab[0].equals(currentStatus) ? "background: #007bff; color: white;" : "background: #e9ecef; color: #333;";
+                %>
+                <button type="button" onclick="document.getElementById('statusField').value='<%= tab[0] %>'; this.form.submit();" 
+                        style="padding: 8px 15px; border: none; border-radius: 20px; cursor: pointer; <%= activeClass %>">
+                    <%= tab[1] %>
+                </button>
+                <% } %>
+            </div>
+        </form>
+        
         <% if (bookings != null && !bookings.isEmpty()) { %>
             <table>
                 <thead>
@@ -63,8 +100,10 @@
                 </tbody>
             </table>
         <% } else { %>
-            <p>Bạn chưa có đơn đặt phòng nào.</p>
-            <a href="<%= request.getContextPath() %>/search" class="btn btn-primary">Khám phá các phòng trống</a>
+            <div style="padding: 30px; text-align: center; border: 1px solid #ddd; background: #fff; border-radius: 8px;">
+                <p>Không tìm thấy đơn đặt phòng nào phù hợp.</p>
+                <a href="<%= request.getContextPath() %>/search" class="btn btn-primary" style="margin-top: 10px; display: inline-block;">Khám phá các phòng trống</a>
+            </div>
         <% } %>
     </main>
 </body>

@@ -124,12 +124,43 @@ public class BookingDao {
         return false;
     }
 
-    public List<Booking> findByCustomerId(long customerId) {
+    public List<Booking> findByCustomerIdWithFilters(long customerId, String status, String bookingCode, Date fromDate, Date toDate) {
         List<Booking> list = new ArrayList<>();
-        String sql = "SELECT * FROM bookings WHERE customer_id = ? ORDER BY id DESC";
+        StringBuilder sql = new StringBuilder("SELECT * FROM bookings WHERE customer_id = ? ");
+        
+        if (status != null && !status.isEmpty() && !status.equals("ALL")) {
+            sql.append(" AND status = ? ");
+        }
+        if (bookingCode != null && !bookingCode.isEmpty()) {
+            sql.append(" AND booking_code LIKE ? ");
+        }
+        if (fromDate != null) {
+            sql.append(" AND check_in_date >= ? ");
+        }
+        if (toDate != null) {
+            sql.append(" AND check_in_date <= ? ");
+        }
+        sql.append(" ORDER BY id DESC");
+        
         try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, customerId);
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            ps.setLong(paramIndex++, customerId);
+            
+            if (status != null && !status.isEmpty() && !status.equals("ALL")) {
+                ps.setString(paramIndex++, status);
+            }
+            if (bookingCode != null && !bookingCode.isEmpty()) {
+                ps.setString(paramIndex++, "%" + bookingCode + "%");
+            }
+            if (fromDate != null) {
+                ps.setDate(paramIndex++, fromDate);
+            }
+            if (toDate != null) {
+                ps.setDate(paramIndex++, toDate);
+            }
+            
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
@@ -184,6 +215,86 @@ public class BookingDao {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Booking> searchBookingsForReception(String keyword, String status, String dateType, Date fromDate, Date toDate, String bookingSource, String paymentStatus) {
+        List<Booking> list = new ArrayList<>();
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT b.*, a.full_name AS customer_name, a.phone AS customer_phone, a.email AS customer_email, ");
+        sql.append(" (SELECT GROUP_CONCAT(r.room_number SEPARATOR ', ') FROM booking_rooms br JOIN rooms r ON br.room_id = r.id WHERE br.booking_id = b.id) AS room_numbers ");
+        sql.append("FROM bookings b ");
+        sql.append("LEFT JOIN accounts a ON b.customer_id = a.id ");
+        sql.append("WHERE 1=1 ");
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (b.booking_code LIKE ? OR a.full_name LIKE ? OR a.phone LIKE ? OR a.email LIKE ? OR b.id IN (SELECT br.booking_id FROM booking_rooms br JOIN rooms r ON br.room_id = r.id WHERE r.room_number LIKE ?)) ");
+        }
+        
+        if (status != null && !status.isEmpty() && !status.equals("ALL")) {
+            sql.append(" AND b.status = ? ");
+        }
+        
+        if (bookingSource != null && !bookingSource.isEmpty() && !bookingSource.equals("ALL")) {
+            sql.append(" AND b.booking_source = ? ");
+        }
+        
+        // payment status might need join with invoices or payments table, skipping for now as it requires complex logic, assuming simple for demo.
+        
+        if (dateType != null && !dateType.isEmpty() && fromDate != null && toDate != null) {
+            if (dateType.equals("CREATED")) {
+                sql.append(" AND DATE(b.created_at) >= ? AND DATE(b.created_at) <= ? ");
+            } else if (dateType.equals("CHECKIN")) {
+                sql.append(" AND b.check_in_date >= ? AND b.check_in_date <= ? ");
+            } else if (dateType.equals("CHECKOUT")) {
+                sql.append(" AND b.check_out_date >= ? AND b.check_out_date <= ? ");
+            } else if (dateType.equals("STAY")) {
+                sql.append(" AND (b.check_in_date <= ? AND b.check_out_date >= ?) "); // Intersecting stay
+            }
+        }
+        
+        sql.append(" ORDER BY b.id DESC");
+        
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String kw = "%" + keyword.trim() + "%";
+                ps.setString(paramIndex++, kw);
+                ps.setString(paramIndex++, kw);
+                ps.setString(paramIndex++, kw);
+                ps.setString(paramIndex++, kw);
+                ps.setString(paramIndex++, kw);
+            }
+            
+            if (status != null && !status.isEmpty() && !status.equals("ALL")) {
+                ps.setString(paramIndex++, status);
+            }
+            
+            if (bookingSource != null && !bookingSource.isEmpty() && !bookingSource.equals("ALL")) {
+                ps.setString(paramIndex++, bookingSource);
+            }
+            
+            if (dateType != null && !dateType.isEmpty() && fromDate != null && toDate != null) {
+                ps.setDate(paramIndex++, fromDate);
+                ps.setDate(paramIndex++, toDate);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Booking b = mapRow(rs);
+                    b.setCustomerName(rs.getString("customer_name"));
+                    b.setCustomerPhone(rs.getString("customer_phone"));
+                    b.setCustomerEmail(rs.getString("customer_email"));
+                    b.setRoomNumbers(rs.getString("room_numbers"));
+                    list.add(b);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     private Booking mapRow(ResultSet rs) throws SQLException {
