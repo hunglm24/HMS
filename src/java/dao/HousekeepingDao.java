@@ -737,6 +737,91 @@ public class HousekeepingDao {
         return value == null ? null : ((Number) value).longValue();
     }
 
+    public void reportIssue(long roomId, Long roomEquipmentId, String note) throws SQLException {
+        String sql = """
+                INSERT INTO housekeeping_tasks
+                    (room_id, room_equipment_id, task_type, priority, status, note)
+                VALUES (?, ?, 'EQUIPMENT_REPAIR', 'HIGH', 'PENDING', ?)
+                """;
+        try (Connection connection = requireConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, roomId);
+            if (roomEquipmentId != null && roomEquipmentId > 0) {
+                statement.setLong(2, roomEquipmentId);
+            } else {
+                statement.setNull(2, java.sql.Types.BIGINT);
+            }
+            statement.setString(3, note);
+            statement.executeUpdate();
+        }
+    }
+
+    public List<HousekeepingTask> findIssueTasks(String keyword, Integer floor, String sortColumn, String direction, int offset, int limit) throws SQLException {
+        StringBuilder sql = new StringBuilder(TASK_SELECT)
+                .append(" WHERE ht.task_type IN ('EQUIPMENT_REPAIR', 'MAINTENANCE_CHECK', 'EQUIPMENT_REPLACEMENT')");
+        List<Object> params = new ArrayList<>();
+        appendRoomFilters(sql, params, keyword, floor);
+        sql.append(" ORDER BY ").append(sortColumn).append(' ').append(direction)
+                .append(", ht.id DESC LIMIT ? OFFSET ?");
+        try (Connection connection = requireConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            int index = bind(statement, params);
+            statement.setInt(index++, limit);
+            statement.setInt(index, offset);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<HousekeepingTask> result = new ArrayList<>();
+                while (rs.next()) result.add(mapTask(rs));
+                return result;
+            }
+        }
+    }
+
+    public int countIssueTasks(String keyword, Integer floor) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+                SELECT COUNT(*) FROM housekeeping_tasks ht
+                JOIN rooms rm ON rm.id = ht.room_id
+                JOIN room_types rt ON rt.id = rm.room_type_id
+                WHERE ht.task_type IN ('EQUIPMENT_REPAIR', 'MAINTENANCE_CHECK', 'EQUIPMENT_REPLACEMENT')
+                """);
+        List<Object> params = new ArrayList<>();
+        appendRoomFilters(sql, params, keyword, floor);
+        try (Connection connection = requireConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            bind(statement, params);
+            try (ResultSet rs = statement.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    public List<HousekeepingTask.EquipmentCheck> findDamagedEquipments(long roomId) throws SQLException {
+        String sql = """
+                SELECT re.id, e.name, re.quantity, re.status,
+                       NULL AS initial_status, NULL AS initial_quantity
+                FROM room_equipment re
+                JOIN equipment e ON e.id = re.equipment_id
+                WHERE re.room_id = ? AND re.status IN ('DAMAGED', 'MISSING', 'WAITING_REPAIR', 'WAITING_REPLACEMENT', 'MAINTENANCE')
+                ORDER BY e.name
+                """;
+        try (Connection connection = requireConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, roomId);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<HousekeepingTask.EquipmentCheck> result = new ArrayList<>();
+                while (rs.next()) {
+                    HousekeepingTask.EquipmentCheck item = new HousekeepingTask.EquipmentCheck();
+                    item.setRoomEquipmentId(rs.getLong("id"));
+                    item.setEquipmentName(rs.getString("name"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setCurrentStatus(rs.getString("status"));
+                    result.add(item);
+                }
+                return result;
+            }
+        }
+    }
+
     private Connection requireConnection() throws SQLException {
         Connection connection = DBConnectionUtil.getConnection();
         if (connection == null) throw new SQLException("Không thể kết nối cơ sở dữ liệu");
