@@ -1,6 +1,8 @@
 @import url("./design-tokens.css?v=20260816-4");
 @import url("./components.css?v=20260816-4");
 @import url("./layout.css?v=20260816-4");
+@import url("design-tokens.css");
+@import url("components.css");
 
 * { box-sizing: border-box; }
 
@@ -56,8 +58,7 @@ p {
 a {
     color: var(--color-primary-600);
 }
-@import url("design-tokens.css");
-@import url("components.css");
+
 
 :root {
     --header-blue: var(--color-primary-600);

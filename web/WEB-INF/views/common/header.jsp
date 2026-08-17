@@ -95,6 +95,20 @@
         </nav>
     </div>
 </header>
+<c:if test="${not empty sessionScope.message}">
+    <div class="toast toast-success" style="position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 15px 20px; border-radius: 5px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        ${sessionScope.message}
+    </div>
+    <script>setTimeout(function() { document.querySelector('.toast-success').style.display = 'none'; }, 5000);</script>
+    <c:remove var="message" scope="session" />
+</c:if>
+<c:if test="${not empty sessionScope.error}">
+    <div class="toast toast-error" style="position: fixed; bottom: 20px; right: 20px; background: #dc3545; color: white; padding: 15px 20px; border-radius: 5px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        ${sessionScope.error}
+    </div>
+    <script>setTimeout(function() { document.querySelector('.toast-error').style.display = 'none'; }, 5000);</script>
+    <c:remove var="error" scope="session" />
+</c:if>
 <% if (internal) { %>
     <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 <% } %>

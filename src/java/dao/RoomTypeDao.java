@@ -19,11 +19,76 @@ public class RoomTypeDao {
         List<RoomType> roomTypes = new ArrayList<>();
         String sql = "SELECT * FROM room_types ORDER BY id DESC";
 
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 roomTypes.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<RoomType> findAvailableRoomTypes(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int guests, int numRooms, Double minPrice, Double maxPrice, String sort, Long roomTypeId) {
+        List<RoomType> roomTypes = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT rt.*, 
+                   (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status = 'AVAILABLE')
+                   - 
+                   (SELECT COUNT(br.room_id)
+                    FROM booking_rooms br
+                    JOIN bookings b ON br.booking_id = b.id
+                    JOIN rooms r ON br.room_id = r.id
+                    WHERE r.room_type_id = rt.id
+                      AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                      AND b.check_in_date < ? AND b.check_out_date > ?) AS availableQuantity
+            FROM room_types rt
+            WHERE (rt.capacity * ?) >= ? AND rt.status = 'ACTIVE'
+            """);
+
+        if (roomTypeId != null && roomTypeId > 0) {
+            sql.append(" AND rt.id = ?");
+        }
+        if (minPrice != null) {
+            sql.append(" AND rt.base_price >= ?");
+        }
+        if (maxPrice != null) {
+            sql.append(" AND rt.base_price <= ?");
+        }
+        
+        sql.append(" HAVING availableQuantity >= ?");
+        
+        if ("PRICE_ASC".equals(sort)) {
+            sql.append(" ORDER BY rt.base_price ASC");
+        } else if ("PRICE_DESC".equals(sort)) {
+            sql.append(" ORDER BY rt.base_price DESC");
+        }
+
+        try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIdx = 1;
+            ps.setDate(paramIdx++, java.sql.Date.valueOf(checkOut));
+            ps.setDate(paramIdx++, java.sql.Date.valueOf(checkIn));
+            ps.setInt(paramIdx++, numRooms);
+            ps.setInt(paramIdx++, guests);
+            
+            if (roomTypeId != null && roomTypeId > 0) {
+                ps.setLong(paramIdx++, roomTypeId);
+            }
+            if (minPrice != null) {
+                ps.setDouble(paramIdx++, minPrice);
+            }
+            if (maxPrice != null) {
+                ps.setDouble(paramIdx++, maxPrice);
+            }
+            
+            ps.setInt(paramIdx++, numRooms);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    RoomType rt = mapRow(rs);
+                    rt.setAvailableQuantity(rs.getInt("availableQuantity"));
+                    roomTypes.add(rt);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -35,8 +100,7 @@ public class RoomTypeDao {
     public Optional<RoomType> findById(long id) {
         String sql = "SELECT * FROM room_types WHERE id = ?";
 
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -54,8 +118,7 @@ public class RoomTypeDao {
         String sql = "INSERT INTO room_types (name, description, capacity, base_price, status) "
                 + "VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, roomType.getName());
             ps.setString(2, roomType.getDescription());
             ps.setInt(3, roomType.getCapacity());
@@ -83,8 +146,7 @@ public class RoomTypeDao {
         String sql = "UPDATE room_types SET name = ?, description = ?, capacity = ?, base_price = ?, status = ? "
                 + "WHERE id = ?";
 
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, roomType.getName());
             ps.setString(2, roomType.getDescription());
             ps.setInt(3, roomType.getCapacity());
@@ -103,8 +165,7 @@ public class RoomTypeDao {
     public boolean delete(long id) {
         String sql = "DELETE FROM room_types WHERE id = ?";
 
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
