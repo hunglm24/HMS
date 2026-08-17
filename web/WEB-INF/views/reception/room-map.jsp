@@ -37,8 +37,26 @@
                     <div class="stat-badge">Tổng: ${totalCount}</div>
                 </div>
             </div>
-            <div><!-- future filters --></div>
-        </div>
+            <div>
+                <form method="get" action="${pageContext.request.contextPath}/receptionist/room-map" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <input type="text" name="search" value="${param.search}" placeholder="Số phòng, loại phòng...">
+                    <select name="status">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="AVAILABLE" ${param.status == 'AVAILABLE' ? 'selected' : ''}>Trống</option>
+                        <option value="OCCUPIED" ${param.status == 'OCCUPIED' ? 'selected' : ''}>Đang có khách</option>
+                        <option value="CLEANING" ${param.status == 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
+                        <option value="MAINTENANCE" ${param.status == 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
+                    </select>
+                    <select name="floor">
+                        <option value="">Tất cả tầng</option>
+                        <option value="1" ${param.floor == '1' ? 'selected' : ''}>Tầng 1</option>
+                        <option value="2" ${param.floor == '2' ? 'selected' : ''}>Tầng 2</option>
+                        <option value="3" ${param.floor == '3' ? 'selected' : ''}>Tầng 3</option>
+                        <option value="4" ${param.floor == '4' ? 'selected' : ''}>Tầng 4</option>
+                    </select>
+                    <button type="submit">Lọc</button>
+                </form>
+            </div>
 
         <c:if test="${not empty flashMessage}">
             <div class="message ${empty flashType ? 'success' : flashType}">

@@ -13,6 +13,63 @@ import java.util.List;
 import java.util.Optional;
 
 public class BookingDao {
+
+    public List<model.Booking> findBookingsByCustomerId(long customerId, String bookingCode, String status, String fromDate, String toDate) throws SQLException {
+        List<model.Booking> bookings = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM bookings WHERE customer_id = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(customerId);
+
+        if (bookingCode != null && !bookingCode.trim().isEmpty()) {
+            sql.append(" AND booking_code LIKE ?");
+            params.add("%" + bookingCode.trim() + "%");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND status = ?");
+            params.add(status.trim());
+        }
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            sql.append(" AND check_in_date >= ?");
+            params.add(java.sql.Date.valueOf(fromDate));
+        }
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            sql.append(" AND check_in_date <= ?");
+            params.add(java.sql.Date.valueOf(toDate));
+        }
+        
+        sql.append(" ORDER BY created_at DESC");
+
+        try (java.sql.Connection conn = DBConnectionUtil.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    model.Booking b = new model.Booking();
+                    b.setId(rs.getLong("id"));
+                    b.setBookingCode(rs.getString("booking_code"));
+                    b.setCheckInDate(rs.getDate("check_in_date"));
+                    b.setCheckOutDate(rs.getDate("check_out_date"));
+                    b.setTotalAmount(rs.getBigDecimal("total_amount"));
+                    b.setStatus(rs.getString("status"));
+                    bookings.add(b);
+                }
+            }
+        }
+        return bookings;
+    }
+
+    public boolean updateBookingStatus(long bookingId, String status) throws SQLException {
+        String sql = "UPDATE bookings SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (java.sql.Connection conn = DBConnectionUtil.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setLong(2, bookingId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     private static final String BASE_SELECT = """
             SELECT b.id AS booking_id,
                    b.booking_code,
@@ -25,6 +82,7 @@ public class BookingDao {
                    b.check_out_date,
                    b.status,
                    b.total_amount,
+                   b.note,
                    COALESCE((
                        SELECT SUM(p.amount)
                        FROM payments p
@@ -93,9 +151,9 @@ public class BookingDao {
     }
 
     public Optional<CheckInBookingSummary> findCheckInBookingById(int bookingId) throws SQLException {
-        QueryParts query = filters(null, null, null, null, bookingId);
+        QueryParts query = filters(null, null, null, null, bookingId, null, null, null);
         String sql = BASE_SELECT + query.whereClause()
-                + " GROUP BY b.id, b.booking_code, b.customer_id, guest_name, phone, email,"
+                + " GROUP BY b.id, b.booking_code, b.customer_id, guest_name, phone, email, b.note,"
                 + " b.booking_source, b.check_in_date, b.check_out_date, b.status, b.total_amount, b.created_at"
                 + " LIMIT 1";
         try (Connection connection = requireConnection();
@@ -110,10 +168,11 @@ public class BookingDao {
     public List<CheckInBookingSummary> findCheckInBookings(String keyword, String bookingStatus,
                                                            Integer roomTypeId, String scope,
                                                            String sortColumn, String sortDirection,
-                                                           int offset, int limit) throws SQLException {
-        QueryParts query = filters(keyword, bookingStatus, roomTypeId, scope, null);
+                                                           int offset, int limit,
+                                                           String fromDate, String toDate, String source) throws SQLException {
+        QueryParts query = filters(keyword, bookingStatus, roomTypeId, scope, null, fromDate, toDate, source);
         String sql = BASE_SELECT + query.whereClause()
-                + " GROUP BY b.id, b.booking_code, b.customer_id, guest_name, phone, email,"
+                + " GROUP BY b.id, b.booking_code, b.customer_id, guest_name, phone, email, b.note,"
                 + " b.booking_source, b.check_in_date, b.check_out_date, b.status, b.total_amount, b.created_at"
                 + " ORDER BY " + normalizeSortColumn(sortColumn) + " " + normalizeSortDirection(sortDirection)
                 + ", b.id DESC"
@@ -134,31 +193,36 @@ public class BookingDao {
     }
 
     public int countCheckInBookings(String keyword, String bookingStatus, Integer roomTypeId,
-                                    String scope) throws SQLException {
-        QueryParts query = filters(keyword, bookingStatus, roomTypeId, scope, null);
+                                    String scope, String fromDate, String toDate, String source) throws SQLException {
+        QueryParts query = filters(keyword, bookingStatus, roomTypeId, scope, null, fromDate, toDate, source);
         String sql = BASE_COUNT + query.whereClause();
         try (Connection connection = requireConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             bind(statement, query.parameters());
             try (ResultSet resultSet = statement.executeQuery()) {
-                resultSet.next();
-                return resultSet.getInt(1);
+                return resultSet.next() ? resultSet.getInt(1) : 0;
             }
         }
     }
 
     private QueryParts filters(String keyword, String bookingStatus, Integer roomTypeId,
-                               String scope, Integer bookingId) {
+                               String scope, Integer bookingId,
+                               String fromDate, String toDate, String source) {
         List<String> conditions = new ArrayList<>();
         List<Object> parameters = new ArrayList<>();
-        conditions.add("b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')");
+        
+        // Remove the default IN condition because the user wants ALL bookings including CANCELLED to be filtered
+        // if no specific status is requested. We'll only add it if we aren't filtering by CANCELLED.
+        if (bookingStatus == null || bookingStatus.isEmpty()) {
+            // Default behavior if we want to show everything in Dashboard
+        }
 
         if (bookingId != null && bookingId > 0) {
             conditions.add("b.id = ?");
             parameters.add(bookingId);
         }
 
-        if (keyword != null) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
             conditions.add("""
                     (
                         LOWER(COALESCE(bg.full_name, a.full_name, '')) LIKE ?
@@ -204,6 +268,21 @@ public class BookingDao {
                 }
             }
         }
+        
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            conditions.add("DATE(b.check_in_date) >= ?");
+            parameters.add(java.sql.Date.valueOf(fromDate));
+        }
+        
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            conditions.add("DATE(b.check_in_date) <= ?");
+            parameters.add(java.sql.Date.valueOf(toDate));
+        }
+        
+        if (source != null && !source.trim().isEmpty()) {
+            conditions.add("b.booking_source = ?");
+            parameters.add(source);
+        }
 
         String whereClause = conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
         return new QueryParts(whereClause, parameters);
@@ -244,8 +323,12 @@ public class BookingDao {
     private int bind(PreparedStatement statement, List<Object> parameters) throws SQLException {
         int index = 1;
         for (Object parameter : parameters) {
-            if (parameter instanceof Integer value) {
-                statement.setInt(index++, value);
+            if (parameter instanceof Integer) {
+                statement.setInt(index++, (Integer) parameter);
+            } else if (parameter instanceof java.sql.Date) {
+                statement.setDate(index++, (java.sql.Date) parameter);
+            } else if (parameter instanceof java.sql.Timestamp) {
+                statement.setTimestamp(index++, (java.sql.Timestamp) parameter);
             } else {
                 statement.setString(index++, String.valueOf(parameter));
             }
@@ -267,6 +350,7 @@ public class BookingDao {
         booking.setStatus(resultSet.getString("status"));
         booking.setTotalAmount(resultSet.getDouble("total_amount"));
         booking.setDepositAmount(resultSet.getDouble("deposit_amount"));
+        booking.setNote(resultSet.getString("note"));
         booking.setCreatedAt(resultSet.getTimestamp("created_at"));
         booking.setRoomCount(resultSet.getInt("room_count"));
         booking.setRoomTypes(resultSet.getString("room_types"));

@@ -17,8 +17,17 @@ public class CheckInBookingSummary {
     private int roomCount;
     private String roomTypes;
     private String roomNumbers;
+    private String note;
 
     public CheckInBookingSummary() {
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public int getBookingId() {

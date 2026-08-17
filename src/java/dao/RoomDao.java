@@ -15,6 +15,51 @@ import java.util.Optional;
 
 public class RoomDao {
 
+    public List<Room> findAvailablePhysicalRooms(java.time.LocalDate checkIn, java.time.LocalDate checkOut, Long roomTypeId) {
+        List<Room> rooms = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT r.*, rt.name AS room_type_name
+            FROM rooms r
+            JOIN room_types rt ON r.room_type_id = rt.id
+            WHERE r.status = 'AVAILABLE'
+              AND r.id NOT IN (
+                  SELECT br.room_id
+                  FROM booking_rooms br
+                  JOIN bookings b ON br.booking_id = b.id
+                  WHERE b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                    AND b.check_in_date < ? AND b.check_out_date > ?
+              )
+            """);
+
+        if (roomTypeId != null && roomTypeId > 0) {
+            sql.append(" AND r.room_type_id = ?");
+        }
+        
+        sql.append(" ORDER BY r.room_number ASC");
+
+        try (Connection conn = DBConnectionUtil.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            ps.setDate(1, java.sql.Date.valueOf(checkOut));
+            ps.setDate(2, java.sql.Date.valueOf(checkIn));
+            
+            if (roomTypeId != null && roomTypeId > 0) {
+                ps.setLong(3, roomTypeId);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room room = mapRow(rs);
+                    room.setRoomTypeName(rs.getString("room_type_name"));
+                    rooms.add(room);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
     // Lấy danh sách tất cả các phòng kèm theo tên loại phòng tương ứng
     public List<Room> findAllWithRoomTypeName() {
         List<Room> rooms = new ArrayList<>();

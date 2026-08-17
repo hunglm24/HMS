@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/reception/bookings", "/reception/booking-detail", "/reception/walk-in", "/reception/check-out"})
+@WebServlet(urlPatterns = {"/reception/booking-detail", "/reception/walk-in", "/reception/check-out"})
 public class ReceptionBookingServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
