@@ -60,6 +60,33 @@ public class HousekeepingTask {
     public boolean isActionReady() { return actionReady; }
     public void setActionReady(boolean actionReady) { this.actionReady = actionReady; }
 
+    public String getStatusLabel() {
+        if (status == null) return "--";
+        switch (status) {
+            case "WAITING": return "Chờ kiểm tra";
+            case "PENDING": return "Chờ thực hiện";
+            case "IN_PROGRESS": return "Đang thực hiện";
+            case "COMPLETED": return "Hoàn thành";
+            case "CANCELLED": return "Đã hủy";
+            default: return status;
+        }
+    }
+
+    public String getTaskTypeLabel() {
+        if (taskType == null) return "--";
+        switch (taskType) {
+            case "CHECKOUT_INSPECTION": return "Kiểm tra sau checkout";
+            case "CLEANING": return "Dọn phòng";
+            default: return taskType;
+        }
+    }
+
+    public static String esc(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
     public static class EquipmentCheck {
         private long roomEquipmentId;
         private String equipmentName;

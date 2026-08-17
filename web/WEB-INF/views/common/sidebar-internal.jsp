@@ -36,8 +36,8 @@
         <% } %>
 
         <% if (isHousekeeping) { %>
-            <a class="<%= activePath(uri, "/housekeeping/tasks") ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks"><span>HK</span>Công việc phòng</a>
-            <a href="<%= cp %>/housekeeping/tasks?view=mine"><span>MY</span>Việc của tôi</a>
+            <a class="<%= activePath(uri, "/housekeeping/tasks") ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks"><span>HK</span>Task chờ nhận</a>
+            <a href="<%= cp %>/housekeeping/tasks?view=mine"><span>MY</span>Task của tôi</a>
             <a href="<%= cp %>/housekeeping/tasks?view=history"><span>HS</span>Lịch sử</a>
         <% } %>
 
