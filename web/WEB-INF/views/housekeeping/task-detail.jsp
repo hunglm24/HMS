@@ -21,8 +21,8 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Phòng <%= HousekeepingTask.esc(task.getRoomNumber()) %> | Dọn phòng</title>
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260816-4">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -41,7 +41,7 @@
         <div class="hk-history-equipment"><% if (equipment != null) for (HousekeepingTask.EquipmentCheck item : equipment) { %>
             <article><div><strong><%= HousekeepingTask.esc(item.getEquipmentName()) %></strong><small>Số lượng: <%= item.getQuantity() %></small></div>
                 <span class="hk-badge condition-<%= item.getConditionStatus().toLowerCase() %>"><%= "NORMAL".equals(item.getConditionStatus()) ? "Bình thường" : "DAMAGED".equals(item.getConditionStatus()) ? "Hư hỏng" : "Thất lạc" %></span>
-                <div><strong><%= String.format("%,.0f", item.getDamageFee()) %> VND</strong><small><%= HousekeepingTask.esc(item.getNote()) %></small></div></article>
+                <div><strong><%= String.format("%,.0f", item.getDamageFee()).replace(",", " ").replace(".", " ") %> VND</strong><small><%= HousekeepingTask.esc(item.getNote()) %></small></div></article>
         <% } %></div>
         <div class="hk-history-meta"><span>Bắt đầu: <strong><%= task.getStartedAt() == null ? "--" : task.getStartedAt() %></strong></span>
             <span>Hoàn thành: <strong><%= task.getCompletedAt() == null ? "--" : task.getCompletedAt() %></strong></span></div>
@@ -84,7 +84,7 @@
                 </label>
                 <label><span class="hk-label-title">Phí bồi thường dự kiến</span>
                     <input class="fee-input" type="number" name="fee_<%= id %>" min="0" max="15000000" step="1000" value="0" disabled>
-                    <small>Tối đa: 15.000.000 VND</small>
+                    <small>Tối đa: 15 000 000 VND</small>
                 </label>
                 <label class="hk-wide">Ghi chú sự cố
                     <input type="text" name="note_<%= id %>" maxlength="1000" placeholder="Mô tả vị trí, mức độ hư hỏng hoặc tình trạng thất lạc">
@@ -151,7 +151,7 @@
         form.querySelectorAll('.fee-input:not(:disabled)').forEach(input => {
             const fee = Number(input.value);
             if (!Number.isFinite(fee) || fee < 0 || fee > 15000000) {
-                input.setCustomValidity('Phí bồi thường phải từ 0 đến 15.000.000 VND.');
+                input.setCustomValidity('Phí bồi thường phải từ 0 đến 15 000 000 VND.');
                 input.reportValidity();
                 valid = false;
             } else input.setCustomValidity('');

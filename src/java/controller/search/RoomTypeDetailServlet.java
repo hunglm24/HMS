@@ -11,17 +11,21 @@ import jakarta.servlet.http.HttpServletResponse;
 public class RoomTypeDetailServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
+    private dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO: Xá»­ lÃ½ hiá»ƒn thá»‹ trang JSP
+        String idStr = request.getParameter("id");
+        if (idStr != null) {
+            try {
+                long id = Long.parseLong(idStr);
+                roomTypeDao.findById(id).ifPresent(rt -> request.setAttribute("room", rt));
+            } catch (NumberFormatException e) {
+                // Invalid ID
+            }
+        }
         request.getRequestDispatcher("/WEB-INF/views/public/room-detail.jsp").forward(request, response);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // TODO: Xá»­ lÃ½ logic nghiá»‡p vá»¥ vÃ  chuyá»ƒn hÆ°á»›ng/forward
     }
 }
 

@@ -26,11 +26,12 @@
 %>
 <aside class="internal-sidebar" aria-label="Internal navigation">
     <div class="sidebar-section">
-        <p class="sidebar-label">Van hanh</p>
+        <p class="sidebar-label">Vận hành</p>
         <% if (isReception) { %>
             <a class="<%= activePath(uri, "/reception/bookings") ? "active" : "" %>" href="<%= cp %>/reception/bookings"><span>BK</span>Danh sách booking</a>
             <a class="<%= activePath(uri, "/reception/walk-in") ? "active" : "" %>" href="<%= cp %>/reception/walk-in"><span>WI</span>Đặt tại quầy</a>
             <a class="<%= activePath(uri, "/reception/room-map") ? "active" : "" %>" href="<%= cp %>/reception/room-map"><span>RM</span>Sơ đồ phòng</a>
+            <a class="<%= activePath(uri, "/reception/room-change-history") ? "active" : "" %>" href="<%= cp %>/reception/room-change-history"><span>RH</span>Lịch sử đổi phòng</a>
             <a class="<%= activePath(uri, "/reception/check-in") ? "active" : "" %>" href="<%= cp %>/reception/check-in"><span>CI</span>Check-in</a>
             <a class="<%= activePath(uri, "/reception/check-out") ? "active" : "" %>" href="<%= cp %>/reception/check-out"><span>CO</span>Check-out</a>
         <% } %>
@@ -43,8 +44,7 @@
 
         <% if (isManager) { %>
             <a class="<%= activePath(uri, "/manager/reports") ? "active" : "" %>" href="<%= cp %>/manager/reports"><span>RP</span>Báo cáo</a>
-            <a class="<%= activePath(uri, "/manager/rooms") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng vật lý</a>
-            <a class="<%= activePath(uri, "/manager/room-types") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
+            <a class="<%= activePath(uri, "/manager/rooms") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng &amp; loại phòng</a>
             <a class="<%= activePath(uri, "/housekeeping/tasks") ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=history"><span>HK</span>Nhiệm vụ dọn phòng</a>
             <a class="<%= activePath(uri, "/manager/pricing") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá và dịch vụ</a>
             <a class="<%= activePath(uri, "/manager/policies") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>

@@ -7,6 +7,7 @@ public class AuditLog extends BaseEntity {
     private String action;
     private String targetType;
     private Long targetId;
+    private String bookingCode;
     private String detail;
     private String ipAddress;
 
@@ -48,6 +49,14 @@ public class AuditLog extends BaseEntity {
 
     public void setTargetId(Long targetId) {
         this.targetId = targetId;
+    }
+
+    public String getBookingCode() {
+        return bookingCode;
+    }
+
+    public void setBookingCode(String bookingCode) {
+        this.bookingCode = bookingCode;
     }
 
     public String getDetail() {

@@ -15,6 +15,51 @@ import java.util.Optional;
 
 public class RoomDao {
 
+    public List<Room> findAvailablePhysicalRooms(java.time.LocalDate checkIn, java.time.LocalDate checkOut, Long roomTypeId) {
+        List<Room> rooms = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT r.*, rt.name AS room_type_name
+            FROM rooms r
+            JOIN room_types rt ON r.room_type_id = rt.id
+            WHERE r.status = 'AVAILABLE'
+              AND r.id NOT IN (
+                  SELECT br.room_id
+                  FROM booking_rooms br
+                  JOIN bookings b ON br.booking_id = b.id
+                  WHERE b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                    AND b.check_in_date < ? AND b.check_out_date > ?
+              )
+            """);
+
+        if (roomTypeId != null && roomTypeId > 0) {
+            sql.append(" AND r.room_type_id = ?");
+        }
+        
+        sql.append(" ORDER BY r.room_number ASC");
+
+        try (Connection conn = DBConnectionUtil.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            ps.setDate(1, java.sql.Date.valueOf(checkOut));
+            ps.setDate(2, java.sql.Date.valueOf(checkIn));
+            
+            if (roomTypeId != null && roomTypeId > 0) {
+                ps.setLong(3, roomTypeId);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room room = mapRow(rs);
+                    room.setRoomTypeName(rs.getString("room_type_name"));
+                    rooms.add(room);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
     // Lấy danh sách tất cả các phòng kèm theo tên loại phòng tương ứng
     public List<Room> findAllWithRoomTypeName() {
         List<Room> rooms = new ArrayList<>();
@@ -29,6 +74,55 @@ public class RoomDao {
             while (rs.next()) {
                 Room room = mapRow(rs);
                 room.setRoomTypeName(rs.getString("room_type_name"));
+                rooms.add(room);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
+    public List<Room> findAllWithRoomTypeNameAndBookingInfo() {
+        List<Room> rooms = new ArrayList<>();
+        String sql = """
+                SELECT r.*,
+                       rt.name AS room_type_name,
+                       b.id AS current_booking_id,
+                       b.booking_code AS current_booking_code,
+                       COALESCE(bg.full_name, a.full_name, '') AS current_guest_name,
+                       b.status AS current_booking_status
+                FROM rooms r
+                JOIN room_types rt ON r.room_type_id = rt.id
+                LEFT JOIN (
+                    SELECT br1.room_id, br1.booking_id
+                    FROM booking_rooms br1
+                    JOIN bookings b1 ON b1.id = br1.booking_id
+                    WHERE b1.status IN ('CONFIRMED', 'CHECKED_IN')
+                      AND br1.id = (
+                          SELECT MAX(br2.id)
+                          FROM booking_rooms br2
+                          JOIN bookings b2 ON b2.id = br2.booking_id
+                          WHERE br2.room_id = br1.room_id
+                            AND b2.status IN ('CONFIRMED', 'CHECKED_IN')
+                      )
+                ) active_br ON active_br.room_id = r.id
+                LEFT JOIN bookings b ON b.id = active_br.booking_id
+                LEFT JOIN booking_guests bg ON bg.booking_id = b.id AND bg.is_primary_guest = TRUE
+                LEFT JOIN accounts a ON a.id = b.customer_id
+                ORDER BY r.room_number ASC
+                """;
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Room room = mapRow(rs);
+                room.setRoomTypeName(rs.getString("room_type_name"));
+                Long currentBookingId = nullableLong(rs, "current_booking_id");
+                room.setCurrentBookingId(currentBookingId);
+                room.setCurrentBookingCode(rs.getString("current_booking_code"));
+                room.setCurrentGuestName(rs.getString("current_guest_name"));
+                room.setCurrentBookingStatus(rs.getString("current_booking_status"));
                 rooms.add(room);
             }
         } catch (SQLException e) {
@@ -68,6 +162,19 @@ public class RoomDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Room> findById(Connection conn, long id) throws SQLException {
+        String sql = "SELECT * FROM rooms WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
         }
         return Optional.empty();
     }
@@ -136,6 +243,15 @@ public class RoomDao {
         return false;
     }
 
+    public boolean updateStatus(Connection conn, long roomId, String status) throws SQLException {
+        String sql = "UPDATE rooms SET status = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setLong(2, roomId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     // Xóa một phòng
     public boolean delete(long id) {
         String sql = "DELETE FROM rooms WHERE id = ?";
@@ -167,5 +283,10 @@ public class RoomDao {
         room.setCreatedAt(rs.getTimestamp("created_at"));
         room.setUpdatedAt(rs.getTimestamp("updated_at"));
         return room;
+    }
+
+    private Long nullableLong(ResultSet rs, String column) throws SQLException {
+        long value = rs.getLong(column);
+        return rs.wasNull() ? null : value;
     }
 }
