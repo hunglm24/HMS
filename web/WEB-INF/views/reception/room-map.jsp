@@ -37,7 +37,9 @@
                     <div class="stat-badge">Tổng: ${totalCount}</div>
                 </div>
             </div>
-            <div><!-- future filters --></div>
+            <div>
+                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/room-change-history">Room change history</a>
+            </div>
         </div>
 
         <c:if test="${not empty flashMessage}">

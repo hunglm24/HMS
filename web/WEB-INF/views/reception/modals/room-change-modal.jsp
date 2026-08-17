@@ -1,5 +1,4 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<<<<<<< HEAD
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="model.Room" %>
@@ -25,6 +24,7 @@
         <input type="hidden" name="bookingId" id="roomChangeBookingId">
         <input type="hidden" name="currentRoomId" id="roomChangeCurrentRoomId">
         <input type="hidden" name="currentRoomNumber" id="roomChangeCurrentRoomNumber">
+        <input type="hidden" name="newRoomNumber" id="roomChangeNewRoomNumber">
 
         <div class="room-change-summary">
             <div class="booking-detail-card">
@@ -102,10 +102,3 @@
         </div>
     </form>
 </section>
-=======
-<div class="modal" id="roomChangeModal" aria-hidden="true">
-    <div class="modal-content"><div class="modal-header"><h3>Đổi phòng</h3><button type="button" class="close-btn" data-close-modal>&times;</button></div>
-        <form method="post" action="${pageContext.request.contextPath}/api/room-assignments"><label>Phòng mới<input name="roomNumber" required></label><label>Ghi chú<textarea name="note"></textarea></label><button type="submit">Cập nhật phòng</button></form>
-    </div>
-</div>
->>>>>>> 07a7432af5007d695558df659b4850f56d379569

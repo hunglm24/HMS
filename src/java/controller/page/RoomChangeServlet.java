@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
+import service.AuditLogService;
 import service.RoomChangeService;
 
 import java.io.IOException;
@@ -15,10 +16,12 @@ import java.sql.SQLException;
 @WebServlet(urlPatterns = {"/reception/room-change"})
 public class RoomChangeServlet extends HttpServlet {
     private RoomChangeService roomChangeService;
+    private AuditLogService auditLogService;
 
     @Override
     public void init() {
         roomChangeService = new RoomChangeService();
+        auditLogService = new AuditLogService();
     }
 
     @Override
@@ -37,10 +40,19 @@ public class RoomChangeServlet extends HttpServlet {
         long currentRoomId = parseLong(request.getParameter("currentRoomId"));
         long newRoomId = parseLong(request.getParameter("newRoomId"));
         String reason = request.getParameter("reason");
+        String currentRoomNumber = request.getParameter("currentRoomNumber");
+        String newRoomNumber = request.getParameter("newRoomNumber");
 
         try {
             // Delegate all business rules to the service layer.
             roomChangeService.changeRoom(bookingId, currentRoomId, newRoomId, reason);
+            auditLogService.log(
+                    request,
+                    "ROOM_CHANGE",
+                    "BOOKING",
+                    bookingId,
+                    buildDetail(currentRoomNumber, newRoomNumber, reason)
+            );
             if (session != null) {
                 // Flash message is shown on the next room-map redirect.
                 session.setAttribute("flashMessage", "Đổi phòng thành công.");
@@ -70,5 +82,12 @@ public class RoomChangeServlet extends HttpServlet {
         } catch (NumberFormatException ex) {
             return 0L;
         }
+    }
+
+    private String buildDetail(String currentRoomNumber, String newRoomNumber, String reason) {
+        String fromRoom = currentRoomNumber == null || currentRoomNumber.isBlank() ? "không rõ" : currentRoomNumber.trim();
+        String toRoom = newRoomNumber == null || newRoomNumber.isBlank() ? "không rõ" : newRoomNumber.trim();
+        String note = reason == null || reason.isBlank() ? "Không có lý do" : reason.trim();
+        return "Đổi phòng từ " + fromRoom + " sang " + toRoom + ". Lý do: " + note;
     }
 }
