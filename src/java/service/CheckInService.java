@@ -46,14 +46,14 @@ public class CheckInService {
         String normalizedDirection = "asc".equalsIgnoreCase(direction) ? "ASC" : "DESC";
 
         int totalItems = bookingDao.countCheckInBookings(normalizedKeyword, normalizedStatus,
-                normalizedRoomTypeId, normalizedScope);
+                normalizedRoomTypeId, normalizedScope, null, null, null);
         int totalPages = Math.max(1, (int) Math.ceil(totalItems / (double) PAGE_SIZE));
         int page = Math.min(Math.max(1, requestedPage), totalPages);
         int offset = (page - 1) * PAGE_SIZE;
 
         List<CheckInBookingSummary> bookings = bookingDao.findCheckInBookings(
                 normalizedKeyword, normalizedStatus, normalizedRoomTypeId, normalizedScope,
-                SORT_COLUMNS.get(normalizedSort), normalizedDirection, offset, PAGE_SIZE);
+                SORT_COLUMNS.get(normalizedSort), normalizedDirection, offset, PAGE_SIZE, null, null, null);
         return new CheckInPage(bookings, page, totalPages, totalItems, normalizedKeyword,
                 normalizedStatus, normalizedRoomTypeId, normalizedScope, normalizedSort,
                 normalizedDirection.toLowerCase());
