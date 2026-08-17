@@ -25,7 +25,19 @@ public class IssueReportServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập");
             return;
         }
-        
+        String action = request.getParameter("action");
+        if ("getEquipments".equals(action)) {
+            try {
+                long roomId = Long.parseLong(request.getParameter("roomId"));
+                java.util.List<model.HousekeepingTask.EquipmentCheck> equips = maintenanceService.findAllEquipmentsInRoom(roomId);
+                request.setAttribute("equips", equips);
+                request.getRequestDispatcher("/WEB-INF/views/housekeeping/fragments/equipment-list.jsp").forward(request, response);
+            } catch (Exception ex) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
+        }
+
         request.setAttribute("rooms", roomService.getAllRooms());
         request.getRequestDispatcher("/WEB-INF/views/housekeeping/issue-report.jsp").forward(request, response);
     }
@@ -41,14 +53,29 @@ public class IssueReportServlet extends HttpServlet {
 
         try {
             long roomId = Long.parseLong(request.getParameter("roomId"));
-            String equipmentParam = request.getParameter("roomEquipmentId");
-            Long roomEquipmentId = null;
-            if (equipmentParam != null && !equipmentParam.trim().isEmpty()) {
-                roomEquipmentId = Long.parseLong(equipmentParam);
-            }
             String note = request.getParameter("note");
+            String[] equipmentParams = request.getParameterValues("roomEquipmentIds");
+            boolean hasEquipmentIssue = false;
 
-            maintenanceService.reportIssue(roomId, roomEquipmentId, note);
+            if (equipmentParams != null && equipmentParams.length > 0) {
+                for (String param : equipmentParams) {
+                    if (param != null && !param.trim().isEmpty()) {
+                        long equipId = Long.parseLong(param);
+                        String currentStatus = request.getParameter("currentStatus_" + equipId);
+                        String newStatus = request.getParameter("status_" + equipId);
+                        
+                        if (newStatus != null && !newStatus.equals("NORMAL") && !newStatus.equals(currentStatus)) {
+                            maintenanceService.reportIssue(roomId, equipId, newStatus, note);
+                            hasEquipmentIssue = true;
+                        }
+                    }
+                }
+            } 
+            
+            if (!hasEquipmentIssue) {
+                maintenanceService.reportIssue(roomId, null, null, note);
+            }
+
             session.setAttribute("successMessage", "Báo cáo sự cố thành công.");
             response.sendRedirect(request.getContextPath() + "/housekeeping/issues");
         } catch (Exception ex) {

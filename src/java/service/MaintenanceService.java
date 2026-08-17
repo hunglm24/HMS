@@ -11,11 +11,11 @@ public class MaintenanceService {
     private final HousekeepingDao housekeepingDao = new HousekeepingDao();
     private final MaintenanceLogDao maintenanceLogDao = new MaintenanceLogDao();
 
-    public void reportIssue(long roomId, Long roomEquipmentId, String note) throws SQLException {
+    public void reportIssue(long roomId, Long roomEquipmentId, String newStatus, String note) throws SQLException {
         if (note == null || note.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng nhập mô tả sự cố");
         }
-        housekeepingDao.reportIssue(roomId, roomEquipmentId, note);
+        housekeepingDao.reportIssue(roomId, roomEquipmentId, newStatus, note);
     }
 
     public List<HousekeepingTask> findIssueTasks(String keyword, Integer floor, String sortColumn, String direction, int page, int pageSize) throws SQLException {
@@ -30,6 +30,10 @@ public class MaintenanceService {
 
     public List<HousekeepingTask.EquipmentCheck> findDamagedEquipments(long roomId) throws SQLException {
         return housekeepingDao.findDamagedEquipments(roomId);
+    }
+
+    public List<HousekeepingTask.EquipmentCheck> findAllEquipmentsInRoom(long roomId) throws SQLException {
+        return housekeepingDao.findEquipment(roomId, null);
     }
 
     public void verifyMaintenance(long taskId, long staffId, List<Long> equipmentIds, String note) throws SQLException {

@@ -106,6 +106,19 @@ public class HousekeepingTask {
         public void setQuantity(int quantity) { this.quantity = quantity; }
         public String getCurrentStatus() { return currentStatus; }
         public void setCurrentStatus(String currentStatus) { this.currentStatus = currentStatus; }
+        
+        public String getCurrentStatusLabel() {
+            if (currentStatus == null) return "";
+            switch (currentStatus) {
+                case "NORMAL": return "Bình thường";
+                case "DAMAGED": return "Hư hỏng";
+                case "MISSING": return "Thất lạc";
+                case "WAITING_REPAIR": return "Chờ sửa chữa";
+                case "WAITING_REPLACEMENT": return "Chờ thay thế";
+                case "MAINTENANCE": return "Bảo trì định kỳ";
+                default: return currentStatus;
+            }
+        }
         public String getInitialStatus() { return initialStatus; }
         public void setInitialStatus(String initialStatus) { this.initialStatus = initialStatus; }
         public Integer getInitialQuantity() { return initialQuantity; }

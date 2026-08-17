@@ -737,22 +737,55 @@ public class HousekeepingDao {
         return value == null ? null : ((Number) value).longValue();
     }
 
-    public void reportIssue(long roomId, Long roomEquipmentId, String note) throws SQLException {
-        String sql = """
-                INSERT INTO housekeeping_tasks
-                    (room_id, room_equipment_id, task_type, priority, status, note)
-                VALUES (?, ?, 'EQUIPMENT_REPAIR', 'HIGH', 'PENDING', ?)
-                """;
-        try (Connection connection = requireConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, roomId);
-            if (roomEquipmentId != null && roomEquipmentId > 0) {
-                statement.setLong(2, roomEquipmentId);
-            } else {
-                statement.setNull(2, java.sql.Types.BIGINT);
+    public void reportIssue(long roomId, Long roomEquipmentId, String newStatus, String note) throws SQLException {
+        String taskType = "EQUIPMENT_REPAIR";
+        if ("MISSING".equals(newStatus) || "WAITING_REPLACEMENT".equals(newStatus)) {
+            taskType = "EQUIPMENT_REPLACEMENT";
+        } else if ("MAINTENANCE".equals(newStatus)) {
+            taskType = "MAINTENANCE_CHECK";
+        }
+        
+        try (Connection connection = requireConnection()) {
+            boolean autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                if (roomEquipmentId != null && roomEquipmentId > 0 && newStatus != null && !"NORMAL".equals(newStatus)) {
+                    try (PreparedStatement update = connection.prepareStatement(
+                            "UPDATE room_equipment SET status = ?, note = ? WHERE id = ? AND room_id = ?")) {
+                        String eqNote = note;
+                        if (eqNote != null && eqNote.length() > 500) eqNote = eqNote.substring(0, 500);
+                        update.setString(1, newStatus);
+                        update.setString(2, eqNote);
+                        update.setLong(3, roomEquipmentId);
+                        update.setLong(4, roomId);
+                        update.executeUpdate();
+                    }
+                }
+                
+                String sql = """
+                        INSERT INTO housekeeping_tasks
+                            (room_id, room_equipment_id, task_type, priority, status, note)
+                        VALUES (?, ?, ?, 'HIGH', 'PENDING', ?)
+                        """;
+                try (PreparedStatement insert = connection.prepareStatement(sql)) {
+                    insert.setLong(1, roomId);
+                    if (roomEquipmentId != null && roomEquipmentId > 0) {
+                        insert.setLong(2, roomEquipmentId);
+                    } else {
+                        insert.setNull(2, java.sql.Types.BIGINT);
+                        taskType = "MAINTENANCE_CHECK"; 
+                    }
+                    insert.setString(3, taskType);
+                    insert.setString(4, note);
+                    insert.executeUpdate();
+                }
+                connection.commit();
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(autoCommit);
             }
-            statement.setString(3, note);
-            statement.executeUpdate();
         }
     }
 
