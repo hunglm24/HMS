@@ -1,28 +1,66 @@
 :root {
-    --color-primary-600: #1e4fd8;
-    --color-primary-500: #3b6bf0;
-    --color-primary-100: #e6ecfd;
-    --color-secondary-600: #0ea5a0;
-    --color-success-600: #16a34a;
-    --color-success-100: #dcfce7;
-    --color-warning-600: #d97706;
-    --color-warning-100: #fef3c7;
-    --color-error-600: #dc2626;
-    --color-error-100: #fee2e2;
-    --color-info-600: #2563eb;
-    --color-info-100: #dbeafe;
-    --color-bg-base: #f7f8fa;
-    --color-bg-surface: #ffffff;
-    --color-border: #e2e5ea;
+    --color-primary-600: #1E4FD8;
+    --color-primary-500: #3B6BF0;
+    --color-primary-100: #E6ECFD;
+    --color-secondary-600: #0EA5A0;
+
+    --color-success-700: #15803D;
+    --color-success-600: #16A34A;
+    --color-success-100: #DCFCE7;
+    --color-warning-700: #B45309;
+    --color-warning-600: #D97706;
+    --color-warning-100: #FEF3C7;
+    --color-error-700: #B91C1C;
+    --color-error-600: #DC2626;
+    --color-error-100: #FEE2E2;
+    --color-info-700: #1D4ED8;
+    --color-info-600: #2563EB;
+    --color-info-100: #DBEAFE;
+
+    --color-bg-base: #F7F8FA;
+    --color-bg-surface: #FFFFFF;
+    --color-border: #E2E5EA;
     --color-text-primary: #111827;
-    --color-text-secondary: #6b7280;
-    --color-text-disabled: #9ca3af;
-    --color-text-inverse: #ffffff;
+    --color-text-secondary: #6B7280;
+    --color-text-disabled: #9CA3AF;
+    --color-text-inverse: #FFFFFF;
+
+    --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+
+    --text-h1: 32px;
+    --text-h2: 24px;
+    --text-h3: 20px;
+    --text-h4: 16px;
+    --text-body: 14px;
+    --text-caption: 12px;
+    --line-h1: 40px;
+    --line-h2: 32px;
+    --line-h3: 28px;
+    --line-body: 20px;
+    --line-caption: 16px;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 40px;
+    --space-8: 48px;
+    --space-9: 64px;
+    --space-10: 80px;
+
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-full: 999px;
-    --shadow-1: 0 1px 2px rgba(16, 24, 40, .06);
-    --shadow-2: 0 4px 8px rgba(16, 24, 40, .08);
-    --shadow-3: 0 8px 16px rgba(16, 24, 40, .12);
+
+    --elevation-1: 0 1px 2px rgba(16, 24, 40, 0.06);
+    --elevation-2: 0 4px 8px rgba(16, 24, 40, 0.08);
+    --elevation-3: 0 8px 16px rgba(16, 24, 40, 0.12);
+    --elevation-4: 0 16px 32px rgba(16, 24, 40, 0.16);
+
+    --focus-ring: 0 0 0 2px rgba(59, 107, 240, 0.24);
+    --content-max: 1280px;
+    --header-height: 72px;
 }
