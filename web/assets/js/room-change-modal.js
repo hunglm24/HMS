@@ -8,6 +8,7 @@
         bookingId: document.getElementById('roomChangeBookingId'),
         currentRoomId: document.getElementById('roomChangeCurrentRoomId'),
         currentRoomNumber: document.getElementById('roomChangeCurrentRoomNumber'),
+        newRoomNumber: document.getElementById('roomChangeNewRoomNumber'),
         bookingCode: document.getElementById('roomChangeBookingCode'),
         guestName: document.getElementById('roomChangeGuestName'),
         currentRoomLabel: document.getElementById('roomChangeCurrentRoomLabel'),
@@ -123,6 +124,9 @@
         if (elements.newRoomSelect) {
             elements.newRoomSelect.value = '';
         }
+        if (elements.newRoomNumber) {
+            elements.newRoomNumber.value = '';
+        }
         updatePriceDiff();
 
         const occupied = (card && (card.dataset.roomStatus || '').toUpperCase() === 'OCCUPIED');
@@ -146,6 +150,10 @@
     if (elements.newRoomSelect) {
         elements.newRoomSelect.addEventListener('change', function () {
             // Recompute hint text whenever the user picks a new room.
+            const option = elements.newRoomSelect.selectedOptions[0];
+            if (elements.newRoomNumber) {
+                elements.newRoomNumber.value = option && option.dataset.roomNumber ? option.dataset.roomNumber : '';
+            }
             updatePriceDiff();
             syncConfirmState();
         });

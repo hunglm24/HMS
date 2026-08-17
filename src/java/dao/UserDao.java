@@ -95,6 +95,28 @@ public class UserDao {
         }
     }
 
+    public List<User> findByRoleName(String roleName) throws SQLException {
+        String sql = """
+                SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                       a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+                FROM accounts a
+                INNER JOIN roles r ON r.id = a.role_id
+                WHERE r.name = ?
+                ORDER BY a.full_name ASC, a.id ASC
+                """;
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, roleName);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<User> users = new ArrayList<>();
+                while (rs.next()) {
+                    users.add(mapUser(rs));
+                }
+                return users;
+            }
+        }
+    }
+
     public Optional<User> findById(long id) throws SQLException {
         String sql = """
                 SELECT a.id, a.full_name, a.email, a.phone, a.password,

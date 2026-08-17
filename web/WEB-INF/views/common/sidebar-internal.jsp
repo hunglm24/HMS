@@ -26,11 +26,12 @@
 %>
 <aside class="internal-sidebar" aria-label="Internal navigation">
     <div class="sidebar-section">
-        <p class="sidebar-label">Van hanh</p>
+        <p class="sidebar-label">Vận hành</p>
         <% if (isReception) { %>
             <a class="<%= activePath(uri, "/reception/bookings") ? "active" : "" %>" href="<%= cp %>/reception/bookings"><span>BK</span>Danh sách booking</a>
             <a class="<%= activePath(uri, "/reception/walk-in") ? "active" : "" %>" href="<%= cp %>/reception/walk-in"><span>WI</span>Đặt tại quầy</a>
             <a class="<%= activePath(uri, "/reception/room-map") ? "active" : "" %>" href="<%= cp %>/reception/room-map"><span>RM</span>Sơ đồ phòng</a>
+            <a class="<%= activePath(uri, "/reception/room-change-history") ? "active" : "" %>" href="<%= cp %>/reception/room-change-history"><span>RH</span>Lịch sử đổi phòng</a>
             <a class="<%= activePath(uri, "/reception/check-in") ? "active" : "" %>" href="<%= cp %>/reception/check-in"><span>CI</span>Check-in</a>
             <a class="<%= activePath(uri, "/reception/check-out") ? "active" : "" %>" href="<%= cp %>/reception/check-out"><span>CO</span>Check-out</a>
         <% } %>
