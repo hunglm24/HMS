@@ -63,6 +63,76 @@ public class UserDao {
                 WHERE 1 = 1
                 """);
         List<String> values = new ArrayList<>();
+        appendUserFilters(sql, values, keyword, roleName, status);
+        sql.append(" ORDER BY a.id ASC");
+
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < values.size(); i++) {
+                statement.setString(i + 1, values.get(i));
+            }
+            try (ResultSet rs = statement.executeQuery()) {
+                List<User> users = new ArrayList<>();
+                while (rs.next()) {
+                    users.add(mapUser(rs));
+                }
+                return users;
+            }
+        }
+    }
+
+    public List<User> findPage(String keyword, String roleName, String status,
+                               int offset, int pageSize) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+                SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                       a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+                FROM accounts a
+                INNER JOIN roles r ON r.id = a.role_id
+                WHERE 1 = 1
+                """);
+        List<String> values = new ArrayList<>();
+        appendUserFilters(sql, values, keyword, roleName, status);
+        sql.append(" ORDER BY a.id ASC LIMIT ? OFFSET ?");
+
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < values.size(); i++) {
+                statement.setString(i + 1, values.get(i));
+            }
+            statement.setInt(values.size() + 1, Math.max(1, pageSize));
+            statement.setInt(values.size() + 2, Math.max(0, offset));
+            try (ResultSet rs = statement.executeQuery()) {
+                List<User> users = new ArrayList<>();
+                while (rs.next()) {
+                    users.add(mapUser(rs));
+                }
+                return users;
+            }
+        }
+    }
+
+    public int countAll(String keyword, String roleName, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+                SELECT COUNT(*)
+                FROM accounts a
+                INNER JOIN roles r ON r.id = a.role_id
+                WHERE 1 = 1
+                """);
+        List<String> values = new ArrayList<>();
+        appendUserFilters(sql, values, keyword, roleName, status);
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < values.size(); i++) {
+                statement.setString(i + 1, values.get(i));
+            }
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    private void appendUserFilters(StringBuilder sql, List<String> values,
+                                   String keyword, String roleName, String status) {
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND (LOWER(a.full_name) LIKE ? OR LOWER(a.email) LIKE ? OR a.phone LIKE ?) ");
             String like = "%" + keyword.trim().toLowerCase(java.util.Locale.ROOT) + "%";
@@ -77,21 +147,6 @@ public class UserDao {
         if (status != null && !status.isBlank()) {
             sql.append(" AND a.status = ? ");
             values.add(status.trim());
-        }
-        sql.append(" ORDER BY a.created_at DESC, a.id DESC");
-
-        try (Connection connection = DBConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                statement.setString(i + 1, values.get(i));
-            }
-            try (ResultSet rs = statement.executeQuery()) {
-                List<User> users = new ArrayList<>();
-                while (rs.next()) {
-                    users.add(mapUser(rs));
-                }
-                return users;
-            }
         }
     }
 

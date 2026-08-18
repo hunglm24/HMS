@@ -85,8 +85,18 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/room-types"><span>Loại phòng</span><h3>Quản lý loại phòng</h3><p>Quản lý hạng phòng, giá và sức chứa.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Buồng phòng</span><h3>Nhiệm vụ dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
         <% } else if ("ADMIN".equalsIgnoreCase(role)) { %>
-            <a class="preview-card" href="${pageContext.request.contextPath}/admin/users"><span>Admin</span><h3>Người dùng</h3><p>Quản lý tài khoản và phân quyền.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/admin/system-config"><span>Cấu hình</span><h3>Cấu hình</h3><p>Thiết lập hệ thống và tích hợp.</p></a>
+            <article class="preview-card admin-action-card">
+                <span>Admin</span>
+                <h3>Người dùng</h3>
+                <p>Quản lý tài khoản và phân quyền.</p>
+                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Mở quản lý</a>
+            </article>
+            <article class="preview-card admin-action-card">
+                <span>Cấu hình</span>
+                <h3>Cấu hình</h3>
+                <p>Thiết lập hệ thống và tích hợp.</p>
+                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/system-config">Mở cấu hình</a>
+            </article>
         <% } %>
     </section>
 </main>

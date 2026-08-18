@@ -41,9 +41,16 @@
         .role-link { font-weight:700; text-decoration:none; }
         .role-link.active { color:var(--color-primary-600); }
         .inline-form { display:inline; margin:0; }
-        .small-button { min-height:0; padding:6px 9px; font-size:12px; }
+        .role-actions { display:grid; grid-template-columns:64px 64px; gap:6px; }
+        .small-button { width:64px; min-height:34px; padding:6px 8px; font-size:12px; border-radius:8px; }
         .permission-list { display:grid; gap:10px; margin:14px 0; }
-        .permission-item { display:grid; grid-template-columns:24px 1fr; gap:8px; padding:10px; border:1px solid var(--color-border); border-radius:8px; }
+        .permission-item { display:grid; grid-template-columns:26px 1fr; gap:12px; padding:14px; border:1px solid var(--color-border); border-radius:8px; background:#fff; }
+        .permission-item input { width:20px; height:20px; min-height:0; margin-top:2px; }
+        .permission-code { display:inline-flex; margin-bottom:5px; padding:3px 7px; border-radius:6px; background:var(--color-bg-base); color:var(--color-primary-600); font-family:Consolas, monospace; font-size:12px; font-weight:700; }
+        .permission-name { display:block; margin-bottom:3px; font-weight:800; }
+        .permission-desc { display:block; color:var(--color-text-secondary); line-height:1.45; }
+        .role-summary { margin:0 0 14px; padding:12px 14px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-bg-base); }
+        .role-summary strong { display:block; margin-bottom:3px; color:var(--color-text-primary); }
         .message { margin-bottom:14px; padding:10px 12px; border-radius:8px; border:1px solid var(--color-border); background:#fff; }
         .message.success { border-color:#86efac; background:#f0fdf4; color:#166534; }
         .message.error { border-color:#fecaca; background:#fef2f2; color:#991b1b; }
@@ -83,12 +90,14 @@
                             <br><small><%= h(role.getDescription()) %></small>
                         </td>
                         <td>
-                            <button class="button button-secondary small-button" type="button"
-                                    onclick="fillRole('<%= role.getId() %>','<%= h(js(role.getName())) %>','<%= h(js(role.getDescription())) %>')">Edit</button>
-                            <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/roles/delete" onsubmit="return confirm('Delete this role?');">
-                                <input type="hidden" name="id" value="<%= role.getId() %>">
-                                <button class="button button-secondary small-button" type="submit">Delete</button>
-                            </form>
+                            <div class="role-actions">
+                                <button class="button button-secondary small-button" type="button"
+                                        onclick="fillRole('<%= role.getId() %>','<%= h(js(role.getName())) %>','<%= h(js(role.getDescription())) %>')">Edit</button>
+                                <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/roles/delete" onsubmit="return confirm('Delete this role?');">
+                                    <input type="hidden" name="id" value="<%= role.getId() %>">
+                                    <button class="button button-secondary small-button" type="submit">Delete</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 <% } %>
@@ -114,13 +123,26 @@
             <% if (selectedRoleId == 0) { %>
                 <p>No role selected.</p>
             <% } else { %>
+                <% Role selectedRole = null;
+                   if (roles != null) for (Role role : roles) {
+                       if (role.getId() == selectedRoleId) { selectedRole = role; break; }
+                   }
+                %>
+                <div class="role-summary">
+                    <strong>Selected role: <%= h(selectedRole == null ? ("#" + selectedRoleId) : selectedRole.getName()) %></strong>
+                    <span><%= h(selectedRole == null ? "" : selectedRole.getDescription()) %></span>
+                </div>
                 <form method="post" action="${pageContext.request.contextPath}/admin/roles/permissions">
                     <input type="hidden" name="roleId" value="<%= selectedRoleId %>">
                     <div class="permission-list">
                         <% if (permissions != null) for (Permission permission : permissions) { %>
                             <label class="permission-item">
                                 <input type="checkbox" name="permissionId" value="<%= permission.getId() %>" <%= permission.isAssigned() ? "checked" : "" %>>
-                                <span><strong><%= h(permission.getCode()) %></strong><br><%= h(permission.getName()) %><br><small><%= h(permission.getDescription()) %></small></span>
+                                <span>
+                                    <span class="permission-code"><%= h(permission.getCode()) %></span>
+                                    <span class="permission-name"><%= h(permission.getName()) %></span>
+                                    <span class="permission-desc"><%= h(permission.getDescription()) %></span>
+                                </span>
                             </label>
                         <% } %>
                     </div>

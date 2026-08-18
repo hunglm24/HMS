@@ -39,10 +39,14 @@ public class AuditLogDao {
     }
 
     public List<AuditLog> findRecent(int limit, String keyword) throws SQLException {
+        return findRecentPage(limit, 0, keyword);
+    }
+
+    public List<AuditLog> findRecentPage(int pageSize, int offset, String keyword) throws SQLException {
         if (!tableExists()) {
             return new ArrayList<>();
         }
-        int safeLimit = Math.max(10, Math.min(limit, 500));
+        int safeLimit = Math.max(10, Math.min(pageSize, 500));
         boolean hasKeyword = keyword != null && !keyword.isBlank();
         String sql = """
                 SELECT l.id, l.actor_id, a.full_name AS actor_name, l.action,
@@ -53,16 +57,19 @@ public class AuditLogDao {
         if (hasKeyword) {
             sql += " WHERE l.action LIKE ? OR l.target_type LIKE ? OR l.detail LIKE ? OR a.full_name LIKE ? ";
         }
-        sql += " ORDER BY l.created_at DESC, l.id DESC LIMIT " + safeLimit;
+        sql += " ORDER BY l.created_at DESC, l.id DESC LIMIT ? OFFSET ?";
         try (Connection connection = DBConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
+            int index = 1;
             if (hasKeyword) {
                 String like = "%" + keyword.trim() + "%";
-                statement.setString(1, like);
-                statement.setString(2, like);
-                statement.setString(3, like);
-                statement.setString(4, like);
+                statement.setString(index++, like);
+                statement.setString(index++, like);
+                statement.setString(index++, like);
+                statement.setString(index++, like);
             }
+            statement.setInt(index++, safeLimit);
+            statement.setInt(index, Math.max(0, offset));
             try (ResultSet rs = statement.executeQuery()) {
                 List<AuditLog> logs = new ArrayList<>();
                 while (rs.next()) {
@@ -81,6 +88,34 @@ public class AuditLogDao {
                     logs.add(log);
                 }
                 return logs;
+            }
+        }
+    }
+
+    public int countRecent(String keyword) throws SQLException {
+        if (!tableExists()) {
+            return 0;
+        }
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+        String sql = """
+                SELECT COUNT(*)
+                FROM system_logs l
+                LEFT JOIN accounts a ON a.id = l.actor_id
+                """;
+        if (hasKeyword) {
+            sql += " WHERE l.action LIKE ? OR l.target_type LIKE ? OR l.detail LIKE ? OR a.full_name LIKE ? ";
+        }
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            if (hasKeyword) {
+                String like = "%" + keyword.trim() + "%";
+                statement.setString(1, like);
+                statement.setString(2, like);
+                statement.setString(3, like);
+                statement.setString(4, like);
+            }
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
             }
         }
     }
