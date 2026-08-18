@@ -21,7 +21,7 @@ public class RoomDao {
             SELECT r.*, rt.name AS room_type_name
             FROM rooms r
             JOIN room_types rt ON r.room_type_id = rt.id
-            WHERE r.status = 'AVAILABLE'
+            WHERE r.status != 'MAINTENANCE'
               AND r.id NOT IN (
                   SELECT br.room_id
                   FROM booking_rooms br

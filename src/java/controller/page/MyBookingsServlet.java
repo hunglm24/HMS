@@ -42,7 +42,10 @@ public class MyBookingsServlet extends HttpServlet {
                         return;
                     }
                     
+                    model.CheckInBookingSummary summary = bookingDao.findCheckInBookingById((int) bookingId).orElse(null);
+                    
                     request.setAttribute("booking", booking);
+                    request.setAttribute("summary", summary);
                 } catch (Exception e) {
                     e.printStackTrace();
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
