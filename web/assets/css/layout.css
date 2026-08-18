@@ -126,17 +126,12 @@
     color: #ffffff;
 }
 
-body .internal-sidebar .page-container,
-body .internal-sidebar .hk-page,
-body .internal-sidebar main:not(.auth-page):not(.public-page) {
-    width: auto;
+.site-header--internal + .internal-sidebar + main:not(.auth-page):not(.public-page) {
+    width: calc(100% - 260px);
     max-width: none;
     margin-left: 260px;
-    padding: 32px;
-}
-
-body .internal-sidebar .page-container {
     margin-right: 0;
+    padding: 32px;
 }
 
 .app-shell,
@@ -260,6 +255,41 @@ body .internal-sidebar .page-container {
 
 .metric-card {
     min-height: 96px;
+}
+
+a.preview-card {
+    display: block;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 120ms ease;
+}
+
+a.preview-card:hover {
+    border-color: var(--color-primary-500);
+    box-shadow: var(--elevation-2);
+    transform: translateY(-1px);
+}
+
+a.preview-card h3,
+a.preview-card p,
+a.preview-card span {
+    text-decoration: none;
+}
+
+.admin-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.admin-action-card h3,
+.admin-action-card p {
+    margin-bottom: 0;
+}
+
+.admin-action-card .btn {
+    margin-top: auto;
 }
 
 .metric-card span,
@@ -529,11 +559,11 @@ body .internal-sidebar .site-footer {
         width: 100%;
     }
 
-    body .internal-sidebar .page-container,
-    body .internal-sidebar .hk-page,
-    body .internal-sidebar main:not(.auth-page):not(.public-page) {
+    .site-header--internal + .internal-sidebar + main:not(.auth-page):not(.public-page) {
+        width: min(100% - 32px, 1180px);
         margin-left: 0;
-        padding: 22px 16px;
+        margin-right: auto;
+        padding: 22px 0;
     }
 
     body .internal-sidebar .site-footer {

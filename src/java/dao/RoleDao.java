@@ -171,18 +171,36 @@ public class RoleDao {
                         REFERENCES permissions(id) ON DELETE CASCADE ON UPDATE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                     """);
-            seedPermission(statement, "ADMIN_USERS", "Manage users", "Create, update, block and assign account roles");
-            seedPermission(statement, "ADMIN_ROLES", "Manage roles", "Create roles and assign permissions");
-            seedPermission(statement, "ADMIN_LOGS", "View logs", "View system activity logs");
-            seedPermission(statement, "BOOKING_MANAGE", "Manage bookings", "Manage booking lifecycle");
-            seedPermission(statement, "ROOM_MANAGE", "Manage rooms", "Manage rooms, room types and prices");
-            seedPermission(statement, "HOUSEKEEPING_MANAGE", "Manage housekeeping", "Manage housekeeping tasks");
+            seedPermission(connection, "USER_REGISTRATION", "User Registration",
+                    "Allow new guests and staff accounts to register through the authentication portal.");
+            seedPermission(connection, "ACCOUNT_PROFILE", "Account Details & Profile",
+                    "View and maintain personal profile, contact information and account security.");
+            seedPermission(connection, "ADMIN_USERS", "User & Roles Management",
+                    "Create accounts, update account details, reset passwords, block users and assign roles.");
+            seedPermission(connection, "ADMIN_ROLES", "Role & Permission Configuration",
+                    "Create roles, edit role descriptions and define the permissions available to each role.");
+            seedPermission(connection, "ADMIN_LOGS", "System Audit Logs",
+                    "Search and review administration activity logs for audit and troubleshooting.");
+            seedPermission(connection, "BOOKING_MANAGE", "Booking Management",
+                    "Create, confirm, update, cancel and track booking lifecycle operations.");
+            seedPermission(connection, "ROOM_MANAGE", "Room & Pricing Management",
+                    "Manage room inventory, room types, prices and availability setup.");
+            seedPermission(connection, "HOUSEKEEPING_MANAGE", "Housekeeping Operations",
+                    "Assign, update and verify housekeeping or maintenance tasks.");
         }
     }
 
-    private void seedPermission(Statement statement, String code, String name, String description) throws SQLException {
-        statement.executeUpdate("INSERT IGNORE INTO permissions (code, name, description) VALUES ('"
-                + code + "', '" + name + "', '" + description + "')");
+    private void seedPermission(Connection connection, String code, String name, String description) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                INSERT INTO permissions (code, name, description)
+                VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description)
+                """)) {
+            statement.setString(1, code);
+            statement.setString(2, name);
+            statement.setString(3, description);
+            statement.executeUpdate();
+        }
     }
 
     private Role mapRole(ResultSet rs) throws SQLException {

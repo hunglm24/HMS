@@ -115,8 +115,18 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/news"><span>Tin tức</span><h3>Quản lý tin tức</h3><p>Thêm, sửa, xóa các chương trình khuyến mãi.</p></a>
 
         <% } else if ("ADMIN".equalsIgnoreCase(role)) { %>
-            <a class="preview-card" href="${pageContext.request.contextPath}/admin/users"><span>Admin</span><h3>Người dùng</h3><p>Quản lý tài khoản và phân quyền.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/admin/system-config"><span>Cấu hình</span><h3>Cấu hình</h3><p>Thiết lập hệ thống và tích hợp.</p></a>
+            <article class="preview-card admin-action-card">
+                <span>Admin</span>
+                <h3>Người dùng</h3>
+                <p>Quản lý tài khoản và phân quyền.</p>
+                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Mở quản lý</a>
+            </article>
+            <article class="preview-card admin-action-card">
+                <span>Cấu hình</span>
+                <h3>Cấu hình</h3>
+                <p>Thiết lập hệ thống và tích hợp.</p>
+                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/system-config">Mở cấu hình</a>
+            </article>
         <% } %>
     </section>
 </main>
