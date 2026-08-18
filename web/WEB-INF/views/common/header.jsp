@@ -54,11 +54,14 @@
 
         <nav id="main-navigation" class="main-nav" aria-label="Điều hướng chính">
             <% if (!signedIn || customer) { %>
-                <a href="<%= contextPath %>/">Trang chủ</a>
                 <a href="<%= contextPath %>/search">Tìm phòng</a>
                 <% if (signedIn) { %>
                     <a href="<%= contextPath %>/my-bookings">Đặt phòng của tôi</a>
-                    <a href="<%= contextPath %>/cart">Giỏ phòng</a>
+                    <%
+                        java.util.List cartItems = (java.util.List) session.getAttribute("cart");
+                        int cartCount = cartItems != null ? cartItems.size() : 0;
+                    %>
+                    <a href="<%= contextPath %>/cart">Giỏ phòng<% if (cartCount > 0) { %><span style="background: #dc3545; color: white; border-radius: 10px; padding: 2px 6px; font-size: 0.75rem; margin-left: 4px; font-weight: bold;">🛒 <%= cartCount %></span><% } %></a>
                 <% } %>
             <% } %>
 
@@ -92,20 +95,22 @@
         </nav>
     </div>
 </header>
-<c:if test="${not empty sessionScope.message}">
-    <div class="toast toast-success" style="position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 15px 20px; border-radius: 5px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        ${sessionScope.message}
-    </div>
-    <script>setTimeout(function() { document.querySelector('.toast-success').style.display = 'none'; }, 5000);</script>
-    <c:remove var="message" scope="session" />
-</c:if>
-<c:if test="${not empty sessionScope.error}">
-    <div class="toast toast-error" style="position: fixed; bottom: 20px; right: 20px; background: #dc3545; color: white; padding: 15px 20px; border-radius: 5px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        ${sessionScope.error}
-    </div>
-    <script>setTimeout(function() { document.querySelector('.toast-error').style.display = 'none'; }, 5000);</script>
-    <c:remove var="error" scope="session" />
-</c:if>
+<div class="toast-container" style="position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999;">
+    <c:if test="${not empty sessionScope.message}">
+        <div class="toast toast-success" style="background: #28a745; color: white; padding: 15px 20px; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            ${sessionScope.message}
+        </div>
+        <script>setTimeout(function() { let el = document.querySelector('.toast-success'); if(el) el.style.display = 'none'; }, 5000);</script>
+        <c:remove var="message" scope="session" />
+    </c:if>
+    <c:if test="${not empty sessionScope.error}">
+        <div class="toast toast-error" style="background: #dc3545; color: white; padding: 15px 20px; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            ${sessionScope.error}
+        </div>
+        <script>setTimeout(function() { let el = document.querySelector('.toast-error'); if(el) el.style.display = 'none'; }, 5000);</script>
+        <c:remove var="error" scope="session" />
+    </c:if>
+</div>
 <% if (internal) { %>
     <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 <% } %>

@@ -25,8 +25,12 @@ public class BookingDao {
             params.add("%" + bookingCode.trim() + "%");
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND status = ?");
-            params.add(status.trim());
+            if ("UPCOMING".equalsIgnoreCase(status.trim())) {
+                sql.append(" AND status IN ('PENDING_PAYMENT', 'CONFIRMED')");
+            } else {
+                sql.append(" AND status = ?");
+                params.add(status.trim());
+            }
         }
         if (fromDate != null && !fromDate.trim().isEmpty()) {
             sql.append(" AND check_in_date >= ?");
@@ -56,6 +60,7 @@ public class BookingDao {
                     b.setCancellationReason(rs.getString("cancellation_reason"));
                     b.setCancelledAt(rs.getTimestamp("cancelled_at"));
                     b.setNote(rs.getString("note"));
+                    b.setCreatedAt(rs.getTimestamp("created_at"));
                     bookings.add(b);
                 }
             }
