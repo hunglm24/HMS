@@ -22,6 +22,7 @@ import java.util.Locale;
 })
 public class UserManagementServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final int PAGE_SIZE = 5;
     private UserDao userDao;
     private RoleDao roleDao;
     private AuditLogService auditLogService;
@@ -73,11 +74,21 @@ public class UserManagementServlet extends HttpServlet {
             String keyword = request.getParameter("q");
             String role = request.getParameter("role");
             String status = request.getParameter("status");
-            request.setAttribute("users", userDao.findAll(keyword, role, status));
+            int pageSize = PAGE_SIZE;
+            int totalItems = userDao.countAll(keyword, role, status);
+            int totalPages = Math.max(1, (int) Math.ceil(totalItems / (double) pageSize));
+            int page = Math.min(parsePage(request.getParameter("page")), totalPages);
+            int offset = (page - 1) * pageSize;
+
+            request.setAttribute("users", userDao.findPage(keyword, role, status, offset, pageSize));
             request.setAttribute("roles", roleDao.findAll());
             request.setAttribute("q", keyword == null ? "" : keyword);
             request.setAttribute("selectedRole", role == null ? "" : role);
             request.setAttribute("selectedStatus", status == null ? "" : status);
+            request.setAttribute("page", page);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalItems", totalItems);
             request.getRequestDispatcher("/WEB-INF/views/admin/users.jsp").forward(request, response);
         } catch (SQLException ex) {
             getServletContext().log("Cannot load admin users", ex);
@@ -161,6 +172,15 @@ public class UserManagementServlet extends HttpServlet {
             return Long.parseLong(value);
         } catch (RuntimeException ex) {
             throw new IllegalArgumentException(message);
+        }
+    }
+
+    private int parsePage(String value) {
+        try {
+            int parsed = Integer.parseInt(value);
+            return Math.max(1, parsed);
+        } catch (RuntimeException ex) {
+            return 1;
         }
     }
 

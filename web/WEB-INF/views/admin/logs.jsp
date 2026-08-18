@@ -1,5 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page import="model.AuditLog" %>
 <%!
     private String h(Object value) {
@@ -7,11 +9,19 @@
         return String.valueOf(value).replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
+    private String enc(Object value) {
+        if (value == null) return "";
+        return URLEncoder.encode(String.valueOf(value), StandardCharsets.UTF_8);
+    }
 %>
 <%
     List<AuditLog> logs = (List<AuditLog>) request.getAttribute("logs");
     String q = (String) request.getAttribute("q");
-    int limit = request.getAttribute("limit") == null ? 100 : (Integer) request.getAttribute("limit");
+    int limit = request.getAttribute("limit") == null ? 5 : (Integer) request.getAttribute("limit");
+    int currentPage = request.getAttribute("page") == null ? 1 : (Integer) request.getAttribute("page");
+    int totalPages = request.getAttribute("totalPages") == null ? 1 : (Integer) request.getAttribute("totalPages");
+    int totalItems = request.getAttribute("totalItems") == null ? 0 : (Integer) request.getAttribute("totalItems");
+    String pageQuery = "&q=" + enc(q);
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -30,6 +40,11 @@
         .data-table th { background:var(--color-bg-surface); color:var(--color-text-secondary); font-size:13px; }
         .code { font-family:Consolas, monospace; font-size:12px; }
         .message { margin-bottom:14px; padding:10px 12px; border-radius:8px; border:1px solid #fecaca; background:#fef2f2; color:#991b1b; }
+        .pagination-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
+        .pagination-links { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+        .page-link { min-width:38px; min-height:36px; display:inline-flex; align-items:center; justify-content:center; padding:7px 11px; border:1px solid var(--color-border); border-radius:8px; background:#fff; color:var(--color-text-primary); font-weight:700; text-decoration:none; }
+        .page-link.active { border-color:var(--color-primary-600); background:var(--color-primary-600); color:#fff; }
+        .page-link.disabled { opacity:.45; pointer-events:none; }
     </style>
 </head>
 <body>
@@ -53,15 +68,6 @@
             <label class="form-label" for="q">Search</label>
             <input class="form-control" id="q" name="q" value="<%= h(q) %>" placeholder="Action, actor, target, detail">
         </div>
-        <div>
-            <label class="form-label" for="limit">Limit</label>
-            <select class="form-control" id="limit" name="limit">
-                <option value="50" <%= limit == 50 ? "selected" : "" %>>50</option>
-                <option value="100" <%= limit == 100 ? "selected" : "" %>>100</option>
-                <option value="250" <%= limit == 250 ? "selected" : "" %>>250</option>
-                <option value="500" <%= limit == 500 ? "selected" : "" %>>500</option>
-            </select>
-        </div>
         <button class="button button-secondary" type="submit">Filter</button>
     </form>
 
@@ -84,6 +90,20 @@
         <% } %>
         </tbody>
     </table>
+    <div class="pagination-bar">
+        <span>Showing <%= logs == null ? 0 : logs.size() %> of <%= totalItems %> log entries, 5 per page</span>
+        <div class="pagination-links">
+            <a class="page-link <%= currentPage <= 1 ? "disabled" : "" %>" href="${pageContext.request.contextPath}/admin/logs?page=<%= currentPage - 1 %><%= pageQuery %>">Prev</a>
+            <% for (int i = 1; i <= totalPages; i++) {
+                if (i == 1 || i == totalPages || Math.abs(i - currentPage) <= 2) { %>
+                    <a class="page-link <%= i == currentPage ? "active" : "" %>" href="${pageContext.request.contextPath}/admin/logs?page=<%= i %><%= pageQuery %>"><%= i %></a>
+                <% } else if (i == currentPage - 3 || i == currentPage + 3) { %>
+                    <span class="page-link disabled">...</span>
+                <% }
+            } %>
+            <a class="page-link <%= currentPage >= totalPages ? "disabled" : "" %>" href="${pageContext.request.contextPath}/admin/logs?page=<%= currentPage + 1 %><%= pageQuery %>">Next</a>
+        </div>
+    </div>
 </main>
 </body>
 </html>

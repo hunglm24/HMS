@@ -1,5 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page import="model.User" %>
 <%@ page import="model.Role" %>
 <%!
@@ -13,6 +15,10 @@
         return String.valueOf(value).replace("\\", "\\\\").replace("'", "\\'")
                 .replace("\r", "").replace("\n", "\\n");
     }
+    private String enc(Object value) {
+        if (value == null) return "";
+        return URLEncoder.encode(String.valueOf(value), StandardCharsets.UTF_8);
+    }
 %>
 <%
     List<User> users = (List<User>) request.getAttribute("users");
@@ -20,6 +26,11 @@
     String q = (String) request.getAttribute("q");
     String selectedRole = (String) request.getAttribute("selectedRole");
     String selectedStatus = (String) request.getAttribute("selectedStatus");
+    int currentPage = request.getAttribute("page") == null ? 1 : (Integer) request.getAttribute("page");
+    int pageSize = request.getAttribute("pageSize") == null ? 5 : (Integer) request.getAttribute("pageSize");
+    int totalPages = request.getAttribute("totalPages") == null ? 1 : (Integer) request.getAttribute("totalPages");
+    int totalItems = request.getAttribute("totalItems") == null ? 0 : (Integer) request.getAttribute("totalItems");
+    String pageQuery = "&q=" + enc(q) + "&role=" + enc(selectedRole) + "&status=" + enc(selectedStatus);
     String toastMessage = (String) session.getAttribute("toastMessage");
     String toastType = (String) session.getAttribute("toastType");
     session.removeAttribute("toastMessage");
@@ -38,6 +49,8 @@
         .admin-tabs a.active { background:var(--color-primary-100); color:var(--color-primary-600); }
         .toolbar { display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:16px; }
         .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+        .filters .filter-field { width:190px; }
+        .filters .search-field { width:210px; }
         .data-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--color-border); border-radius:8px; overflow:hidden; }
         .data-table th,.data-table td { padding:11px 12px; border-bottom:1px solid var(--color-border); text-align:left; vertical-align:top; }
         .data-table th { background:var(--color-bg-surface); color:var(--color-text-secondary); font-size:13px; }
@@ -45,14 +58,20 @@
         .badge-active { background:#dcfce7; color:#166534; }
         .badge-inactive { background:#f3f4f6; color:#374151; }
         .badge-blocked { background:#fee2e2; color:#991b1b; }
-        .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+        .row-actions { display:grid; grid-template-columns:repeat(4, 78px); gap:6px; align-items:center; }
         .inline-form { display:inline; margin:0; }
-        .small-button { min-height:0; padding:6px 9px; font-size:12px; }
+        .small-button { width:78px; min-height:34px; padding:6px 8px; font-size:12px; border-radius:8px; }
         .admin-panel { margin-top:20px; padding:18px; background:#fff; border:1px solid var(--color-border); border-radius:8px; }
         .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
         .message { margin-bottom:14px; padding:10px 12px; border-radius:8px; border:1px solid var(--color-border); background:#fff; }
         .message.success { border-color:#86efac; background:#f0fdf4; color:#166534; }
         .message.error { border-color:#fecaca; background:#fef2f2; color:#991b1b; }
+        .pagination-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
+        .pagination-links { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+        .page-link { min-width:38px; min-height:36px; display:inline-flex; align-items:center; justify-content:center; padding:7px 11px; border:1px solid var(--color-border); border-radius:8px; background:#fff; color:var(--color-text-primary); font-weight:700; text-decoration:none; }
+        .page-link.active { border-color:var(--color-primary-600); background:var(--color-primary-600); color:#fff; }
+        .page-link.disabled { opacity:.45; pointer-events:none; }
+        @media (max-width: 900px) { .row-actions { grid-template-columns:repeat(2, 78px); } }
     </style>
 </head>
 <body>
@@ -76,11 +95,11 @@
 
     <div class="toolbar">
         <form class="filters" method="get" action="${pageContext.request.contextPath}/admin/users">
-            <div>
+            <div class="search-field">
                 <label class="form-label" for="q">Search</label>
                 <input class="form-control" id="q" name="q" value="<%= h(q) %>" placeholder="Name, email, phone">
             </div>
-            <div>
+            <div class="filter-field">
                 <label class="form-label" for="role">Role</label>
                 <select class="form-control" id="role" name="role">
                     <option value="">All roles</option>
@@ -89,7 +108,7 @@
                     <% } %>
                 </select>
             </div>
-            <div>
+            <div class="filter-field">
                 <label class="form-label" for="status">Status</label>
                 <select class="form-control" id="status" name="status">
                     <option value="">All statuses</option>
@@ -137,6 +156,20 @@
         <% } %>
         </tbody>
     </table>
+    <div class="pagination-bar">
+        <span>Showing <%= users == null ? 0 : users.size() %> of <%= totalItems %> users, 5 per page</span>
+        <div class="pagination-links">
+            <a class="page-link <%= currentPage <= 1 ? "disabled" : "" %>" href="${pageContext.request.contextPath}/admin/users?page=<%= currentPage - 1 %><%= pageQuery %>">Prev</a>
+            <% for (int i = 1; i <= totalPages; i++) {
+                if (i == 1 || i == totalPages || Math.abs(i - currentPage) <= 2) { %>
+                    <a class="page-link <%= i == currentPage ? "active" : "" %>" href="${pageContext.request.contextPath}/admin/users?page=<%= i %><%= pageQuery %>"><%= i %></a>
+                <% } else if (i == currentPage - 3 || i == currentPage + 3) { %>
+                    <span class="page-link disabled">...</span>
+                <% }
+            } %>
+            <a class="page-link <%= currentPage >= totalPages ? "disabled" : "" %>" href="${pageContext.request.contextPath}/admin/users?page=<%= currentPage + 1 %><%= pageQuery %>">Next</a>
+        </div>
+    </div>
 
     <section class="admin-panel">
         <h2 id="userFormTitle">Create user</h2>
