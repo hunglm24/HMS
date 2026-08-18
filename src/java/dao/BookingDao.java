@@ -59,7 +59,6 @@ public class BookingDao {
                     b.setStatus(rs.getString("status"));
                     b.setCancellationReason(rs.getString("cancellation_reason"));
                     b.setCancelledAt(rs.getTimestamp("cancelled_at"));
-                    b.setNote(rs.getString("note"));
                     b.setCreatedAt(rs.getTimestamp("created_at"));
                     bookings.add(b);
                 }
@@ -88,7 +87,6 @@ public class BookingDao {
                     b.setStatus(rs.getString("status"));
                     b.setCancellationReason(rs.getString("cancellation_reason"));
                     b.setCancelledAt(rs.getTimestamp("cancelled_at"));
-                    b.setNote(rs.getString("note"));
                     b.setCreatedAt(rs.getTimestamp("created_at"));
                     b.setCreatedBy(rs.getLong("created_by"));
                     return Optional.of(b);
