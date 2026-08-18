@@ -1,7 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%!
     private String sideBeanString(Object bean, String getterName) {
-        if (bean == null) return "";
+        if (bean == null) {
+            return "";
+        }
         try {
             Object value = bean.getClass().getMethod(getterName).invoke(bean);
             return value == null ? "" : String.valueOf(value);
@@ -47,6 +49,7 @@
             <a class="<%= activePath(uri, "/manager/reports") ? "active" : "" %>" href="<%= cp %>/manager/reports"><span>RP</span>Báo cáo</a>
             <a class="<%= activePath(uri, "/manager/rooms") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng</a>
             <a class="<%= activePath(uri, "/manager/room-types") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
+            <a class="<%= activePath(uri, "/manager/equipment") ? "active" : "" %>" href="<%= cp %>/manager/equipment"><span>EQ</span>Thiết bị</a>
             <a class="<%= activePath(uri, "/housekeeping/tasks") ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=history"><span>HK</span>Nhiệm vụ dọn phòng</a>
             <a class="<%= activePath(uri, "/manager/pricing") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá, mã giảm giá</a>
             <a class="<%= activePath(uri, "/manager/policies") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>
