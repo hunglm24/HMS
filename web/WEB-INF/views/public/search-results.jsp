@@ -4,17 +4,22 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="vi">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tìm phòng | HMS</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4"></head>
-<body><jsp:include page="/WEB-INF/views/common/header.jsp" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tìm phòng | HMS</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+</head>
+<body>
+<jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main class="public-page">
     <section class="section-head">
         <div><p class="section-kicker">Booking</p><h1>Tìm phòng trống</h1><p>Lọc theo ngày ở, số khách và hạng phòng.</p></div>
     </section>
     <form class="toolbar-card" method="get" action="${pageContext.request.contextPath}/search">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; align-items: end;">
-            <label>Check-in<input type="date" name="checkIn" value="${param.checkIn}" required></label>
-            <label>Check-out<input type="date" name="checkOut" value="${param.checkOut}" required></label>
+            <label>Check-in<input type="date" id="checkIn" name="checkIn" value="${param.checkIn}" required></label>
+            <label>Check-out<input type="date" id="checkOut" name="checkOut" value="${param.checkOut}" required></label>
             <label>Số khách<input type="number" name="guests" value="${not empty param.guests ? param.guests : 2}" min="1" required></label>
             <label>Số phòng<input type="number" name="numRooms" value="${not empty param.numRooms ? param.numRooms : 1}" min="1" required></label>
             
@@ -63,4 +68,30 @@
             </c:when>
         </c:choose>
     </section>
-</main><jsp:include page="/WEB-INF/views/common/footer.jsp" /></body></html>
+</main>
+<script>
+    const checkInInput = document.getElementById('checkIn');
+    const checkOutInput = document.getElementById('checkOut');
+    
+    // Set min date for checkIn to today
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
+    checkInInput.setAttribute('min', today);
+
+    // When checkIn changes, update checkOut min date
+    checkInInput.addEventListener('change', function() {
+        if (this.value) {
+            const nextDay = new Date(this.value);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const minOut = nextDay.toISOString().split('T')[0];
+            checkOutInput.setAttribute('min', minOut);
+            if (checkOutInput.value && checkOutInput.value <= this.value) {
+                checkOutInput.value = minOut;
+            }
+        }
+    });
+</script>
+<jsp:include page="/WEB-INF/views/common/footer.jsp" /></body></html>

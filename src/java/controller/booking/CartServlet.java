@@ -49,12 +49,66 @@ public class CartServlet extends HttpServlet {
                 int guests = Integer.parseInt(request.getParameter("guests"));
                 int quantity = Integer.parseInt(request.getParameter("quantity"));
                 
+                // Validation: Check-in < Check-out
+                if (!checkIn.isBefore(checkOut)) {
+                    session.setAttribute("error", "Ngày trả phòng phải sau ngày nhận phòng.");
+                    response.sendRedirect(request.getContextPath() + "/cart");
+                    return;
+                }
+                
+                // Validation: All cart items must have the same dates
+                if (!cart.isEmpty()) {
+                    CartItem first = cart.get(0);
+                    if (!checkIn.equals(first.getCheckIn()) || !checkOut.equals(first.getCheckOut())) {
+                        session.setAttribute("error", "Chỉ có thể đặt phòng trong cùng một khoảng thời gian. Vui lòng thanh toán giỏ hàng hiện tại hoặc xóa các phòng cũ.");
+                        response.sendRedirect(request.getContextPath() + "/cart");
+                        return;
+                    }
+                }
+                
                 RoomType rt = roomTypeDao.findById(roomId).orElse(null);
-                if (rt != null) {
-                    cart.add(new CartItem(rt, checkIn, checkOut, quantity, guests));
+                if (rt != null && "ACTIVE".equals(rt.getStatus())) {
+                    // Validation: Capacity check
+                    if (guests > rt.getCapacity() * quantity) {
+                        session.setAttribute("error", "Số khách vượt quá sức chứa của số phòng được chọn.");
+                        response.sendRedirect(request.getContextPath() + "/cart");
+                        return;
+                    }
+                    
+                    // Check existing quantity in cart for this room type
+                    int existingQuantity = 0;
+                    CartItem existingItem = null;
+                    for (CartItem item : cart) {
+                        if (item.getRoomType().getId() == roomId) {
+                            existingQuantity = item.getQuantity();
+                            existingItem = item;
+                            break;
+                        }
+                    }
+                    
+                    int totalRequested = quantity + existingQuantity;
+                    
+                    // Re-check availability from database
+                    java.util.List<RoomType> available = roomTypeDao.findAvailableRoomTypes(
+                            checkIn, checkOut, 1, totalRequested, null, null, null, roomId);
+                    
+                    if (!available.isEmpty() && available.get(0).getAvailableQuantity() >= totalRequested) {
+                        if (existingItem != null) {
+                            existingItem.setQuantity(totalRequested);
+                            existingItem.setGuests(existingItem.getGuests() + guests);
+                        } else {
+                            cart.add(new CartItem(rt, checkIn, checkOut, quantity, guests));
+                        }
+                        session.setAttribute("toastMessage", "Đã thêm phòng vào giỏ hàng");
+                        session.setAttribute("toastType", "toast-success");
+                    } else {
+                        session.setAttribute("error", "Số lượng phòng trống không đủ (" + (available.isEmpty() ? 0 : available.get(0).getAvailableQuantity()) + " phòng).");
+                    }
+                } else {
+                    session.setAttribute("error", "Loại phòng không hợp lệ hoặc đã ngừng hoạt động.");
                 }
             } catch (Exception e) {
-                // Ignore parse errors
+                session.setAttribute("error", "Dữ liệu không hợp lệ.");
             }
         } else if ("remove".equals(action)) {
             try {

@@ -57,18 +57,39 @@ public class RoomMapServlet extends HttpServlet {
         if (status != null) status = status.trim().toUpperCase();
 
         // Build summary counters and group rooms by floor in a single pass.
-        long available = 0, occupied = 0, cleaning = 0, maintenance = 0;
+        long available = 0, occupied = 0, reserved = 0, cleaning = 0, maintenance = 0;
+        int totalActiveRooms = 0;
         Map<Integer, List<Room>> roomsByFloor = new LinkedHashMap<>();
 
         for (Room room : allRooms) {
+            String physicalStatus = room.getStatus() != null ? room.getStatus().toUpperCase() : "";
+            
+            // Validation: Không được hiển thị phòng Inactive
+            if ("INACTIVE".equals(physicalStatus)) {
+                continue;
+            }
+            
+            String mapStatus = physicalStatus;
+            if ("CONFIRMED".equals(room.getCurrentBookingStatus())) {
+                mapStatus = "RESERVED";
+            } else if ("CHECKED_IN".equals(room.getCurrentBookingStatus())) {
+                mapStatus = "OCCUPIED";
+            }
+            
+            room.setStatus(mapStatus); // Override for the JSP
+            
+            totalActiveRooms++;
+            
             // Count room statuses for the dashboard badges.
-            String roomStatus = room.getStatus() != null ? room.getStatus().toUpperCase() : "";
-            switch (roomStatus) {
+            switch (mapStatus) {
                 case "AVAILABLE":
                     available++;
                     break;
                 case "OCCUPIED":
                     occupied++;
+                    break;
+                case "RESERVED":
+                    reserved++;
                     break;
                 case "CLEANING":
                     cleaning++;
@@ -81,7 +102,7 @@ public class RoomMapServlet extends HttpServlet {
             }
 
             // Apply filters from the UI.
-            if (status != null && !status.isEmpty() && !"ALL".equals(status) && !status.equals(roomStatus)) {
+            if (status != null && !status.isEmpty() && !"ALL".equals(status) && !status.equals(mapStatus)) {
                 continue;
             }
 
@@ -111,9 +132,11 @@ public class RoomMapServlet extends HttpServlet {
         request.setAttribute("roomsByFloor", roomsByFloor);
         request.setAttribute("availableCount", available);
         request.setAttribute("occupiedCount", occupied);
+        request.setAttribute("reservedCount", reserved);
         request.setAttribute("cleaningCount", cleaning);
         request.setAttribute("maintenanceCount", maintenance);
-        request.setAttribute("totalCount", allRooms.size());
+        
+        request.setAttribute("totalCount", totalActiveRooms);
         request.setAttribute("currentSearch", request.getParameter("search"));
         request.setAttribute("currentStatus", (status == null || status.isEmpty()) ? "ALL" : status);
         request.setAttribute("currentFloor", request.getParameter("floor"));

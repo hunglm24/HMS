@@ -28,7 +28,10 @@
             </label>
             <label>Họ tên<input name="fullName" required></label>
             <label>Điện thoại<input name="phone" required></label>
-            <label>Số khách<input type="number" name="guests" min="1" value="2"></label>
+            <label>Email (Tùy chọn)<input type="email" name="email"></label>
+            <label>CMND/Passport<input name="identityNumber" required></label>
+            <label>Ngày sinh<input type="date" name="dateOfBirth" id="dobInput"></label>
+            <label>Số khách<input type="number" name="guests" min="1" value="2" required></label>
             <input type="hidden" name="checkIn" value="${param.checkIn}">
             <input type="hidden" name="checkOut" value="${param.checkOut}">
         </div>
@@ -38,4 +41,12 @@
 <c:if test="${param.checkIn != null && empty availablePhysicalRooms}">
     <p>Không có phòng trống trong khoảng thời gian này.</p>
 </c:if>
-</main></body></html>
+</main>
+<script>
+    const dobInput = document.getElementById('dobInput');
+    if (dobInput) {
+        const today = new Date();
+        dobInput.max = today.toISOString().split('T')[0];
+    }
+</script>
+</body></html>

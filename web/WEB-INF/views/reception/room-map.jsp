@@ -32,6 +32,7 @@
                 <div class="stats-row">
                     <div class="stat-badge stat-available">Trống: ${availableCount}</div>
                     <div class="stat-badge stat-occupied">Đang có khách: ${occupiedCount}</div>
+                    <div class="stat-badge stat-reserved" style="background:#ffc107; color:#000;">Đã đặt trước: ${reservedCount}</div>
                     <div class="stat-badge stat-cleaning">Đang dọn: ${cleaningCount}</div>
                     <div class="stat-badge stat-maintenance">Bảo trì: ${maintenanceCount}</div>
                     <div class="stat-badge">Tổng: ${totalCount}</div>
@@ -44,6 +45,7 @@
                         <option value="">Tất cả trạng thái</option>
                         <option value="AVAILABLE" ${param.status == 'AVAILABLE' ? 'selected' : ''}>Trống</option>
                         <option value="OCCUPIED" ${param.status == 'OCCUPIED' ? 'selected' : ''}>Đang có khách</option>
+                        <option value="RESERVED" ${param.status == 'RESERVED' ? 'selected' : ''}>Đã đặt trước</option>
                         <option value="CLEANING" ${param.status == 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
                         <option value="MAINTENANCE" ${param.status == 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
                     </select>
@@ -83,6 +85,9 @@
                                     </c:when>
                                     <c:when test="${roomStatus eq 'OCCUPIED'}">
                                         <c:set var="statusLabel" value="Có khách" />
+                                    </c:when>
+                                    <c:when test="${roomStatus eq 'RESERVED'}">
+                                        <c:set var="statusLabel" value="Đã đặt trước" />
                                     </c:when>
                                     <c:when test="${roomStatus eq 'CLEANING'}">
                                         <c:set var="statusLabel" value="Đang dọn" />
