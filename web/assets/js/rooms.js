@@ -1,38 +1,15 @@
 (function () {
     // Room management uses a tiny modal controller and confirm hooks.
     const modalState = {
-        roomType: document.getElementById('roomTypeModal'),
         room: document.getElementById('roomModal')
     };
 
-    function normalizeModalKind(kind) {
-        if (kind === 'room-type') {
-            return 'roomType';
-        }
-        return kind;
-    }
-
     // Open the requested modal and update its accessibility state.
     function openModal(kind) {
-        const modal = modalState[normalizeModalKind(kind)];
+        const modal = modalState[kind];
         if (!modal) return;
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
-    }
-
-    // Reset the room type modal into create mode.
-    function openRoomTypeModal() {
-        setText('roomTypeModalTitle', 'Thêm loại phòng');
-        setValue('roomTypeIdField', '');
-        setValue('roomTypeName', '');
-        setValue('roomTypePrice', '');
-        setReadonly('roomTypePrice', false);
-        setText('roomTypePriceHint', 'Giá sẽ được nhập khi tạo mới.');
-        setDigitsOnly('roomTypePrice');
-        setValue('roomTypeCapacity', '');
-        setValue('roomTypeDescription', '');
-        setValue('roomTypeStatus', 'ACTIVE');
-        openModal('room-type');
     }
 
     // Reset the room modal into create mode.
@@ -97,9 +74,6 @@
         document.querySelectorAll('[data-room-mgmt-open]').forEach((button) => {
             button.addEventListener('click', () => {
                 const kind = button.getAttribute('data-room-mgmt-open');
-                if (kind === 'room-type') {
-                    openRoomTypeModal();
-                }
                 if (kind === 'room') {
                     openRoomModal();
                 }
@@ -107,24 +81,8 @@
         });
     }
 
-    // Bind edit actions so each modal opens with existing values.
+    // Bind edit actions so the room modal opens with existing values.
     function bindEditButtons() {
-        document.querySelectorAll('[data-room-mgmt-edit-room-type="true"]').forEach((button) => {
-            button.addEventListener('click', () => {
-                setText('roomTypeModalTitle', 'Sửa loại phòng');
-                setValue('roomTypeIdField', button.dataset.roomTypeId);
-                setValue('roomTypeName', button.dataset.roomTypeName);
-                setValue('roomTypePrice', button.dataset.roomTypeBasePrice);
-                setReadonly('roomTypePrice', true);
-                setText('roomTypePriceHint', 'Giá hiện tại sẽ được giữ nguyên khi sửa.');
-                setDigitsOnly('roomTypePrice');
-                setValue('roomTypeCapacity', button.dataset.roomTypeCapacity);
-                setValue('roomTypeDescription', button.dataset.roomTypeDescription);
-                setValue('roomTypeStatus', button.dataset.roomTypeStatus || 'ACTIVE');
-                openModal('roomType');
-            });
-        });
-
         document.querySelectorAll('[data-room-mgmt-edit-room="true"]').forEach((button) => {
             button.addEventListener('click', () => {
                 setText('roomModalTitle', 'Sửa phòng');
@@ -174,7 +132,6 @@
 
     window.RoomManagement = {
         openModal,
-        openRoomTypeModal,
         openRoomModal
     };
 })();

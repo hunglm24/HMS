@@ -14,6 +14,13 @@
     Object currentUser = session.getAttribute("currentUser");
     String role = indexBeanString(currentUser, "getRoleName");
     boolean internal = currentUser != null && !"CUSTOMER".equalsIgnoreCase(role);
+    
+    // Fetch Latest News for Public Page
+    java.util.List<model.News> latestNews = java.util.Collections.emptyList();
+    if (!internal) {
+        dao.NewsDao newsDao = new dao.NewsDao();
+        latestNews = newsDao.getLatestNews(3);
+    }
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -55,6 +62,27 @@
             <div class="room-showcase-card__body"><h3>Executive Suite</h3><p>Không gian rộng, có khu tiếp khách và view thành phố.</p><div class="room-meta"><span>3 khách</span><span>48 m2</span><span>Mini bar</span></div><a class="btn" href="${pageContext.request.contextPath}/room-detail">Xem chi tiết</a></div>
         </article>
     </section>
+    
+    <% if (!latestNews.isEmpty()) { %>
+    <section class="section-head" style="margin-top: 40px;">
+        <div><p class="section-kicker">Tin tức</p><h2>Khuyến mãi & Sự kiện</h2></div>
+        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/news">Xem tất cả</a>
+    </section>
+    <section class="room-card-grid">
+        <% for(model.News n : latestNews) { %>
+        <article class="room-showcase-card">
+            <img src="<%= n.getThumbnailUrl() != null && !n.getThumbnailUrl().isEmpty() ? n.getThumbnailUrl() : "https://via.placeholder.com/900x500?text=News" %>" alt="News Image">
+            <div class="room-showcase-card__body">
+                <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= n.getTitle() %></h3>
+                <div class="room-meta" style="margin-top: 8px; color: #666; font-size: 14px;">
+                    <span><%= n.getPublishedAt() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(n.getPublishedAt()) : "" %></span>
+                </div>
+                <a class="btn" href="${pageContext.request.contextPath}/news/detail?id=<%= n.getId() %>" style="margin-top: 16px;">Xem chi tiết</a>
+            </div>
+        </article>
+        <% } %>
+    </section>
+    <% } %>
 </main>
 <% } else { %>
 <main class="page-container">
@@ -84,6 +112,8 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/room-types"><span>Loại phòng</span><h3>Quản lý loại phòng</h3><p>Quản lý hạng phòng, giá và sức chứa.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Buồng phòng</span><h3>Nhiệm vụ dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/news"><span>Tin tức</span><h3>Quản lý tin tức</h3><p>Thêm, sửa, xóa các chương trình khuyến mãi.</p></a>
+
         <% } else if ("ADMIN".equalsIgnoreCase(role)) { %>
             <article class="preview-card admin-action-card">
                 <span>Admin</span>

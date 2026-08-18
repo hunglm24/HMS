@@ -42,7 +42,10 @@ public class MyBookingsServlet extends HttpServlet {
                         return;
                     }
                     
+                    model.CheckInBookingSummary summary = bookingDao.findCheckInBookingById((int) bookingId).orElse(null);
+                    
                     request.setAttribute("booking", booking);
+                    request.setAttribute("summary", summary);
                 } catch (Exception e) {
                     e.printStackTrace();
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -63,8 +66,24 @@ public class MyBookingsServlet extends HttpServlet {
 
                 List<Booking> bookings = bookingDao.findBookingsByCustomerId(user.getId(), bookingCode, status, fromDate, toDate);
                 request.setAttribute("bookings", bookings);
+                
+                try {
+                    java.util.Map<Long, Boolean> hasFeedbackMap = new java.util.HashMap<>();
+                    dao.FeedbackDao feedbackDao = new dao.FeedbackDao();
+                    for (Booking b : bookings) {
+                        if ("CHECKED_OUT".equals(b.getStatus())) {
+                            hasFeedbackMap.put(b.getId(), feedbackDao.hasFeedback(b.getId(), user.getId()));
+                        }
+                    }
+                    request.setAttribute("hasFeedbackMap", hasFeedbackMap);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    request.setAttribute("errorMessage", "Error checking feedback: " + ex.getMessage());
+                }
+                
             } catch (Exception e) {
                 e.printStackTrace();
+                request.setAttribute("errorMessage", "Error loading bookings: " + e.getMessage());
             }
             request.getRequestDispatcher("/WEB-INF/views/public/my-bookings.jsp").forward(request, response);
         }

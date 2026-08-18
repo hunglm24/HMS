@@ -14,7 +14,7 @@ public class CheckInService {
     public static final int PAGE_SIZE = 8;
     private static final Set<String> BOOKING_STATUSES = Set.of(
             "Pending", "Confirmed", "CheckedIn", "Cancelled");
-    private static final Set<String> SCOPES = Set.of("today", "upcoming", "overdue", "all");
+    private static final Set<String> SCOPES = Set.of("today", "upcoming", "overdue", "all", "checkout_today", "checkout_upcoming", "checkout_overdue");
     private static final Map<String, String> SORT_COLUMNS = Map.of(
             "created", "b.created_at",
             "checkIn", "b.check_in_date",

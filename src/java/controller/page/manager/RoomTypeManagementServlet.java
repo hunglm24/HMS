@@ -1,60 +1,81 @@
 package controller.page.manager;
 
 import dto.RoomManagementPageData;
+import model.Amenity;
 import model.RoomType;
 import service.RoomTypeService;
+import util.LocalFileUtil;
+import util.MoneyUtil;
+import util.MultipartUtil;
 import util.ValidationUtil;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
-import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @WebServlet(urlPatterns = {
         "/manager/room-types",
-        "/manager/room-types/save-room-type",
-        "/manager/room-types/deactivate-room-type",
-        "/manager/room-types/delete"
+        "/manager/room-types/new",
+        "/manager/room-types/create",
+        "/manager/room-types/edit",
+        "/manager/room-types/update",
+        "/manager/room-types/toggle-status"
 })
+@MultipartConfig(
+        maxFileSize = 5L * 1024 * 1024,
+        maxRequestSize = 8L * 1024 * 1024
+)
 public class RoomTypeManagementServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final String ACTIVE_STATUS = "ACTIVE";
+    private static final String ALL_STATUS = "ALL";
+    private static final long MAX_COVER_IMAGE_SIZE = 5L * 1024 * 1024;
+    private static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
+    private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+    );
+    private static final String ROOM_TYPE_IMAGE_DIR = "uploads/room-types";
 
     private RoomTypeService roomTypeService;
 
     @Override
     public void init() throws ServletException {
-        // Initialize the service once for the servlet lifecycle.
         roomTypeService = new RoomTypeService();
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Route GET requests based on the requested servlet path.
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
         String path = req.getServletPath();
 
         if ("/manager/room-types".equals(path)) {
-            // Load the management page with the current filter state.
-            RoomManagementPageData pageData = new RoomManagementPageData();
-            String keyword = req.getParameter("keyword");
-            String roomTypeStatus = req.getParameter("roomTypeStatus");
-            if (!req.getParameterMap().containsKey("roomTypeStatus")) {
-                // Default to active room types when the filter is missing.
-                roomTypeStatus = "ACTIVE";
-            }
-            pageData.setKeyword(keyword);
-            pageData.setRoomTypeStatus(roomTypeStatus);
-            pageData.setRoomTypes(roomTypeService.findRoomTypes(keyword, roomTypeStatus));
-            req.setAttribute("pageData", pageData);
-            req.setAttribute("roomTypes", pageData.getRoomTypes());
+            prepareRoomTypesPage(req);
             req.getRequestDispatcher("/WEB-INF/views/manager/room-types.jsp").forward(req, resp);
             return;
         }
 
-        if ("/manager/room-types/delete".equals(path) || "/manager/room-types/deactivate-room-type".equals(path)) {
-            handleDeactivateRoomType(req, resp);
+        if ("/manager/room-types/new".equals(path)) {
+            prepareCreateForm(req);
+            prepareRoomTypeFormView(req, new RoomType(), false, null, new LinkedHashSet<>());
+            req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
+            return;
+        }
+
+        if ("/manager/room-types/edit".equals(path)) {
+            handleEditRoomType(req, resp);
             return;
         }
 
@@ -62,71 +83,332 @@ public class RoomTypeManagementServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Handle only the room type save endpoint for POST requests.
-        if ("/manager/room-types/save-room-type".equals(req.getServletPath())) {
-            handleSaveRoomType(req, resp);
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+        if ("/manager/room-types/create".equals(req.getServletPath())) {
+            handleCreateRoomType(req, resp);
+            return;
+        }
+
+        if ("/manager/room-types/update".equals(req.getServletPath())) {
+            handleUpdateRoomType(req, resp);
+            return;
+        }
+
+        if ("/manager/room-types/toggle-status".equals(req.getServletPath())) {
+            handleToggleRoomTypeStatus(req, resp);
             return;
         }
 
         resp.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
-    private void handleSaveRoomType(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // Build a RoomType object from the submitted form values.
-        RoomType roomType = new RoomType();
-        String idStr = req.getParameter("id");
-        String name = req.getParameter("name");
-        String description = req.getParameter("description");
-        String capacityStr = req.getParameter("capacity");
-        String basePriceStr = req.getParameter("basePrice");
-        String status = req.getParameter("status");
-
-        if (!ValidationUtil.isBlank(idStr)) {
-            // Keep the existing ID when this is an edit flow.
-            roomType.setId(ValidationUtil.requirePositiveLong(idStr, "Room type"));
-        }
-        roomType.setName(name);
-        roomType.setDescription(description);
-        roomType.setCapacity(ValidationUtil.requirePositiveInt(capacityStr, "Capacity"));
-        roomType.setBasePrice(ValidationUtil.requirePositiveBigDecimal(basePriceStr, "Base price"));
-        roomType.setStatus(status);
-
-        try {
-            // Persist the room type and prepare a toast message for the redirect.
-            roomTypeService.saveRoomType(roomType);
-            req.getSession().setAttribute("toastMessage", "Room type saved successfully.");
-            req.getSession().setAttribute("toastType", "success");
-        } catch (IllegalArgumentException ex) {
-            req.getSession().setAttribute("toastMessage", ex.getMessage());
-            req.getSession().setAttribute("toastType", "error");
-        } catch (SQLException ex) {
-            req.getSession().setAttribute("toastMessage", "Failed to save the room type.");
-            req.getSession().setAttribute("toastType", "error");
-        }
-
-        resp.sendRedirect(req.getContextPath() + "/manager/room-types");
+    // Handle create-room-type form submission with server-side validation.
+    private void handleCreateRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+        handlePersistRoomType(req, resp, false);
     }
 
-    private void handleDeactivateRoomType(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // Deactivate the selected room type when a valid ID is provided.
-        String idParam = req.getParameter("id");
-        if (!ValidationUtil.isBlank(idParam)) {
-            // Validate the ID before calling the service layer.
-            long id = ValidationUtil.requirePositiveLong(idParam, "Room type");
+    // Handle edit-room-type form submission with server-side validation.
+    private void handleUpdateRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+        handlePersistRoomType(req, resp, true);
+    }
+
+    // Handle quick room-type status toggle from the detail panel.
+    private void handleToggleRoomTypeStatus(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+        Long roomTypeId = ValidationUtil.optionalPositiveLong(req.getParameter("id"), "Room type");
+        if (roomTypeId == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        try {
+            roomTypeService.toggleRoomTypeStatus(roomTypeId);
+            req.getSession().setAttribute("toastMessage", "Room type status updated successfully.");
+            req.getSession().setAttribute("toastType", "success");
+            resp.sendRedirect(req.getContextPath() + "/manager/room-types?selectedRoomTypeId=" + roomTypeId);
+        } catch (SQLException ex) {
+            throw new ServletException("Failed to toggle room type status", ex);
+        }
+    }
+
+    // Handle create/update-room-type form submission with shared validation.
+    private void handlePersistRoomType(HttpServletRequest req, HttpServletResponse resp, boolean updating) throws ServletException, java.io.IOException {
+        Map<String, String> errors = new LinkedHashMap<>();
+        RoomType existingRoomType = null;
+        RoomType roomType = new RoomType();
+        String roomTypeIdRaw = req.getParameter("id");
+        Long roomTypeId = null;
+
+        if (updating) {
             try {
-                // Update the status and report the result through a toast.
-                roomTypeService.deactivateRoomType(id);
-                req.getSession().setAttribute("toastMessage", "Room type deactivated successfully.");
-                req.getSession().setAttribute("toastType", "success");
+                roomTypeId = ValidationUtil.requirePositiveLong(roomTypeIdRaw, "Room type");
+                existingRoomType = roomTypeService.findRoomTypeById(roomTypeId);
+                if (existingRoomType == null) {
+                    errors.put("general", "Room type not found.");
+                } else {
+                    roomType.setId(existingRoomType.getId());
+                    roomType.setImageUrl(existingRoomType.getImageUrl());
+                }
             } catch (IllegalArgumentException ex) {
-                req.getSession().setAttribute("toastMessage", ex.getMessage());
-                req.getSession().setAttribute("toastType", "error");
-            } catch (SQLException ex) {
-                req.getSession().setAttribute("toastMessage", "Failed to update the room type.");
-                req.getSession().setAttribute("toastType", "error");
+                errors.put("general", ex.getMessage());
             }
         }
-        resp.sendRedirect(req.getContextPath() + "/manager/room-types");
+
+        String name = ValidationUtil.normalizeText(req.getParameter("name"));
+        String description = req.getParameter("description");
+        String capacityRaw = req.getParameter("capacity");
+        String basePriceRaw = req.getParameter("basePrice");
+        String statusRaw = req.getParameter("status");
+        String sizeM2Raw = req.getParameter("sizeM2");
+        String bedTypeRaw = req.getParameter("bedType");
+        List<Long> amenityIds = parseAmenityIds(req.getParameterValues("amenityIds"), errors);
+        Part coverImagePart = null;
+
+        try {
+            roomType.setName(ValidationUtil.requireText(name, "Room type name", 2, 100));
+        } catch (IllegalArgumentException ex) {
+            errors.put("name", ex.getMessage());
+        }
+
+        try {
+            roomType.setDescription(ValidationUtil.optionalText(description, 500));
+        } catch (IllegalArgumentException ex) {
+            errors.put("description", ex.getMessage());
+        }
+
+        try {
+            roomType.setSizeM2(ValidationUtil.optionalBigDecimal(sizeM2Raw, "Room size"));
+        } catch (IllegalArgumentException ex) {
+            errors.put("sizeM2", ex.getMessage());
+        }
+
+        try {
+            roomType.setBedType(ValidationUtil.optionalText(bedTypeRaw, 100));
+        } catch (IllegalArgumentException ex) {
+            errors.put("bedType", ex.getMessage());
+        }
+
+        try {
+            roomType.setCapacity(ValidationUtil.requirePositiveInt(capacityRaw, "Capacity"));
+        } catch (IllegalArgumentException ex) {
+            errors.put("capacity", ex.getMessage());
+        }
+
+        try {
+            roomType.setBasePrice(MoneyUtil.parseVndMoney(basePriceRaw, "Base price"));
+        } catch (IllegalArgumentException ex) {
+            errors.put("basePrice", ex.getMessage());
+        }
+
+        try {
+            String status = ValidationUtil.optionalStatus(statusRaw, Set.of("ACTIVE", "INACTIVE"));
+            roomType.setStatus(status == null ? ACTIVE_STATUS : status);
+        } catch (IllegalArgumentException ex) {
+            errors.put("status", ex.getMessage());
+        }
+
+        try {
+            coverImagePart = req.getPart("coverImage");
+            if (coverImagePart != null && coverImagePart.getSize() > 0) {
+                MultipartUtil.validateImagePart(
+                        coverImagePart,
+                        MAX_COVER_IMAGE_SIZE,
+                        ALLOWED_IMAGE_EXTENSIONS,
+                        ALLOWED_IMAGE_CONTENT_TYPES,
+                        "Cover image"
+                );
+            } else if (!updating) {
+                errors.put("coverImage", "Cover image is required.");
+            }
+        } catch (IllegalArgumentException ex) {
+            errors.put("coverImage", ex.getMessage());
+        } catch (java.io.IOException ex) {
+            errors.put("coverImage", "Unable to read cover image.");
+        }
+
+        if (!errors.isEmpty()) {
+            prepareCreateForm(req);
+            req.setAttribute("errors", errors);
+            prepareRoomTypeFormView(req, roomType, updating, roomTypeId, new LinkedHashSet<>(amenityIds));
+            req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
+            return;
+        }
+
+        String uploadedImagePath = null;
+        String previousImagePath = roomType.getImageUrl();
+        try {
+            if (coverImagePart != null && coverImagePart.getSize() > 0) {
+                uploadedImagePath = LocalFileUtil.saveImagePart(
+                        coverImagePart,
+                        req.getServletContext(),
+                        ROOM_TYPE_IMAGE_DIR,
+                        roomType.getName()
+                );
+                roomType.setImageUrl(uploadedImagePath);
+            }
+            if (updating) {
+                roomTypeService.updateRoomType(roomType, amenityIds);
+            } else {
+                roomTypeService.createRoomType(roomType, amenityIds);
+            }
+            if (updating && uploadedImagePath != null && previousImagePath != null && !previousImagePath.equals(uploadedImagePath)) {
+                LocalFileUtil.deleteByWebPath(req.getServletContext(), previousImagePath);
+            }
+            req.getSession().setAttribute("toastMessage", updating ? "Room type updated successfully." : "Room type created successfully.");
+            req.getSession().setAttribute("toastType", "success");
+            resp.sendRedirect(req.getContextPath() + "/manager/room-types");
+        } catch (IllegalArgumentException ex) {
+            LocalFileUtil.deleteByWebPath(req.getServletContext(), uploadedImagePath);
+            errors.put("general", ex.getMessage());
+            prepareCreateForm(req);
+            req.setAttribute("errors", errors);
+            prepareRoomTypeFormView(req, roomType, updating, roomTypeId, new LinkedHashSet<>(amenityIds));
+            req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
+        } catch (SQLException ex) {
+            LocalFileUtil.deleteByWebPath(req.getServletContext(), uploadedImagePath);
+            errors.put("general", updating ? "Failed to update room type." : "Failed to create room type.");
+            prepareCreateForm(req);
+            req.setAttribute("errors", errors);
+            prepareRoomTypeFormView(req, roomType, updating, roomTypeId, new LinkedHashSet<>(amenityIds));
+            req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
+        } catch (RuntimeException ex) {
+            LocalFileUtil.deleteByWebPath(req.getServletContext(), uploadedImagePath);
+            errors.put("general", ex.getMessage() == null
+                    ? (updating ? "Unexpected error while updating room type." : "Unexpected error while creating room type.")
+                    : ex.getMessage());
+            prepareCreateForm(req);
+            req.setAttribute("errors", errors);
+            prepareRoomTypeFormView(req, roomType, updating, roomTypeId, new LinkedHashSet<>(amenityIds));
+            req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
+        } catch (java.io.IOException ex) {
+            LocalFileUtil.deleteByWebPath(req.getServletContext(), uploadedImagePath);
+            throw new ServletException("Failed to save cover image", ex);
+        }
+    }
+
+    // Prepare all create-form lookups from the database.
+    private void prepareCreateForm(HttpServletRequest req) {
+        List<String> statuses = roomTypeService.findCreateStatuses();
+        if (statuses == null || statuses.isEmpty()) {
+            statuses = List.of("ACTIVE", "INACTIVE");
+        }
+        req.setAttribute("roomTypeStatuses", statuses);
+        req.setAttribute("bedTypes", roomTypeService.findBedTypes());
+        req.setAttribute("amenities", roomTypeService.findActiveAmenities());
+    }
+
+    // Prepare the shared create/edit form view model.
+    private void prepareRoomTypeFormView(HttpServletRequest req, RoomType form, boolean updating, Long roomTypeId, Set<Long> selectedAmenityIds) {
+        req.setAttribute("form", form);
+        req.setAttribute("selectedAmenityIds", selectedAmenityIds == null ? new LinkedHashSet<Long>() : selectedAmenityIds);
+        req.setAttribute("isEditMode", updating);
+        req.setAttribute("roomTypeFormAction", updating ? "/manager/room-types/update" : "/manager/room-types/create");
+        req.setAttribute("roomTypePageTitle", updating ? "Edit Room Type | HMS" : "New Room Type | HMS");
+        req.setAttribute("roomTypePageHeading", updating ? "Edit Room Type" : "New Room Type");
+        req.setAttribute("roomTypePageSubtitle", updating
+                ? "Update the room type core info, configuration, and cover image."
+                : "Create a room type with required core info and optional configuration details.");
+        req.setAttribute("roomTypeBackUrl", "/manager/room-types");
+        req.setAttribute("roomTypeSubmitLabel", updating ? "Update" : "Save");
+        req.setAttribute("roomTypeId", roomTypeId != null ? roomTypeId : form.getId());
+        req.setAttribute("roomTypeExistingImageUrl", form != null ? form.getImageUrl() : null);
+    }
+
+    // Prepare the edit form by loading the selected room type from the database.
+    private void handleEditRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+        Long roomTypeId = ValidationUtil.optionalPositiveLong(req.getParameter("id"), "Room type");
+        if (roomTypeId == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        RoomType roomType = roomTypeService.findRoomTypeById(roomTypeId);
+        if (roomType == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        prepareCreateForm(req);
+        Set<Long> selectedAmenityIds = roomTypeService.findAmenitiesByRoomTypeId(roomTypeId).stream()
+                .map(Amenity::getId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        prepareRoomTypeFormView(req, roomType, true, roomTypeId, selectedAmenityIds);
+        req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
+    }
+
+    // Prepare the room types listing page with DB data and the selected detail item.
+    private void prepareRoomTypesPage(HttpServletRequest req) {
+        RoomManagementPageData pageData = new RoomManagementPageData();
+        String keyword = req.getParameter("keyword");
+        String roomTypeStatus = req.getParameter("roomTypeStatus");
+        if (ValidationUtil.isBlank(roomTypeStatus)) {
+            roomTypeStatus = ACTIVE_STATUS;
+        }
+        String selectedRoomTypeIdRaw = req.getParameter("selectedRoomTypeId");
+
+        pageData.setKeyword(keyword);
+        pageData.setRoomTypeStatus(roomTypeStatus);
+        pageData.setRoomTypes(ALL_STATUS.equalsIgnoreCase(roomTypeStatus)
+                ? roomTypeService.findRoomTypes(keyword, null)
+                : roomTypeService.findRoomTypes(keyword, roomTypeStatus));
+
+        RoomType selectedRoomType = resolveSelectedRoomType(pageData.getRoomTypes(), selectedRoomTypeIdRaw);
+        if (selectedRoomType == null && !ValidationUtil.isBlank(selectedRoomTypeIdRaw)) {
+            Long selectedRoomTypeId = ValidationUtil.optionalPositiveLong(selectedRoomTypeIdRaw, "Room type");
+            if (selectedRoomTypeId != null) {
+                selectedRoomType = roomTypeService.findRoomTypeById(selectedRoomTypeId);
+            }
+        }
+        if (selectedRoomType == null && pageData.getRoomTypes() != null && !pageData.getRoomTypes().isEmpty()) {
+            selectedRoomType = pageData.getRoomTypes().get(0);
+        }
+
+        req.setAttribute("pageData", pageData);
+        req.setAttribute("roomTypes", pageData.getRoomTypes());
+        req.setAttribute("selectedRoomType", selectedRoomType);
+        req.setAttribute("selectedRoomTypeId", selectedRoomType == null ? null : selectedRoomType.getId());
+        req.setAttribute(
+                "selectedRoomTypeAmenities",
+                selectedRoomType == null ? List.of() : roomTypeService.findAmenitiesByRoomTypeId(selectedRoomType.getId())
+        );
+    }
+
+    // Find the room type that matches the selected id if the request provided one.
+    private RoomType resolveSelectedRoomType(List<RoomType> roomTypes, String selectedRoomTypeIdRaw) {
+        if (roomTypes == null || roomTypes.isEmpty() || ValidationUtil.isBlank(selectedRoomTypeIdRaw)) {
+            return null;
+        }
+
+        try {
+            long selectedRoomTypeId = ValidationUtil.requirePositiveLong(selectedRoomTypeIdRaw, "Room type");
+            for (RoomType roomType : roomTypes) {
+                if (roomType != null && roomType.getId() != null && roomType.getId() == selectedRoomTypeId) {
+                    return roomType;
+                }
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Ignore invalid selection and fall back to the first item.
+        }
+        return null;
+    }
+
+    // Parse amenity ids from the multi-select checkbox field.
+    private List<Long> parseAmenityIds(String[] rawIds, Map<String, String> errors) {
+        List<Long> amenityIds = new ArrayList<>();
+        if (rawIds == null || rawIds.length == 0) {
+            return amenityIds;
+        }
+
+        for (String rawId : rawIds) {
+            if (ValidationUtil.isBlank(rawId)) {
+                continue;
+            }
+            try {
+                long amenityId = ValidationUtil.requirePositiveLong(rawId, "Amenity");
+                amenityIds.add(amenityId);
+            } catch (IllegalArgumentException ex) {
+                errors.put("amenityIds", ex.getMessage());
+            }
+        }
+        return amenityIds;
     }
 }

@@ -86,25 +86,13 @@
                         <input type="hidden" name="id" value="${b.bookingId}">
                         <button class="btn btn-secondary" type="submit">Duyệt</button>
                     </form>
-                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;" onsubmit="return confirm('Hủy đặt phòng này?');">
-                        <input type="hidden" name="action" value="REJECT">
-                        <input type="hidden" name="id" value="${b.bookingId}">
-                        <button class="btn btn-secondary" type="submit" style="color:var(--color-error-600);">Từ chối</button>
-                    </form>
+                    <button class="btn btn-secondary" type="button" style="color:var(--color-error-600);" onclick="openRejectModal('${b.bookingId}')">Từ chối</button>
                 </c:if>
                 <c:if test="${b.status == 'CONFIRMED'}">
-                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;">
-                        <input type="hidden" name="action" value="CHECK_IN">
-                        <input type="hidden" name="id" value="${b.bookingId}">
-                        <button class="btn btn-primary" type="submit">Check-in</button>
-                    </form>
+                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/reception/check-in?bookingId=${b.bookingId}">Check-in</a>
                 </c:if>
                 <c:if test="${b.status == 'CHECKED_IN'}">
-                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;">
-                        <input type="hidden" name="action" value="CHECK_OUT">
-                        <input type="hidden" name="id" value="${b.bookingId}">
-                        <button class="btn btn-primary" type="submit" style="background-color: var(--color-warning-600);">Check-out</button>
-                    </form>
+                    <a class="btn btn-primary" style="background-color: var(--color-warning-600);" href="${pageContext.request.contextPath}/reception/check-out?bookingId=${b.bookingId}">Check-out</a>
                 </c:if>
                 <c:if test="${b.status != 'PENDING_PAYMENT'}">
                     <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/booking-detail?id=${b.bookingId}">Chi tiết</a>
@@ -114,4 +102,31 @@
         </td>
     </tr>
 </c:forEach>
-</tbody></table></div></main></body></html>
+</tbody></table></div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; padding:24px; border-radius:8px; width:400px; max-width:90%;">
+        <h3 style="margin-top:0;">Từ chối Đặt phòng</h3>
+        <form method="post" action="${pageContext.request.contextPath}/reception/bookings">
+            <input type="hidden" name="action" value="REJECT">
+            <input type="hidden" id="rejectBookingId" name="id" value="">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label>Lý do từ chối (bắt buộc):</label>
+                <textarea name="reason" rows="3" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="Ví dụ: Hết phòng, sai thông tin..."></textarea>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:12px;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('rejectModal').style.display='none'">Hủy</button>
+                <button type="submit" class="btn" style="background-color:var(--color-error-600); color:white;">Xác nhận Từ chối</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function openRejectModal(bookingId) {
+        document.getElementById('rejectBookingId').value = bookingId;
+        document.getElementById('rejectModal').style.display = 'flex';
+    }
+</script>
+
+</main></body></html>

@@ -25,8 +25,12 @@ public class BookingDao {
             params.add("%" + bookingCode.trim() + "%");
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND status = ?");
-            params.add(status.trim());
+            if ("UPCOMING".equalsIgnoreCase(status.trim())) {
+                sql.append(" AND status IN ('PENDING_PAYMENT', 'CONFIRMED')");
+            } else {
+                sql.append(" AND status = ?");
+                params.add(status.trim());
+            }
         }
         if (fromDate != null && !fromDate.trim().isEmpty()) {
             sql.append(" AND check_in_date >= ?");
@@ -55,7 +59,7 @@ public class BookingDao {
                     b.setStatus(rs.getString("status"));
                     b.setCancellationReason(rs.getString("cancellation_reason"));
                     b.setCancelledAt(rs.getTimestamp("cancelled_at"));
-                    b.setNote(rs.getString("note"));
+                    b.setCreatedAt(rs.getTimestamp("created_at"));
                     bookings.add(b);
                 }
             }
@@ -83,7 +87,6 @@ public class BookingDao {
                     b.setStatus(rs.getString("status"));
                     b.setCancellationReason(rs.getString("cancellation_reason"));
                     b.setCancelledAt(rs.getTimestamp("cancelled_at"));
-                    b.setNote(rs.getString("note"));
                     b.setCreatedAt(rs.getTimestamp("created_at"));
                     b.setCreatedBy(rs.getLong("created_by"));
                     return Optional.of(b);
@@ -309,6 +312,9 @@ public class BookingDao {
                 case "today" -> conditions.add("DATE(b.check_in_date) = CURDATE()");
                 case "upcoming" -> conditions.add("DATE(b.check_in_date) > CURDATE()");
                 case "overdue" -> conditions.add("DATE(b.check_in_date) < CURDATE() AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED')");
+                case "checkout_today" -> conditions.add("DATE(b.check_out_date) = CURDATE()");
+                case "checkout_upcoming" -> conditions.add("DATE(b.check_out_date) > CURDATE()");
+                case "checkout_overdue" -> conditions.add("DATE(b.check_out_date) < CURDATE() AND b.status = 'CHECKED_IN'");
                 default -> {
                 }
             }

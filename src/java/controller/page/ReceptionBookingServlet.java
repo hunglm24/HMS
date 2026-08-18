@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/reception/booking-detail", "/reception/walk-in", "/reception/check-out"})
+@WebServlet(urlPatterns = {"/reception/booking-detail", "/reception/walk-in"})
 public class ReceptionBookingServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -71,8 +71,6 @@ public class ReceptionBookingServlet extends HttpServlet {
             view = "/WEB-INF/views/reception/booking-detail.jsp";
         } else if ("/reception/walk-in".equals(path)) {
             view = "/WEB-INF/views/reception/walk-in-booking.jsp";
-        } else if ("/reception/check-out".equals(path)) {
-            view = "/WEB-INF/views/reception/check-out.jsp";
         }
         
         request.getRequestDispatcher(view).forward(request, response);

@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 public class Room extends BaseEntity {
 
     private long roomTypeId;
-    private String roomNumber, status, description;
+    private String roomNumber, viewType, status, description;
     private Integer floorNumber;
     private Timestamp updatedAt;
     private String roomTypeName;
@@ -13,6 +13,15 @@ public class Room extends BaseEntity {
     private String currentBookingCode;
     private String currentGuestName;
     private String currentBookingStatus;
+    private java.math.BigDecimal roomTypeBasePrice;
+
+    public java.math.BigDecimal getRoomTypeBasePrice() {
+        return roomTypeBasePrice;
+    }
+
+    public void setRoomTypeBasePrice(java.math.BigDecimal roomTypeBasePrice) {
+        this.roomTypeBasePrice = roomTypeBasePrice;
+    }
 
     public long getRoomTypeId() {
         return roomTypeId;
@@ -28,6 +37,14 @@ public class Room extends BaseEntity {
 
     public void setRoomNumber(String v) {
         roomNumber = v;
+    }
+
+    public String getViewType() {
+        return viewType;
+    }
+
+    public void setViewType(String v) {
+        viewType = v;
     }
 
     public Integer getFloorNumber() {
