@@ -1,94 +1,143 @@
 package controller.page.admin;
 
+import dao.RoleDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Role;
-import service.RoleService;
+import service.AuditLogService;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
-@WebServlet(urlPatterns = "/admin/roles")
+@WebServlet(urlPatterns = {"/admin/roles", "/admin/roles/save", "/admin/roles/delete", "/admin/roles/permissions"})
 public class RoleManagementServlet extends HttpServlet {
-    private RoleService roleService;
+    private static final long serialVersionUID = 1L;
+    private RoleDao roleDao;
+    private AuditLogService auditLogService;
 
     @Override
     public void init() {
-        roleService = new RoleService();
+        roleDao = new RoleDao();
+        auditLogService = new AuditLogService();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        loadPage(request, response, null, null);
+        if (!"/admin/roles".equals(request.getServletPath())) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        loadPage(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
         try {
-            if ("create".equals(action)) {
-                roleService.createRole(request.getParameter("name"), request.getParameter("description"));
-                response.sendRedirect(request.getContextPath() + "/admin/roles?success=created");
-                return;
+            switch (request.getServletPath()) {
+                case "/admin/roles/save" -> saveRole(request, response);
+                case "/admin/roles/delete" -> deleteRole(request, response);
+                case "/admin/roles/permissions" -> savePermissions(request, response);
+                default -> response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
-            if ("update".equals(action)) {
-                roleService.updateRole(parseLong(request.getParameter("id")),
-                        request.getParameter("name"), request.getParameter("description"));
-                response.sendRedirect(request.getContextPath() + "/admin/roles?success=updated");
-                return;
-            }
-            loadPage(request, response, "Thao tác không hợp lệ.", null);
         } catch (IllegalArgumentException ex) {
-            loadPage(request, response, ex.getMessage(), retainForm(request));
+            flash(request, ex.getMessage(), "error");
+            response.sendRedirect(request.getContextPath() + "/admin/roles");
         } catch (SQLException ex) {
-            getServletContext().log("Quản lý vai trò thất bại", ex);
-            loadPage(request, response, "Không thể xử lý vai trò. Vui lòng thử lại sau.", retainForm(request));
+            getServletContext().log("Admin role management failed", ex);
+            flash(request, "Database error: " + ex.getMessage(), "error");
+            response.sendRedirect(request.getContextPath() + "/admin/roles");
         }
     }
 
-    private void loadPage(HttpServletRequest request, HttpServletResponse response,
-                          String error, Role formRole) throws ServletException, IOException {
+    private void loadPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         try {
-            request.setAttribute("roles", roleService.listRoles());
-            request.setAttribute("editRole", loadEditRole(request, formRole));
-            request.setAttribute("error", error);
-            request.setAttribute("success", request.getParameter("success"));
+            long selectedRoleId = parseSelectedRole(request);
+            List<Role> roles = roleDao.findAll();
+            if (selectedRoleId == 0 && !roles.isEmpty()) {
+                selectedRoleId = roles.get(0).getId();
+            }
+            request.setAttribute("roles", roles);
+            request.setAttribute("selectedRoleId", selectedRoleId);
+            request.setAttribute("permissions",
+                    selectedRoleId == 0 ? List.of() : roleDao.findPermissionsForRole(selectedRoleId));
             request.getRequestDispatcher("/WEB-INF/views/admin/roles.jsp").forward(request, response);
         } catch (SQLException ex) {
-            throw new ServletException("Không thể tải trang quản lý vai trò", ex);
+            getServletContext().log("Cannot load admin roles", ex);
+            request.setAttribute("error", "Cannot load roles. Check database connection.");
+            request.getRequestDispatcher("/WEB-INF/views/admin/roles.jsp").forward(request, response);
         }
     }
 
-    private Role loadEditRole(HttpServletRequest request, Role formRole) throws SQLException {
-        if (formRole != null) {
-            return formRole;
-        }
-        String editId = request.getParameter("edit");
-        if (editId == null || editId.isBlank()) {
-            return null;
-        }
-        return roleService.findById(parseLong(editId)).orElse(null);
-    }
-
-    private Role retainForm(HttpServletRequest request) {
+    private void saveRole(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
         Role role = new Role();
-        role.setId(parseLong(request.getParameter("id")));
-        role.setName(request.getParameter("name"));
+        String idValue = request.getParameter("id");
+        if (idValue != null && !idValue.isBlank()) {
+            role.setId(Long.parseLong(idValue));
+        }
+        role.setName(required(request, "name").toUpperCase(Locale.ROOT));
         role.setDescription(request.getParameter("description"));
-        request.setAttribute("formAction", request.getParameter("action"));
-        return role;
+        long id = roleDao.save(role);
+        auditLogService.log(request, role.getId() == null ? "CREATE_ROLE" : "UPDATE_ROLE",
+                "ROLE", id, "Saved role " + role.getName());
+        flash(request, "Role saved.", "success");
+        response.sendRedirect(request.getContextPath() + "/admin/roles?roleId=" + id);
     }
 
-    private long parseLong(String value) {
+    private void deleteRole(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        long id = Long.parseLong(required(request, "id"));
+        roleDao.delete(id);
+        auditLogService.log(request, "DELETE_ROLE", "ROLE", id, "Deleted role");
+        flash(request, "Role deleted.", "success");
+        response.sendRedirect(request.getContextPath() + "/admin/roles");
+    }
+
+    private void savePermissions(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        long roleId = Long.parseLong(required(request, "roleId"));
+        String[] selected = request.getParameterValues("permissionId");
+        List<Long> permissionIds = new ArrayList<>();
+        if (selected != null) {
+            for (String value : selected) {
+                permissionIds.add(Long.parseLong(value));
+            }
+        }
+        roleDao.replaceRolePermissions(roleId, permissionIds);
+        auditLogService.log(request, "ASSIGN_ROLE_PERMISSIONS", "ROLE", roleId,
+                "Assigned " + permissionIds.size() + " permissions");
+        flash(request, "Permissions updated.", "success");
+        response.sendRedirect(request.getContextPath() + "/admin/roles?roleId=" + roleId);
+    }
+
+    private long parseSelectedRole(HttpServletRequest request) {
         try {
-            return value == null || value.isBlank() ? 0 : Long.parseLong(value);
-        } catch (NumberFormatException ex) {
+            return Long.parseLong(request.getParameter("roleId"));
+        } catch (RuntimeException ex) {
             return 0;
         }
     }
+
+    private String required(HttpServletRequest request, String name) {
+        String value = request.getParameter(name);
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("Missing required field: " + name);
+        }
+        return value.trim();
+    }
+
+    private void flash(HttpServletRequest request, String message, String type) {
+        request.getSession().setAttribute("toastMessage", message);
+        request.getSession().setAttribute("toastType", type);
+    }
 }
+

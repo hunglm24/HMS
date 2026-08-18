@@ -1,111 +1,172 @@
 package controller.page.admin;
 
+import dao.RoleDao;
+import dao.UserDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.User;
-import service.AdminUserService;
-import service.RoleService;
+import model.Role;
+import service.AuditLogService;
+import util.PasswordUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Locale;
 
-@WebServlet(urlPatterns = "/admin/users")
+@WebServlet(urlPatterns = {
+        "/admin/users", "/admin/users/save", "/admin/users/status",
+        "/admin/users/password", "/admin/users/delete"
+})
 public class UserManagementServlet extends HttpServlet {
-    private AdminUserService userService;
-    private RoleService roleService;
+    private static final long serialVersionUID = 1L;
+    private UserDao userDao;
+    private RoleDao roleDao;
+    private AuditLogService auditLogService;
 
     @Override
     public void init() {
-        userService = new AdminUserService();
-        roleService = new RoleService();
+        userDao = new UserDao();
+        roleDao = new RoleDao();
+        auditLogService = new AuditLogService();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        loadPage(request, response, null, null);
+        if (!"/admin/users".equals(request.getServletPath())) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        loadList(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
         try {
-            if ("create".equals(action)) {
-                userService.createUser(
-                        request.getParameter("fullName"),
-                        request.getParameter("email"),
-                        request.getParameter("phone"),
-                        request.getParameter("password"),
-                        parseLong(request.getParameter("roleId")),
-                        request.getParameter("status"));
-                response.sendRedirect(request.getContextPath() + "/admin/users?success=created");
-                return;
+            switch (request.getServletPath()) {
+                case "/admin/users/save" -> saveUser(request, response);
+                case "/admin/users/status" -> updateStatus(request, response);
+                case "/admin/users/password" -> resetPassword(request, response);
+                case "/admin/users/delete" -> deleteUser(request, response);
+                default -> response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
-            if ("update".equals(action)) {
-                userService.updateUser(
-                        parseLong(request.getParameter("id")),
-                        request.getParameter("fullName"),
-                        request.getParameter("phone"),
-                        parseLong(request.getParameter("roleId")),
-                        request.getParameter("status"));
-                response.sendRedirect(request.getContextPath() + "/admin/users?success=updated");
-                return;
-            }
-            loadPage(request, response, "Thao tác không hợp lệ.", null);
         } catch (IllegalArgumentException ex) {
-            loadPage(request, response, ex.getMessage(), retainForm(request));
+            request.getSession().setAttribute("toastMessage", ex.getMessage());
+            request.getSession().setAttribute("toastType", "error");
+            response.sendRedirect(request.getContextPath() + "/admin/users");
         } catch (SQLException ex) {
-            getServletContext().log("Quản lý người dùng thất bại", ex);
-            loadPage(request, response, "Không thể xử lý người dùng. Vui lòng thử lại sau.", retainForm(request));
+            getServletContext().log("Admin user management failed", ex);
+            request.getSession().setAttribute("toastMessage",
+                    "Database error: " + ex.getMessage());
+            request.getSession().setAttribute("toastType", "error");
+            response.sendRedirect(request.getContextPath() + "/admin/users");
         }
     }
 
-    private void loadPage(HttpServletRequest request, HttpServletResponse response,
-                          String error, User formUser) throws ServletException, IOException {
+    private void loadList(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         try {
-            request.setAttribute("users", userService.listUsers(request.getParameter("q")));
-            request.setAttribute("roles", roleService.listRoles());
-            request.setAttribute("editUser", loadEditUser(request, formUser));
-            request.setAttribute("error", error);
-            request.setAttribute("success", request.getParameter("success"));
+            String keyword = request.getParameter("q");
+            String role = request.getParameter("role");
+            String status = request.getParameter("status");
+            request.setAttribute("users", userDao.findAll(keyword, role, status));
+            request.setAttribute("roles", roleDao.findAll());
+            request.setAttribute("q", keyword == null ? "" : keyword);
+            request.setAttribute("selectedRole", role == null ? "" : role);
+            request.setAttribute("selectedStatus", status == null ? "" : status);
             request.getRequestDispatcher("/WEB-INF/views/admin/users.jsp").forward(request, response);
         } catch (SQLException ex) {
-            throw new ServletException("Không thể tải trang quản lý người dùng", ex);
+            getServletContext().log("Cannot load admin users", ex);
+            request.setAttribute("error", "Cannot load users. Check database connection.");
+            request.getRequestDispatcher("/WEB-INF/views/admin/users.jsp").forward(request, response);
         }
     }
 
-    private User loadEditUser(HttpServletRequest request, User formUser) throws SQLException {
-        if (formUser != null) {
-            return formUser;
+    private void saveUser(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        String idValue = request.getParameter("id");
+        String fullName = required(request, "fullName");
+        String email = required(request, "email").toLowerCase(Locale.ROOT);
+        String phone = blankToNull(request.getParameter("phone"));
+        long roleId = parseLong(request.getParameter("roleId"), "Invalid role");
+        String status = required(request, "status");
+
+        if (idValue == null || idValue.isBlank()) {
+            String password = required(request, "password");
+            if (password.length() < 8) {
+                throw new IllegalArgumentException("Password must be at least 8 characters.");
+            }
+            long id = userDao.createAccount(fullName, email, phone, roleId, status, PasswordUtil.hash(password));
+            auditLogService.log(request, "CREATE_USER", "ACCOUNT", id, "Created account " + email);
+            flash(request, "User account created.", "success");
+        } else {
+            long id = parseLong(idValue, "Invalid user");
+            userDao.updateAccount(id, fullName, email, phone, roleId, status);
+            auditLogService.log(request, "UPDATE_USER", "ACCOUNT", id, "Updated account " + email);
+            flash(request, "User account updated.", "success");
         }
-        String editId = request.getParameter("edit");
-        if (editId == null || editId.isBlank()) {
-            return null;
-        }
-        return userService.findById(parseLong(editId)).orElse(null);
+        response.sendRedirect(request.getContextPath() + "/admin/users");
     }
 
-    private User retainForm(HttpServletRequest request) {
-        User user = new User();
-        user.setUserId((int) parseLong(request.getParameter("id")));
-        user.setFullName(request.getParameter("fullName"));
-        user.setEmail(request.getParameter("email"));
-        user.setPhone(request.getParameter("phone"));
-        user.setRoleId((int) parseLong(request.getParameter("roleId")));
-        user.setStatus(request.getParameter("status"));
-        request.setAttribute("formAction", request.getParameter("action"));
-        return user;
+    private void updateStatus(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        long id = parseLong(request.getParameter("id"), "Invalid user");
+        String status = required(request, "status");
+        userDao.updateStatus(id, status);
+        auditLogService.log(request, "UPDATE_USER_STATUS", "ACCOUNT", id, "Status changed to " + status);
+        flash(request, "User status updated.", "success");
+        response.sendRedirect(request.getContextPath() + "/admin/users");
     }
 
-    private long parseLong(String value) {
+    private void resetPassword(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        long id = parseLong(request.getParameter("id"), "Invalid user");
+        String password = required(request, "password");
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters.");
+        }
+        userDao.updatePassword(id, PasswordUtil.hash(password));
+        auditLogService.log(request, "RESET_USER_PASSWORD", "ACCOUNT", id, "Password reset by admin");
+        flash(request, "Password reset.", "success");
+        response.sendRedirect(request.getContextPath() + "/admin/users");
+    }
+
+    private void deleteUser(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        long id = parseLong(request.getParameter("id"), "Invalid user");
+        userDao.deleteAccount(id);
+        auditLogService.log(request, "DELETE_USER", "ACCOUNT", id, "Deleted account");
+        flash(request, "User account deleted.", "success");
+        response.sendRedirect(request.getContextPath() + "/admin/users");
+    }
+
+    private String required(HttpServletRequest request, String name) {
+        String value = request.getParameter(name);
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("Missing required field: " + name);
+        }
+        return value.trim();
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    private long parseLong(String value, String message) {
         try {
-            return value == null || value.isBlank() ? 0 : Long.parseLong(value);
-        } catch (NumberFormatException ex) {
-            return 0;
+            return Long.parseLong(value);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException(message);
         }
+    }
+
+    private void flash(HttpServletRequest request, String message, String type) {
+        request.getSession().setAttribute("toastMessage", message);
+        request.getSession().setAttribute("toastType", type);
     }
 }
+

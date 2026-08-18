@@ -1,0 +1,86 @@
+package controller.housekeeping;
+
+import model.Account;
+import service.MaintenanceService;
+import service.RoomService;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+
+@WebServlet(name = "IssueReportServlet", urlPatterns = {"/housekeeping/issues/report"})
+public class IssueReportServlet extends HttpServlet {
+    private final MaintenanceService maintenanceService = new MaintenanceService();
+    private final RoomService roomService = new RoomService();
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Account account = (Account) session.getAttribute("currentUser");
+        if (account == null || (!"HOUSEKEEPING".equals(account.getRoleName()) && !"HOTEL_MANAGER".equals(account.getRoleName()))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập");
+            return;
+        }
+        String action = request.getParameter("action");
+        if ("getEquipments".equals(action)) {
+            try {
+                long roomId = Long.parseLong(request.getParameter("roomId"));
+                java.util.List<model.HousekeepingTask.EquipmentCheck> equips = maintenanceService.findAllEquipmentsInRoom(roomId);
+                request.setAttribute("equips", equips);
+                request.getRequestDispatcher("/WEB-INF/views/housekeeping/fragments/equipment-list.jsp").forward(request, response);
+            } catch (Exception ex) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
+        }
+
+        request.setAttribute("rooms", roomService.getAllRooms());
+        request.getRequestDispatcher("/WEB-INF/views/housekeeping/issue-report.jsp").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Account account = (Account) session.getAttribute("currentUser");
+        if (account == null || (!"HOUSEKEEPING".equals(account.getRoleName()) && !"HOTEL_MANAGER".equals(account.getRoleName()))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập");
+            return;
+        }
+
+        try {
+            long roomId = Long.parseLong(request.getParameter("roomId"));
+            String note = request.getParameter("note");
+            String[] equipmentParams = request.getParameterValues("roomEquipmentIds");
+            boolean hasEquipmentIssue = false;
+
+            if (equipmentParams != null && equipmentParams.length > 0) {
+                for (String param : equipmentParams) {
+                    if (param != null && !param.trim().isEmpty()) {
+                        long equipId = Long.parseLong(param);
+                        String currentStatus = request.getParameter("currentStatus_" + equipId);
+                        String newStatus = request.getParameter("status_" + equipId);
+                        
+                        if (newStatus != null && !newStatus.equals("NORMAL") && !newStatus.equals(currentStatus)) {
+                            maintenanceService.reportIssue(roomId, equipId, newStatus, note);
+                            hasEquipmentIssue = true;
+                        }
+                    }
+                }
+            } 
+            
+            if (!hasEquipmentIssue) {
+                maintenanceService.reportIssue(roomId, null, null, note);
+            }
+
+            session.setAttribute("successMessage", "Báo cáo sự cố thành công.");
+            response.sendRedirect(request.getContextPath() + "/housekeeping/issues");
+        } catch (Exception ex) {
+            session.setAttribute("errorMessage", ex.getMessage());
+            response.sendRedirect(request.getContextPath() + "/housekeeping/issues/report");
+        }
+    }
+}

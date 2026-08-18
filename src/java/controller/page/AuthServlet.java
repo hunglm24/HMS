@@ -16,6 +16,7 @@ import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/login", "/register", "/forgot-password", "/reset-password", "/logout"})
 public class AuthServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private UserService userService;
 
     @Override
@@ -26,7 +27,8 @@ public class AuthServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (request.getServletPath().equals("/logout")) {
+        String path = request.getServletPath();
+        if ("/logout".equals(path)) {
             logout(request, response);
             return;
         }
@@ -35,19 +37,20 @@ public class AuthServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/");
             return;
         }
-        if (request.getServletPath().equals("/register")) {
+        if ("/register".equals(path)) {
             request.getRequestDispatcher("/WEB-INF/views/public/register.jsp").forward(request, response);
             return;
         }
-        if (request.getServletPath().equals("/forgot-password")) {
+        if ("/forgot-password".equals(path)) {
             request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
             return;
         }
-        if (request.getServletPath().equals("/reset-password")) {
+        if ("/reset-password".equals(path)) {
             request.setAttribute("token", request.getParameter("token"));
             request.getRequestDispatcher("/WEB-INF/views/public/reset-password.jsp").forward(request, response);
             return;
         }
+
         String returnUrl = validReturnUrl(request, request.getParameter("returnUrl"));
         if (returnUrl != null) {
             request.getSession(true).setAttribute("loginReturnUrl", returnUrl);
@@ -58,19 +61,20 @@ public class AuthServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (request.getServletPath().equals("/logout")) {
+        String path = request.getServletPath();
+        if ("/logout".equals(path)) {
             logout(request, response);
             return;
         }
-        if (request.getServletPath().equals("/register")) {
+        if ("/register".equals(path)) {
             register(request, response);
             return;
         }
-        if (request.getServletPath().equals("/forgot-password")) {
+        if ("/forgot-password".equals(path)) {
             requestPasswordReset(request, response);
             return;
         }
-        if (request.getServletPath().equals("/reset-password")) {
+        if ("/reset-password".equals(path)) {
             resetPassword(request, response);
             return;
         }
@@ -87,21 +91,20 @@ public class AuthServlet extends HttpServlet {
                 return;
             }
 
-            // Chống session fixation: bỏ session cũ trước khi tạo session đăng nhập.
             HttpSession oldSession = request.getSession(false);
             String returnUrl = oldSession == null ? null
                     : (String) oldSession.getAttribute("loginReturnUrl");
             if (oldSession != null) {
                 oldSession.invalidate();
             }
+
             HttpSession session = request.getSession(true);
             User currentUser = authenticated.get();
             currentUser.setPasswordHash(null);
             session.setAttribute("currentUser", currentUser);
             session.setMaxInactiveInterval(30 * 60);
 
-            String defaultUrl = request.getContextPath() + "/";
-            response.sendRedirect(returnUrl == null ? defaultUrl : returnUrl);
+            response.sendRedirect(returnUrl == null ? request.getContextPath() + "/" : returnUrl);
         } catch (SQLException ex) {
             getServletContext().log("Đăng nhập thất bại do lỗi cơ sở dữ liệu", ex);
             request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
@@ -184,7 +187,7 @@ public class AuthServlet extends HttpServlet {
         if (session != null) {
             session.invalidate();
         }
-        response.sendRedirect(request.getContextPath() + "/login?logout=1");
+        response.sendRedirect(request.getContextPath() + "/login");
     }
 
     private String validReturnUrl(HttpServletRequest request, String returnUrl) {

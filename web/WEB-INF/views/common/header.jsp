@@ -1,11 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%!
-    private String callStringGetter(Object target, String methodName) {
-        if (target == null) return "";
+    private String beanString(Object bean, String getterName) {
+        if (bean == null) return "";
         try {
-            Object value = target.getClass().getMethod(methodName).invoke(target);
-            return value == null ? "" : value.toString();
-        } catch (ReflectiveOperationException e) {
+            Object value = bean.getClass().getMethod(getterName).invoke(bean);
+            return value == null ? "" : String.valueOf(value);
+        } catch (ReflectiveOperationException ex) {
             return "";
         }
     }
@@ -17,7 +17,7 @@
     }
 
     private String roleLabel(String roleName) {
-        if (roleName == null) return "Khách hàng";
+        if (roleName == null || roleName.trim().isEmpty()) return "Khách hàng";
         switch (roleName.toUpperCase(java.util.Locale.ROOT)) {
             case "ADMIN": return "Quản trị hệ thống";
             case "CUSTOMER": return "Khách hàng";
@@ -31,87 +31,59 @@
 <%
     Object headerUser = session.getAttribute("currentUser");
     String contextPath = request.getContextPath();
-    String roleName = callStringGetter(headerUser, "getRoleName");
+    String roleName = beanString(headerUser, "getRoleName");
+    boolean signedIn = headerUser != null;
+    boolean hideSidebar = Boolean.TRUE.equals(request.getAttribute("hideSidebar"));
     boolean customer = "CUSTOMER".equalsIgnoreCase(roleName);
-    boolean receptionist = "RECEPTIONIST".equalsIgnoreCase(roleName);
     boolean housekeeping = "HOUSEKEEPING".equalsIgnoreCase(roleName);
     boolean manager = "HOTEL_MANAGER".equalsIgnoreCase(roleName);
-    boolean admin = "ADMIN".equalsIgnoreCase(roleName);
+    boolean internal = signedIn && !customer && !hideSidebar;
+    String currentPath = request.getServletPath();
+    String fullName = escapeHtml(beanString(headerUser, "getFullName"));
+    String avatar = fullName.isEmpty() ? "U" : fullName.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
 %>
-<a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
-<header class="site-header">
+<header class="site-header <%= internal ? "site-header--internal" : "" %>">
     <div class="header-container">
-        <a class="brand" href="<%= contextPath %>/" aria-label="Trang chủ HMS">
+        <a class="brand" href="<%= contextPath %>/" aria-label="HMS home">
             <span class="brand-mark" aria-hidden="true">H</span>
-            <span class="brand-copy"><strong>HMS</strong><small>Hotel Management System</small></span>
+            <span class="brand-copy"><strong>HMS</strong><small>Quản lý khách sạn</small></span>
         </a>
 
         <button class="nav-toggle" type="button" aria-expanded="false"
                 aria-controls="main-navigation" aria-label="Mở menu">☰</button>
 
         <nav id="main-navigation" class="main-nav" aria-label="Điều hướng chính">
-            <a href="<%= contextPath %>/">Trang chủ</a>
-
-            <% if (headerUser == null || customer) { %>
+            <% if (!signedIn || customer) { %>
+                <a href="<%= contextPath %>/">Trang chủ</a>
                 <a href="<%= contextPath %>/search">Tìm phòng</a>
-                <% if (headerUser != null) { %>
+                <% if (signedIn) { %>
                     <a href="<%= contextPath %>/my-bookings">Đặt phòng của tôi</a>
+                    <a href="<%= contextPath %>/cart">Giỏ phòng</a>
                 <% } %>
             <% } %>
 
-            <% if (receptionist) { %>
-                <div class="nav-dropdown">
-                    <button type="button" class="dropdown-toggle">Đặt phòng <span>▾</span></button>
-                    <div class="dropdown-menu">
-                        <a href="<%= contextPath %>/reception/bookings">Danh sách đặt phòng</a>
-                        <a href="<%= contextPath %>/reception/walk-in">Đặt phòng tại quầy</a>
-                        <a href="<%= contextPath %>/reception/room-map">Sơ đồ phòng</a>
-                    </div>
-                </div>
-                <a href="<%= contextPath %>/reception/check-in">Nhận phòng</a>
-                <a href="<%= contextPath %>/reception/check-out">Trả phòng</a>
-            <% } %>
-
-            <% if (housekeeping) { %>
-                <a href="<%= contextPath %>/housekeeping/tasks">Công việc buồng phòng</a>
-                <a href="<%= contextPath %>/housekeeping/issues">Báo cáo sự cố</a>
-            <% } %>
-
             <% if (manager) { %>
-                <div class="nav-dropdown">
-                    <button type="button" class="dropdown-toggle">Vận hành <span>▾</span></button>
-                    <div class="dropdown-menu">
-                        <a href="<%= contextPath %>/manager/room-types">Phòng và loại phòng</a>
-                        <a href="<%= contextPath %>/manager/pricing">Giá và dịch vụ</a>
-                        <a href="<%= contextPath %>/manager/staff">Quản lý nhân viên</a>
-                    </div>
-                </div>
-                <a href="<%= contextPath %>/manager/reports">Báo cáo thống kê</a>
+                <a href="<%= contextPath %>/manager/reports">Báo cáo</a>
+                <a href="<%= contextPath %>/manager/rooms">Phòng &amp; Loại phòng</a>
+                <a href="<%= contextPath %>/housekeeping/tasks?view=history">Nhiệm vụ dọn phòng</a>
             <% } %>
 
-            <% if (admin) { %>
-                <div class="nav-dropdown">
-                    <button type="button" class="dropdown-toggle">Quản trị <span>▾</span></button>
-                    <div class="dropdown-menu">
-                        <a href="<%= contextPath %>/admin/users">Người dùng</a>
-                        <a href="<%= contextPath %>/admin/roles">Vai trò và quyền</a>
-                        <a href="<%= contextPath %>/admin/system-config">Cấu hình hệ thống</a>
-                        <a href="<%= contextPath %>/admin/backup">Sao lưu</a>
-                    </div>
-                </div>
-                <a href="<%= contextPath %>/admin/logs">Nhật ký hệ thống</a>
-            <% } %>
-
-            <% if (headerUser == null) { %>
-                <a href="<%= contextPath %>/login">Đăng nhập</a>
-                <a class="nav-primary" href="<%= contextPath %>/register">Đăng ký</a>
+            <% if (!signedIn) { %>
+                <% if ("/login".equals(currentPath)) { %>
+                    <span class="nav-current">Đăng nhập</span>
+                <% } else { %>
+                    <a href="<%= contextPath %>/login">Đăng nhập</a>
+                <% } %>
+                <% if ("/register".equals(currentPath)) { %>
+                    <span class="nav-current nav-primary">Đăng ký</span>
+                <% } else { %>
+                    <a class="nav-primary" href="<%= contextPath %>/register">Đăng ký</a>
+                <% } %>
             <% } else { %>
-                <a class="user-chip" href="<%= contextPath %>/profile" title="Xem hồ sơ">
-                    <span class="user-avatar" aria-hidden="true">●</span>
-                    <span><strong><%= escapeHtml(callStringGetter(headerUser, "getFullName")) %></strong>
-                        <small><%= roleLabel(roleName) %></small></span>
+                <a class="user-chip" href="<%= contextPath %>/profile" title="Hồ sơ">
+                    <span class="user-avatar" aria-hidden="true"><%= avatar %></span>
+                    <span><strong><%= fullName %></strong><small><%= roleLabel(roleName) %></small></span>
                 </a>
-                <a href="<%= contextPath %>/change-password">Đổi mật khẩu</a>
                 <form class="logout-form" method="post" action="<%= contextPath %>/logout">
                     <button type="submit">Đăng xuất</button>
                 </form>
@@ -119,24 +91,35 @@
         </nav>
     </div>
 </header>
+<c:if test="${not empty sessionScope.message}">
+    <div class="toast toast-success" style="position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 15px 20px; border-radius: 5px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        ${sessionScope.message}
+    </div>
+    <script>setTimeout(function() { document.querySelector('.toast-success').style.display = 'none'; }, 5000);</script>
+    <c:remove var="message" scope="session" />
+</c:if>
+<c:if test="${not empty sessionScope.error}">
+    <div class="toast toast-error" style="position: fixed; bottom: 20px; right: 20px; background: #dc3545; color: white; padding: 15px 20px; border-radius: 5px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        ${sessionScope.error}
+    </div>
+    <script>setTimeout(function() { document.querySelector('.toast-error').style.display = 'none'; }, 5000);</script>
+    <c:remove var="error" scope="session" />
+</c:if>
+<% if (internal) { %>
+    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
+<% } %>
 <script>
     (() => {
-        const header = document.currentScript.previousElementSibling;
+        const header = document.querySelector('.site-header');
+        if (!header) return;
         const toggle = header.querySelector('.nav-toggle');
         const nav = header.querySelector('.main-nav');
+        if (!toggle || !nav) return;
         toggle.addEventListener('click', () => {
             const open = nav.classList.toggle('is-open');
             toggle.setAttribute('aria-expanded', String(open));
             toggle.setAttribute('aria-label', open ? 'Đóng menu' : 'Mở menu');
         });
-        header.querySelectorAll('.dropdown-toggle').forEach(button => {
-            button.addEventListener('click', event => {
-                event.stopPropagation();
-                button.parentElement.classList.toggle('is-open');
-            });
-        });
-        document.addEventListener('click', () => {
-            header.querySelectorAll('.nav-dropdown.is-open').forEach(item => item.classList.remove('is-open'));
-        });
     })();
 </script>
+<script src="<%= contextPath %>/assets/js/booking-validation.js"></script>

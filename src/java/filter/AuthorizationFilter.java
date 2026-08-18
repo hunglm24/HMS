@@ -27,18 +27,27 @@ public class AuthorizationFilter implements Filter {
         }
 
         User user = (User) session.getAttribute("currentUser");
+        String role = user.getRoleName();
         String path = request.getServletPath();
-        String requiredRole = path.startsWith("/reception/") ? "RECEPTIONIST"
-                : path.startsWith("/housekeeping/") ? "HOUSEKEEPING"
-                : path.startsWith("/technician/") ? "HOUSEKEEPING"
-                : path.startsWith("/manager/") ? "HOTEL_MANAGER"
-                : path.startsWith("/admin/") ? "ADMIN" : null;
 
-        if (requiredRole != null && !requiredRole.equalsIgnoreCase(user.getRoleName())) {
+        if (!isAllowed(path, role)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
                     "Bạn không có quyền truy cập chức năng này.");
             return;
         }
+
         chain.doFilter(request, response);
+    }
+
+    private boolean isAllowed(String path, String role) {
+        if (role == null) return false;
+        if (path.startsWith("/admin/")) return "ADMIN".equalsIgnoreCase(role);
+        if (path.startsWith("/manager/")) return "HOTEL_MANAGER".equalsIgnoreCase(role);
+        if (path.startsWith("/reception/")) return "RECEPTIONIST".equalsIgnoreCase(role);
+        if (path.startsWith("/technician/")) return "HOUSEKEEPING".equalsIgnoreCase(role)
+                || "HOTEL_MANAGER".equalsIgnoreCase(role);
+        if (path.startsWith("/housekeeping/")) return "HOUSEKEEPING".equalsIgnoreCase(role)
+                || "HOTEL_MANAGER".equalsIgnoreCase(role);
+        return true;
     }
 }

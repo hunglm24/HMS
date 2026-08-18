@@ -1,11 +1,11 @@
 package util;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 public final class PasswordUtil {
     private static final int ITERATIONS = 120_000;
@@ -20,7 +20,7 @@ public final class PasswordUtil {
 
     public static String hash(String password) {
         if (password == null || password.isEmpty()) {
-            throw new IllegalArgumentException("Mật khẩu không được để trống");
+            throw new IllegalArgumentException("Password must not be empty");
         }
         byte[] salt = new byte[SALT_LENGTH];
         new SecureRandom().nextBytes(salt);
@@ -55,7 +55,7 @@ public final class PasswordUtil {
             return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
                     .generateSecret(spec).getEncoded();
         } catch (GeneralSecurityException ex) {
-            throw new IllegalStateException("PBKDF2 không được hỗ trợ", ex);
+            throw new IllegalStateException("PBKDF2 is not supported", ex);
         } finally {
             spec.clearPassword();
         }

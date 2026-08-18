@@ -9,9 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDateTime;
 
 public class UserDao {
     private static final String FIND_BY_EMAIL = """
@@ -27,30 +27,6 @@ public class UserDao {
     private static final String CREATE_CUSTOMER = """
             INSERT INTO accounts (role_id, full_name, phone, email, password, status)
             VALUES (?, ?, ?, ?, ?, 'ACTIVE')
-            """;
-    private static final String LIST_USERS = """
-            SELECT a.id, a.full_name, a.email, a.phone, a.password,
-                   a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
-            FROM accounts a
-            INNER JOIN roles r ON r.id = a.role_id
-            WHERE (? IS NULL OR LOWER(a.full_name) LIKE ? OR LOWER(a.email) LIKE ?)
-            ORDER BY a.created_at DESC, a.id DESC
-            """;
-    private static final String FIND_BY_ID = """
-            SELECT a.id, a.full_name, a.email, a.phone, a.password,
-                   a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
-            FROM accounts a
-            INNER JOIN roles r ON r.id = a.role_id
-            WHERE a.id = ?
-            """;
-    private static final String CREATE_USER = """
-            INSERT INTO accounts (role_id, full_name, phone, email, password, status)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """;
-    private static final String UPDATE_USER = """
-            UPDATE accounts
-            SET role_id = ?, full_name = ?, phone = ?, status = ?
-            WHERE id = ?
             """;
 
     public Optional<User> findByEmail(String email) throws SQLException {
@@ -78,62 +54,160 @@ public class UserDao {
         }
     }
 
-    public List<User> listUsers(String keyword) throws SQLException {
-        List<User> users = new ArrayList<>();
-        String normalized = keyword == null || keyword.isBlank()
-                ? null : "%" + keyword.trim().toLowerCase(java.util.Locale.ROOT) + "%";
+    public List<User> findAll(String keyword, String roleName, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+                SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                       a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+                FROM accounts a
+                INNER JOIN roles r ON r.id = a.role_id
+                WHERE 1 = 1
+                """);
+        List<String> values = new ArrayList<>();
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (LOWER(a.full_name) LIKE ? OR LOWER(a.email) LIKE ? OR a.phone LIKE ?) ");
+            String like = "%" + keyword.trim().toLowerCase(java.util.Locale.ROOT) + "%";
+            values.add(like);
+            values.add(like);
+            values.add("%" + keyword.trim() + "%");
+        }
+        if (roleName != null && !roleName.isBlank()) {
+            sql.append(" AND r.name = ? ");
+            values.add(roleName.trim());
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND a.status = ? ");
+            values.add(status.trim());
+        }
+        sql.append(" ORDER BY a.created_at DESC, a.id DESC");
+
         try (Connection connection = DBConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(LIST_USERS)) {
-            statement.setString(1, normalized);
-            statement.setString(2, normalized);
-            statement.setString(3, normalized);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    users.add(mapUser(resultSet));
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < values.size(); i++) {
+                statement.setString(i + 1, values.get(i));
+            }
+            try (ResultSet rs = statement.executeQuery()) {
+                List<User> users = new ArrayList<>();
+                while (rs.next()) {
+                    users.add(mapUser(rs));
                 }
+                return users;
             }
         }
-        return users;
+    }
+
+    public List<User> findByRoleName(String roleName) throws SQLException {
+        String sql = """
+                SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                       a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+                FROM accounts a
+                INNER JOIN roles r ON r.id = a.role_id
+                WHERE r.name = ?
+                ORDER BY a.full_name ASC, a.id ASC
+                """;
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, roleName);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<User> users = new ArrayList<>();
+                while (rs.next()) {
+                    users.add(mapUser(rs));
+                }
+                return users;
+            }
+        }
     }
 
     public Optional<User> findById(long id) throws SQLException {
+        String sql = """
+                SELECT a.id, a.full_name, a.email, a.phone, a.password,
+                       a.role_id, r.name AS role_name, a.status, a.created_at, a.updated_at
+                FROM accounts a
+                INNER JOIN roles r ON r.id = a.role_id
+                WHERE a.id = ?
+                """;
         try (Connection connection = DBConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID)) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next() ? Optional.of(mapUser(resultSet)) : Optional.empty();
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? Optional.of(mapUser(rs)) : Optional.empty();
             }
         }
     }
 
-    public void createUser(String fullName, String email, String phone, String passwordHash,
-                           long roleId, String status) throws SQLException {
+    public long createAccount(String fullName, String email, String phone, long roleId,
+                              String status, String passwordHash) throws SQLException {
+        String sql = """
+                INSERT INTO accounts (role_id, full_name, phone, email, password, status)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """;
         try (Connection connection = DBConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(CREATE_USER)) {
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, roleId);
             statement.setString(2, fullName);
             statement.setString(3, phone);
             statement.setString(4, email);
             statement.setString(5, passwordHash);
             statement.setString(6, status);
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getLong(1);
+                }
+            }
+        }
+        throw new SQLException("Cannot create account");
+    }
+
+    public void updateAccount(long id, String fullName, String email, String phone,
+                              long roleId, String status) throws SQLException {
+        String sql = """
+                UPDATE accounts
+                SET role_id = ?, full_name = ?, phone = ?, email = ?, status = ?
+                WHERE id = ?
+                """;
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, roleId);
+            statement.setString(2, fullName);
+            statement.setString(3, phone);
+            statement.setString(4, email);
+            statement.setString(5, status);
+            statement.setLong(6, id);
             if (statement.executeUpdate() == 0) {
-                throw new SQLException("Không thể tạo người dùng");
+                throw new SQLException("Account not found");
             }
         }
     }
 
-    public void updateUser(long id, String fullName, String phone, long roleId, String status)
-            throws SQLException {
+    public void updateStatus(long id, String status) throws SQLException {
         try (Connection connection = DBConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(UPDATE_USER)) {
-            statement.setLong(1, roleId);
-            statement.setString(2, fullName);
-            statement.setString(3, phone);
-            statement.setString(4, status);
-            statement.setLong(5, id);
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE accounts SET status = ? WHERE id = ?")) {
+            statement.setString(1, status);
+            statement.setLong(2, id);
             if (statement.executeUpdate() == 0) {
-                throw new SQLException("Không thể cập nhật người dùng");
+                throw new SQLException("Account not found");
             }
+        }
+    }
+
+    public void updatePassword(long id, String passwordHash) throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE accounts SET password = ? WHERE id = ?")) {
+            statement.setString(1, passwordHash);
+            statement.setLong(2, id);
+            if (statement.executeUpdate() == 0) {
+                throw new SQLException("Account not found");
+            }
+        }
+    }
+
+    public void deleteAccount(long id) throws SQLException {
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement("DELETE FROM accounts WHERE id = ?")) {
+            statement.setLong(1, id);
+            statement.executeUpdate();
         }
     }
 
@@ -284,7 +358,11 @@ public class UserDao {
         user.setRoleName(resultSet.getString("role_name"));
         user.setStatus(resultSet.getString("status"));
         user.setCreatedAt(resultSet.getTimestamp("created_at"));
-        user.setUpdatedAt(resultSet.getTimestamp("updated_at"));
+        try {
+            user.setUpdatedAt(resultSet.getTimestamp("updated_at"));
+        } catch (SQLException ignored) {
+            // Some legacy queries do not select updated_at.
+        }
         return user;
     }
 }
