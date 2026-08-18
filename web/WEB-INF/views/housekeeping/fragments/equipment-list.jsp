@@ -2,8 +2,11 @@
 <%@ page import="java.util.List" %>
 <%@ page import="model.HousekeepingTask.EquipmentCheck" %>
 <%@ page import="model.HousekeepingTask" %>
+<%@ page import="java.util.Map" %>
 <%
     List<EquipmentCheck> equips = (List<EquipmentCheck>) request.getAttribute("equips");
+    Map<String, String> reportableStatuses = (Map<String, String>) request.getAttribute("reportableStatuses");
+    
     if (equips == null || equips.isEmpty()) {
 %>
     <div style="padding: 12px; color: var(--color-text-secondary);">Không có thiết bị.</div>
@@ -31,10 +34,15 @@
                     <span style="font-size: 13px; color: var(--color-text-secondary);">Đã báo cáo sự cố</span>
                 <% } else { %>
                     <select name="status_<%= eqId %>" class="form-control" style="width: 160px; padding: 6px; font-size: 13px;">
-                        <option value="NORMAL" <%= "NORMAL".equals(currentStatus) ? "selected" : "" %>>Bình thường</option>
-                        <option value="DAMAGED" <%= "DAMAGED".equals(currentStatus) ? "selected" : "" %>>Hư hỏng</option>
-                        <option value="MISSING" <%= "MISSING".equals(currentStatus) ? "selected" : "" %>>Thất lạc</option>
-                        <option value="MAINTENANCE" <%= "MAINTENANCE".equals(currentStatus) ? "selected" : "" %>>Bảo trì định kỳ</option>
+                        <% if (reportableStatuses != null) {
+                            for (Map.Entry<String, String> entry : reportableStatuses.entrySet()) { 
+                                String val = entry.getKey();
+                                String lbl = entry.getValue();
+                        %>
+                            <option value="<%= val %>" <%= val.equals(currentStatus) ? "selected" : "" %>><%= lbl %></option>
+                        <%  }
+                           } 
+                        %>
                     </select>
                 <% } %>
             </div>
