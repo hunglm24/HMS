@@ -6,10 +6,9 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.Random;
 
 public class VNPayConfig {
-    public static final String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static final String vnp_Returnurl = "/HMS/payment-return"; // Context path /HMS
-    public static final String vnp_TmnCode = "TESTCODE"; // Example TmnCode
-    public static final String vnp_HashSecret = "TESTSECRET"; // Example Secret
+    public static final String vnp_PayUrl = env("HMS_VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
+    public static final String vnp_TmnCode = env("HMS_VNPAY_TMN_CODE", "TESTCODE");
+    public static final String vnp_HashSecret = env("HMS_VNPAY_HASH_SECRET", "TESTSECRET");
     public static final String vnp_apiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 
     public static String hmacSHA512(final String key, final String data) {
@@ -41,5 +40,14 @@ public class VNPayConfig {
             sb.append(chars.charAt(rnd.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+    public static boolean isConfigured() {
+        return !"TESTCODE".equals(vnp_TmnCode) && !"TESTSECRET".equals(vnp_HashSecret);
+    }
+
+    private static String env(String name, String fallback) {
+        String value = System.getenv(name);
+        return value == null || value.isBlank() ? fallback : value.trim();
     }
 }
