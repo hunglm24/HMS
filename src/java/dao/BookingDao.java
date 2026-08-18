@@ -314,6 +314,9 @@ public class BookingDao {
                 case "today" -> conditions.add("DATE(b.check_in_date) = CURDATE()");
                 case "upcoming" -> conditions.add("DATE(b.check_in_date) > CURDATE()");
                 case "overdue" -> conditions.add("DATE(b.check_in_date) < CURDATE() AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED')");
+                case "checkout_today" -> conditions.add("DATE(b.check_out_date) = CURDATE()");
+                case "checkout_upcoming" -> conditions.add("DATE(b.check_out_date) > CURDATE()");
+                case "checkout_overdue" -> conditions.add("DATE(b.check_out_date) < CURDATE() AND b.status = 'CHECKED_IN'");
                 default -> {
                 }
             }

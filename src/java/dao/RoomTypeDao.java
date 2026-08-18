@@ -26,7 +26,7 @@ public class RoomTypeDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return roomTypes;
     }
 
     public List<RoomType> findAvailableRoomTypes(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int guests, int numRooms, Double minPrice, Double maxPrice, String sort, Long roomTypeId) {

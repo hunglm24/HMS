@@ -18,7 +18,7 @@ public class RoomDao {
     public List<Room> findAvailablePhysicalRooms(java.time.LocalDate checkIn, java.time.LocalDate checkOut, Long roomTypeId) {
         List<Room> rooms = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
-            SELECT r.*, rt.name AS room_type_name
+            SELECT r.*, rt.name AS room_type_name, rt.base_price AS base_price
             FROM rooms r
             JOIN room_types rt ON r.room_type_id = rt.id
             WHERE r.status != 'MAINTENANCE'
@@ -51,6 +51,7 @@ public class RoomDao {
                 while (rs.next()) {
                     Room room = mapRow(rs);
                     room.setRoomTypeName(rs.getString("room_type_name"));
+                    room.setRoomTypeBasePrice(rs.getBigDecimal("base_price"));
                     rooms.add(room);
                 }
             }
