@@ -50,6 +50,12 @@ public class PaymentServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String note = request.getParameter("note");
 
+        if (!config.VNPayConfig.isConfigured()) {
+            session.setAttribute("error", "VNPay chưa được cấu hình. Vui lòng thêm mã TMN và Hash Secret sandbox.");
+            response.sendRedirect(request.getContextPath() + "/checkout");
+            return;
+        }
+
         try (java.sql.Connection conn = util.DBConnectionUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -57,7 +63,7 @@ public class PaymentServlet extends HttpServlet {
                 String bookingCode = "BK-" + System.currentTimeMillis();
                 java.sql.Date checkIn = java.sql.Date.valueOf(cart.get(0).getCheckIn());
                 java.sql.Date checkOut = java.sql.Date.valueOf(cart.get(0).getCheckOut());
-                model.User user = (model.User) session.getAttribute("user");
+                model.User user = (model.User) session.getAttribute("currentUser");
                 String insertBooking = "INSERT INTO bookings (booking_code, booking_source, check_in_date, check_out_date, check_in_datetime, check_out_datetime, total_room_amount, total_amount, status, note, customer_id) VALUES (?, 'ONLINE', ?, ?, ?, ?, ?, ?, 'PENDING_PAYMENT', ?, ?)";
                 long bookingId = 0;
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(insertBooking, java.sql.Statement.RETURN_GENERATED_KEYS)) {
@@ -111,11 +117,18 @@ public class PaymentServlet extends HttpServlet {
                 }
 
                 conn.commit();
-                session.removeAttribute("cart");
-                
-                // Set success message and redirect
-                session.setAttribute("message", "Đặt phòng thành công! Mã booking của bạn là: " + bookingCode + ". Lễ tân sẽ sớm liên hệ với bạn để xác nhận.");
-                response.sendRedirect(request.getContextPath() + "/");
+                session.setAttribute("pendingBookingId", bookingId);
+                session.setAttribute("pendingBookingCode", bookingCode);
+                session.setAttribute("pendingPaymentAmount", total);
+
+                String returnUrl = request.getScheme() + "://" + request.getServerName()
+                        + ((request.getServerPort() == 80 || request.getServerPort() == 443)
+                        ? "" : ":" + request.getServerPort())
+                        + request.getContextPath() + "/payment-return";
+                String paymentUrl = vnPayService.createPaymentUrl(total.longValueExact(),
+                        "Thanh toan dat phong " + bookingCode, bookingCode,
+                        request.getRemoteAddr(), returnUrl);
+                response.sendRedirect(paymentUrl);
             } catch (IllegalArgumentException e) {
                 conn.rollback();
                 session.setAttribute("error", e.getMessage());
