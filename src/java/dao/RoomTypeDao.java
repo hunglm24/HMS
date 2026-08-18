@@ -33,10 +33,10 @@ public class RoomTypeDao {
         List<RoomType> roomTypes = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT rt.*, 
-                   (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status = 'AVAILABLE') AS totalActiveRooms,
-                   (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status = 'AVAILABLE')
+                   (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status != 'MAINTENANCE') AS totalActiveRooms,
+                   (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status != 'MAINTENANCE')
                    - 
-                   (SELECT COUNT(br.room_id)
+                   (SELECT COUNT(DISTINCT br.room_id)
                     FROM booking_rooms br
                     JOIN bookings b ON br.booking_id = b.id
                     JOIN rooms r ON br.room_id = r.id

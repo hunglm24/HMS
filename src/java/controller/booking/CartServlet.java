@@ -119,6 +119,31 @@ public class CartServlet extends HttpServlet {
             } catch (Exception e) {
                 // Ignore parse errors
             }
+        } else if ("update".equals(action)) {
+            try {
+                int index = Integer.parseInt(request.getParameter("index"));
+                int quantity = Integer.parseInt(request.getParameter("quantity"));
+                if (index >= 0 && index < cart.size()) {
+                    if (quantity <= 0) {
+                        cart.remove(index);
+                    } else {
+                        CartItem item = cart.get(index);
+                        if (item.getGuests() > item.getRoomType().getCapacity() * quantity) {
+                            session.setAttribute("error", "Số lượng phòng quá ít so với số lượng khách.");
+                        } else {
+                            java.util.List<RoomType> available = roomTypeDao.findAvailableRoomTypes(
+                                    item.getCheckIn(), item.getCheckOut(), 1, quantity, null, null, null, item.getRoomType().getId());
+                            if (!available.isEmpty() && available.get(0).getAvailableQuantity() >= quantity) {
+                                item.setQuantity(quantity);
+                            } else {
+                                session.setAttribute("error", "Không đủ số lượng phòng trống.");
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore
+            }
         }
         
         response.sendRedirect(request.getContextPath() + "/cart");

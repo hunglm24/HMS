@@ -57,7 +57,7 @@ public class PaymentServlet extends HttpServlet {
                 String bookingCode = "BK-" + System.currentTimeMillis();
                 java.sql.Date checkIn = java.sql.Date.valueOf(cart.get(0).getCheckIn());
                 java.sql.Date checkOut = java.sql.Date.valueOf(cart.get(0).getCheckOut());
-                model.User user = (model.User) session.getAttribute("user");
+                model.User user = (model.User) session.getAttribute("currentUser");
                 String insertBooking = "INSERT INTO bookings (booking_code, booking_source, check_in_date, check_out_date, check_in_datetime, check_out_datetime, total_room_amount, total_amount, status, note, customer_id) VALUES (?, 'ONLINE', ?, ?, ?, ?, ?, ?, 'PENDING_PAYMENT', ?, ?)";
                 long bookingId = 0;
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(insertBooking, java.sql.Statement.RETURN_GENERATED_KEYS)) {
