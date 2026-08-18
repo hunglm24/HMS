@@ -151,15 +151,50 @@
                     <span style="display:block; color:var(--color-gray-500); font-size:0.875rem; margin-bottom: 8px;">Xếp phòng (Room Assignment)</span>
                     <c:forEach var="asgn" items="${assignments}">
                         <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
-                            <strong style="width: 120px;">${asgn.roomTypeName}</strong>
+                            <select class="form-control" style="width: auto;" onchange="updateRoomOptions(this, '${asgn.brId}')">
+                                <c:forEach var="rt" items="${roomTypes}">
+                                    <option value="${rt.id}" ${rt.id == asgn.roomTypeId ? 'selected' : ''}>${fn:escapeXml(rt.name)}</option>
+                                </c:forEach>
+                            </select>
                             <select name="assignedRoom_${asgn.brId}" class="form-control" style="width: auto;" required>
-                                <c:forEach var="room" items="${asgn.availableRooms}">
+                                <c:forEach var="room" items="${availableRoomsByTypeId[asgn.roomTypeId]}">
                                     <option value="${room.id}" ${room.id == asgn.currentRoomId ? 'selected' : ''}>Phòng ${room.roomNumber}</option>
                                 </c:forEach>
                             </select>
                         </div>
                     </c:forEach>
                 </div>
+                <script>
+                    const availableRoomsMap = {
+                        <c:forEach var="entry" items="${availableRoomsByTypeId}" varStatus="status">
+                            "${entry.key}": [
+                                <c:forEach var="room" items="${entry.value}" varStatus="rStatus">
+                                    { id: "${room.id}", roomNumber: "${fn:escapeXml(room.roomNumber)}" }${!rStatus.last ? ',' : ''}
+                                </c:forEach>
+                            ]${!status.last ? ',' : ''}
+                        </c:forEach>
+                    };
+
+                    function updateRoomOptions(selectElement, brId) {
+                        const typeId = selectElement.value;
+                        const roomSelect = document.querySelector('select[name="assignedRoom_' + brId + '"]');
+                        roomSelect.innerHTML = '';
+                        const rooms = availableRoomsMap[typeId] || [];
+                        if (rooms.length === 0) {
+                            const opt = document.createElement('option');
+                            opt.value = '';
+                            opt.textContent = 'Hết phòng trống';
+                            roomSelect.appendChild(opt);
+                        } else {
+                            rooms.forEach(room => {
+                                const opt = document.createElement('option');
+                                opt.value = room.id;
+                                opt.textContent = 'Phòng ' + room.roomNumber;
+                                roomSelect.appendChild(opt);
+                            });
+                        }
+                    }
+                </script>
             </div>
 
             <form method="post" action="${pageContext.request.contextPath}/reception/bookings" class="checkin-form">
