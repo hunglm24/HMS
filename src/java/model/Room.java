@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 public class Room extends BaseEntity {
 
     private long roomTypeId;
-    private String roomNumber, status, description;
+    private String roomNumber, viewType, status, description;
     private Integer floorNumber;
     private Timestamp updatedAt;
     private String roomTypeName;
@@ -28,6 +28,14 @@ public class Room extends BaseEntity {
 
     public void setRoomNumber(String v) {
         roomNumber = v;
+    }
+
+    public String getViewType() {
+        return viewType;
+    }
+
+    public void setViewType(String v) {
+        viewType = v;
     }
 
     public Integer getFloorNumber() {
