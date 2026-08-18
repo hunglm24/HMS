@@ -4,8 +4,9 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class RoomType extends BaseEntity {
-    private String name, description, imageUrl, status;
+    private String name, description, imageUrl, bedType, status;
     private int capacity, totalQuantity;
+    private java.math.BigDecimal sizeM2;
     private BigDecimal basePrice;
     private Timestamp updatedAt;
     private int availableQuantity;
@@ -18,6 +19,12 @@ public class RoomType extends BaseEntity {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String v) { imageUrl = v; }
+
+    public java.math.BigDecimal getSizeM2() { return sizeM2; }
+    public void setSizeM2(java.math.BigDecimal v) { sizeM2 = v; }
+
+    public String getBedType() { return bedType; }
+    public void setBedType(String v) { bedType = v; }
 
     public String getStatus() { return status; }
     public void setStatus(String v) { status = v; }
