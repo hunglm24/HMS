@@ -75,7 +75,10 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/reception/bookings"><span>Lễ tân</span><h3>Booking</h3><p>Quản lý đặt phòng, check-in và check-out.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/reception/room-map"><span>Phòng</span><h3>Sơ đồ phòng</h3><p>Xem nhanh tình trạng phòng theo tầng.</p></a>
         <% } else if ("HOUSEKEEPING".equalsIgnoreCase(role)) { %>
-            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks"><span>Buồng phòng</span><h3>Công việc phòng</h3><p>Nhận việc dọn phòng và kiểm tra checkout.</p></a>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; grid-column: 1 / -1;">
+                <a class="btn btn-primary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/tasks">Nhận Task phòng</a>
+                <a class="btn btn-secondary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/issues">Báo cáo & Quản lý sự cố</a>
+            </div>
         <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(role)) { %>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo</h3><p>Theo dõi doanh thu, công suất phòng và nhân sự.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý.</p></a>

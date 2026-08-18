@@ -224,9 +224,9 @@ body > main { width: 100%; flex: 1 0 auto; }
 .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--header-text); text-decoration: none; }
 .brand-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 11px;
     background: rgba(255, 255, 255, .18); color: #fff; font-size: 22px; font-weight: 800; }
-.brand-copy { display: grid; line-height: 1.05; }
-.brand-copy strong { font-size: 18px; letter-spacing: 0; }
-.brand-copy small { margin-top: 4px; color: var(--color-text-secondary); font-size: 11px; }
+.brand-copy { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.brand-copy strong { font-size: 18px; letter-spacing: 0; line-height: 1; }
+.brand-copy small { color: var(--color-text-secondary); font-size: 11px; line-height: 1; margin: 0; }
 
 .main-nav { display: flex; align-items: center; gap: var(--space-2); }
 .main-nav > a { min-height: 40px; display: inline-flex; align-items: center; padding: 10px 13px; border-radius: var(--radius-md); color: #344054; font-weight: 600;

@@ -2,20 +2,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="model.HousekeepingTask" %>
-<%!
-    private String esc(String value) {
-        if (value == null) return "";
-        return value.replace("&", "&amp;").replace("<", "&lt;")
-                .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
-    }
-    private String statusLabel(String value) {
-        if ("PENDING".equals(value)) return "Chờ thực hiện";
-        if ("IN_PROGRESS".equals(value)) return "Đang thực hiện";
-        if ("COMPLETED".equals(value)) return "Hoàn thành";
-        if ("CANCELLED".equals(value)) return "Đã hủy";
-        return value;
-    }
-%>
+
 <%
     HousekeepingTask task = (HousekeepingTask) request.getAttribute("task");
     List<HousekeepingTask.EquipmentCheck> equipment =
@@ -33,7 +20,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Phòng <%= esc(task.getRoomNumber()) %> | Dọn phòng</title>
+    <title>Phòng <%= HousekeepingTask.esc(task.getRoomNumber()) %> | Dọn phòng</title>
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260816-4">
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260816-4">
 </head>
@@ -43,18 +30,18 @@
     <a class="hk-back" href="<%= contextPath %>/housekeeping/tasks?view=<%= history ? "history" : "mine" %>">← <%= history ? "Lịch sử" : "Công việc của tôi" %></a>
     <section class="hk-detail-heading">
         <div><p class="hk-eyebrow">Dọn phòng · Mã công việc #<%= task.getTaskId() %></p>
-            <h1>Phòng <%= esc(task.getRoomNumber()) %></h1>
-            <p><%= esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %></p></div>
-        <span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= statusLabel(task.getStatus()) %></span>
+            <h1>Phòng <%= HousekeepingTask.esc(task.getRoomNumber()) %></h1>
+            <p><%= HousekeepingTask.esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %></p></div>
+        <span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= task.getStatusLabel() %></span>
     </section>
 
     <% if (inspection && history) { %>
     <section class="hk-card hk-work-form"><div class="hk-section-heading"><div><h2>Kết quả kiểm tra thiết bị</h2>
         <p>Dữ liệu được lưu tại thời điểm hoàn tất inspection.</p></div></div>
         <div class="hk-history-equipment"><% if (equipment != null) for (HousekeepingTask.EquipmentCheck item : equipment) { %>
-            <article><div><strong><%= esc(item.getEquipmentName()) %></strong><small>Số lượng: <%= item.getQuantity() %></small></div>
+            <article><div><strong><%= HousekeepingTask.esc(item.getEquipmentName()) %></strong><small>Số lượng: <%= item.getQuantity() %></small></div>
                 <span class="hk-badge condition-<%= item.getConditionStatus().toLowerCase() %>"><%= "NORMAL".equals(item.getConditionStatus()) ? "Bình thường" : "DAMAGED".equals(item.getConditionStatus()) ? "Hư hỏng" : "Thất lạc" %></span>
-                <div><strong><%= String.format("%,.0f", item.getDamageFee()).replace(",", " ").replace(".", " ") %> VND</strong><small><%= esc(item.getNote()) %></small></div></article>
+                <div><strong><%= String.format("%,.0f", item.getDamageFee()).replace(",", " ").replace(".", " ") %> VND</strong><small><%= HousekeepingTask.esc(item.getNote()) %></small></div></article>
         <% } %></div>
         <div class="hk-history-meta"><span>Bắt đầu: <strong><%= task.getStartedAt() == null ? "--" : task.getStartedAt() %></strong></span>
             <span>Hoàn thành: <strong><%= task.getCompletedAt() == null ? "--" : task.getCompletedAt() %></strong></span></div>
@@ -72,8 +59,8 @@
                 <p>Đánh dấu những khu vực housekeeper cần ưu tiên xử lý.</p></div>
             <div class="hk-check-grid">
                 <% if (cleaningChecklist != null) for (Map.Entry<String, String> item : cleaningChecklist.entrySet()) { %>
-                <label><input type="checkbox" name="cleaningItem" value="<%= esc(item.getKey()) %>">
-                    <span><strong><%= esc(item.getValue()) %></strong><small>Thêm vào danh sách việc cần làm</small></span>
+                <label><input type="checkbox" name="cleaningItem" value="<%= HousekeepingTask.esc(item.getKey()) %>">
+                    <span><strong><%= HousekeepingTask.esc(item.getValue()) %></strong><small>Thêm vào danh sách việc cần làm</small></span>
                 </label>
                 <% } %>
             </div>
@@ -84,9 +71,9 @@
             String id = String.valueOf(item.getRoomEquipmentId()); %>
             <fieldset class="hk-equipment-item">
                 <legend><span class="hk-equipment-icon" aria-hidden="true">✓</span>
-                    <strong><%= esc(item.getEquipmentName()) %></strong>
+                    <strong><%= HousekeepingTask.esc(item.getEquipmentName()) %></strong>
                     <small>Số lượng hiện có: <%= item.getQuantity() %> · Lúc check-in:
-                        <%= item.getInitialStatus() == null ? "Không có snapshot" : esc(item.getInitialStatus()) + " / SL " + item.getInitialQuantity() %></small></legend>
+                        <%= item.getInitialStatus() == null ? "Không có snapshot" : HousekeepingTask.esc(item.getInitialStatus()) + " / SL " + item.getInitialQuantity() %></small></legend>
                 <label><span class="hk-label-title">Tình trạng thực tế <span class="required">*</span></span>
                     <select class="condition-select" name="condition_<%= id %>" required>
                         <option value="">-- Chọn tình trạng --</option>
@@ -120,11 +107,11 @@
             <p>Hoàn thành lần lượt các nội dung được ghi nhận khi inspection.</p></div></div>
         <ol class="hk-work-list">
             <% if (workItems != null && !workItems.isEmpty()) for (String item : workItems) { %>
-                <li><span aria-hidden="true">✓</span><strong><%= esc(item) %></strong></li>
+                <li><span aria-hidden="true">✓</span><strong><%= HousekeepingTask.esc(item) %></strong></li>
             <% } else { %><li><span aria-hidden="true">✓</span><strong>Dọn vệ sinh tổng quát và kiểm tra lại phòng</strong></li><% } %>
         </ol>
         <% if (inspectionMessage != null) { %><div class="hk-note-box"><strong>Lời nhắn từ người inspection</strong>
-            <p><%= esc(inspectionMessage) %></p></div><% } %>
+            <p><%= HousekeepingTask.esc(inspectionMessage) %></p></div><% } %>
         <% if (!history) { %><form method="post" action="<%= contextPath %>/housekeeping/tasks/<%= pending ? "start-cleaning" : "complete-cleaning" %>">
             <input type="hidden" name="taskId" value="<%= task.getTaskId() %>">
             <div class="hk-form-actions"><a href="<%= contextPath %>/housekeeping/tasks?view=mine">Quay lại</a>
@@ -139,8 +126,8 @@
         <% } else { %><div class="hk-maintenance-list">
             <% for (HousekeepingTask.EquipmentCheck item : equipment) {
                 boolean repaired = "NORMAL".equals(item.getCurrentStatus()); %>
-            <article><div><strong><%= esc(item.getEquipmentName()) %></strong>
-                <small><%= esc(item.getNote()) %></small></div>
+            <article><div><strong><%= HousekeepingTask.esc(item.getEquipmentName()) %></strong>
+                <small><%= HousekeepingTask.esc(item.getNote()) %></small></div>
                 <span class="hk-badge <%= repaired ? "condition-normal" : "condition-damaged" %>"><%= repaired ? "Đã xử lý" : "Chưa xử lý" %></span></article>
             <% } %>
         </div><p class="hk-maintenance-help">Nếu thiết bị chưa được xử lý, phòng vẫn có thể dọn xong nhưng sẽ ở trạng thái NOT_READY hoặc MAINTENANCE.</p><% } %>

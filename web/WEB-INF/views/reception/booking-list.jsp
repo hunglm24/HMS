@@ -86,14 +86,28 @@
                         <input type="hidden" name="id" value="${b.bookingId}">
                         <button class="btn btn-secondary" type="submit">Duyệt</button>
                     </form>
-                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;">
+                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;" onsubmit="return confirm('Hủy đặt phòng này?');">
                         <input type="hidden" name="action" value="REJECT">
                         <input type="hidden" name="id" value="${b.bookingId}">
-                        <button class="btn btn-secondary" type="submit" style="color:red;">Từ chối</button>
+                        <button class="btn btn-secondary" type="submit" style="color:var(--color-error-600);">Từ chối</button>
+                    </form>
+                </c:if>
+                <c:if test="${b.status == 'CONFIRMED'}">
+                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;">
+                        <input type="hidden" name="action" value="CHECK_IN">
+                        <input type="hidden" name="id" value="${b.bookingId}">
+                        <button class="btn btn-primary" type="submit">Check-in</button>
+                    </form>
+                </c:if>
+                <c:if test="${b.status == 'CHECKED_IN'}">
+                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;">
+                        <input type="hidden" name="action" value="CHECK_OUT">
+                        <input type="hidden" name="id" value="${b.bookingId}">
+                        <button class="btn btn-primary" type="submit" style="background-color: var(--color-warning-600);">Check-out</button>
                     </form>
                 </c:if>
                 <c:if test="${b.status != 'PENDING_PAYMENT'}">
-                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/booking-detail">Chi tiết</a>
+                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/booking-detail?id=${b.bookingId}">Chi tiết</a>
                 </c:if>
                 <a class="btn btn-secondary" href="${pageContext.request.contextPath}/receptionist/edit-booking?id=${b.bookingId}">Sửa</a>
             </div>

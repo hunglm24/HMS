@@ -32,6 +32,7 @@
                 <div class="stats-row">
                     <div class="stat-badge stat-available">Trống: ${availableCount}</div>
                     <div class="stat-badge stat-occupied">Đang có khách: ${occupiedCount}</div>
+                    <div class="stat-badge stat-reserved" style="background:#ffc107; color:#000;">Đã đặt trước: ${reservedCount}</div>
                     <div class="stat-badge stat-cleaning">Đang dọn: ${cleaningCount}</div>
                     <div class="stat-badge stat-maintenance">Bảo trì: ${maintenanceCount}</div>
                     <div class="stat-badge">Tổng: ${totalCount}</div>
@@ -80,8 +81,30 @@
                         <div class="floor-section">
                             <h3 class="floor-title">
                                 <c:choose>
-                                    <c:when test="${entry.key == 0}">Không rõ tầng</c:when>
-                                    <c:otherwise>Tầng ${entry.key}</c:otherwise>
+                                    <c:when test="${roomStatus eq 'AVAILABLE'}">
+                                        <c:set var="statusLabel" value="Trống" />
+                                    </c:when>
+                                    <c:when test="${roomStatus eq 'OCCUPIED'}">
+                                        <c:set var="statusLabel" value="Có khách" />
+                                    </c:when>
+                                    <c:when test="${roomStatus eq 'RESERVED'}">
+                                        <c:set var="statusLabel" value="Đã đặt trước" />
+                                    </c:when>
+                                    <c:when test="${roomStatus eq 'CLEANING'}">
+                                        <c:set var="statusLabel" value="Đang dọn" />
+                                    </c:when>
+                                    <c:when test="${roomStatus eq 'MAINTENANCE'}">
+                                        <c:set var="statusLabel" value="Bảo trì" />
+                                    </c:when>
+                                    <c:when test="${roomStatus eq 'NOT_READY'}">
+                                        <c:set var="statusLabel" value="Chưa sẵn sàng" />
+                                    </c:when>
+                                    <c:when test="${roomStatus eq 'INSPECTION'}">
+                                        <c:set var="statusLabel" value="Chờ kiểm tra" />
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:set var="statusLabel" value="Không rõ" />
+                                    </c:otherwise>
                                 </c:choose>
                             </h3>
                             <div class="room-grid">

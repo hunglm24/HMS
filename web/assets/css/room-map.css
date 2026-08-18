@@ -1,6 +1,17 @@
+<<<<<<< HEAD
 .map-header {
     margin-bottom: 14px;
 }
+=======
+.map-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+.stats-row { display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
+.stat-badge { padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; border: 1px solid var(--color-border); }
+.stat-available { background: var(--color-success-100); color: #166534; border-color: #bbf7d0; }
+.stat-occupied { background: var(--color-info-100); color: var(--color-info-700); border-color: #bfdbfe; }
+.stat-cleaning { background: var(--color-warning-100); color: var(--color-warning-700); border-color: #fde68a; }
+.stat-maintenance { background: var(--color-error-100); color: var(--color-error-700); border-color: #fca5a5; }
+.stat-reserved { background: #fef08a; color: #854d0e; border-color: #fde047; }
+>>>>>>> d1a4c712b67945c004d6ae17f2c38e3c4a893681
 
 .stats-row {
     display: flex;
@@ -20,6 +31,7 @@
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
+<<<<<<< HEAD
 .stat-available { background: #ecfdf3; border-color: #ccefd9; color: #166534; }
 .stat-occupied { background: #eef4ff; border-color: #cfe0ff; color: #1e63d6; }
 .stat-cleaning { background: #fff7e8; border-color: #fde0b8; color: #d97706; }
@@ -230,6 +242,24 @@
     background: #f8fafc;
     border-color: #e2e8f0;
 }
+=======
+.room-card.AVAILABLE { background: var(--color-success-100); border-color: #bbf7d0; }
+.room-card.OCCUPIED { background: var(--color-info-100); border-color: #bfdbfe; }
+.room-card.RESERVED { background: #fef08a; border-color: #fde047; }
+.room-card.CLEANING { background: var(--color-warning-100); border-color: #fde68a; }
+.room-card.MAINTENANCE { background: var(--color-error-100); border-color: #fca5a5; }
+.room-card.NOT_READY, .room-card.INSPECTION { background: #f3f4f6; border-color: #e5e7eb; }
+
+.room-number { font-size: 24px; font-weight: 800; margin-bottom: 4px; color: var(--color-text-primary); }
+.room-type { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 12px; }
+.room-status { font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05); }
+.AVAILABLE .room-status { color: #166534; }
+.OCCUPIED .room-status { color: var(--color-info-700); }
+.RESERVED .room-status { color: #854d0e; }
+.CLEANING .room-status { color: #b45309; }
+.MAINTENANCE .room-status { color: #991b1b; }
+.NOT_READY .room-status, .INSPECTION .room-status { color: var(--color-text-secondary); }
+>>>>>>> d1a4c712b67945c004d6ae17f2c38e3c4a893681
 
 .drawer-backdrop {
     position: fixed;

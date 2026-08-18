@@ -96,7 +96,7 @@ public class PaymentServlet extends HttpServlet {
                     for (dto.CartItem item : cart) {
                         java.util.List<model.Room> available = roomDao.findAvailablePhysicalRooms(item.getCheckIn(), item.getCheckOut(), item.getRoomType().getId());
                         if (available.size() < item.getQuantity()) {
-                            throw new RuntimeException("Không đủ phòng trống cho loại phòng: " + item.getRoomType().getName());
+                            throw new IllegalArgumentException("Không đủ phòng trống cho loại phòng: " + item.getRoomType().getName() + ". Vui lòng quay lại giỏ hàng để cập nhật.");
                         }
                         for (int i = 0; i < item.getQuantity(); i++) {
                             ps.setLong(1, bookingId);
@@ -116,6 +116,10 @@ public class PaymentServlet extends HttpServlet {
                 // Set success message and redirect
                 session.setAttribute("message", "Đặt phòng thành công! Mã booking của bạn là: " + bookingCode + ". Lễ tân sẽ sớm liên hệ với bạn để xác nhận.");
                 response.sendRedirect(request.getContextPath() + "/");
+            } catch (IllegalArgumentException e) {
+                conn.rollback();
+                session.setAttribute("error", e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/cart");
             } catch (Exception e) {
                 conn.rollback();
                 throw e;

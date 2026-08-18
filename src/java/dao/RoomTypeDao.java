@@ -33,6 +33,7 @@ public class RoomTypeDao {
         List<RoomType> roomTypes = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT rt.*, 
+                   (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status = 'AVAILABLE') AS totalActiveRooms,
                    (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status = 'AVAILABLE')
                    - 
                    (SELECT COUNT(br.room_id)
@@ -87,6 +88,7 @@ public class RoomTypeDao {
                 while (rs.next()) {
                     RoomType rt = mapRow(rs);
                     rt.setAvailableQuantity(rs.getInt("availableQuantity"));
+                    rt.setTotalQuantity(rs.getInt("totalActiveRooms"));
                     roomTypes.add(rt);
                 }
             }

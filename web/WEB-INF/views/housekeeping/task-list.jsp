@@ -4,26 +4,8 @@
 <%@ page import="model.HousekeepingTask" %>
 <%@ page import="service.HousekeepingService" %>
 <%!
-    private String esc(String value) {
-        if (value == null) return "";
-        return value.replace("&", "&amp;").replace("<", "&lt;")
-                .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
-    }
     private String enc(Object value) {
         return URLEncoder.encode(String.valueOf(value), StandardCharsets.UTF_8);
-    }
-    private String label(String value) {
-        if (value == null) return "--";
-        switch (value) {
-            case "WAITING": return "Chờ kiểm tra";
-            case "PENDING": return "Chờ thực hiện";
-            case "IN_PROGRESS": return "Đang thực hiện";
-            case "CHECKOUT_INSPECTION": return "Kiểm tra sau checkout";
-            case "CLEANING": return "Dọn phòng";
-            case "COMPLETED": return "Hoàn thành";
-            case "CANCELLED": return "Đã hủy";
-            default: return value;
-        }
     }
     private String query(HousekeepingService.TaskPage r, boolean includeSort) {
         StringBuilder q = new StringBuilder("view=").append(enc(r.view()));
@@ -66,17 +48,17 @@
             <p>Chọn công việc kiểm tra hoặc dọn phòng đang chờ nhận.</p></div>
         <div class="hk-total"><strong><%= result.totalItems() %></strong><span>kết quả</span></div>
     </section>
-
+<!--
     <nav class="hk-tabs" aria-label="Nhóm công việc">
-        <% if (!isManager) { %><a class="<%= !mine && !history ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=waiting">Công việc chờ nhận</a>
-        <a class="<%= mine ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=mine">Công việc của tôi</a><% } %>
+        <% if (!isManager) { %><a class="<%= !mine && !history ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=waiting">Task chờ nhận</a>
+        <a class="<%= mine ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=mine">Task của tôi</a><% } %>
         <a class="<%= history ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=history">Lịch sử<%= isManager ? " toàn bộ" : " của tôi" %></a>
-    </nav>
+    </nav>-->
 
     <form class="hk-filters" method="get" action="<%= contextPath %>/housekeeping/tasks">
-        <input type="hidden" name="view" value="<%= esc(result.view()) %>">
+        <input type="hidden" name="view" value="<%= HousekeepingTask.esc(result.view()) %>">
         <label class="hk-search">Tìm kiếm
-            <input type="search" name="q" maxlength="50" value="<%= esc(result.keyword()) %>"
+            <input type="search" name="q" maxlength="50" value="<%= HousekeepingTask.esc(result.keyword()) %>"
                    placeholder="Số phòng hoặc loại phòng">
         </label>
         <label>Tầng
@@ -116,11 +98,11 @@
             <th><span class="sr-only">Thao tác</span></th>
         </tr></thead>
         <tbody><% for (HousekeepingTask task : result.tasks()) { %><tr>
-            <td data-label="Phòng"><span class="hk-room-number"><%= esc(task.getRoomNumber()) %></span></td>
-            <td data-label="Loại phòng"><%= esc(task.getRoomTypeName()) %></td>
+            <td data-label="Phòng"><span class="hk-room-number"><%= HousekeepingTask.esc(task.getRoomNumber()) %></span></td>
+            <td data-label="Loại phòng"><%= HousekeepingTask.esc(task.getRoomTypeName()) %></td>
             <td data-label="Tầng"><%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %></td>
-            <td data-label="Công việc"><%= label(task.getTaskType()) %></td>
-            <td data-label="Trạng thái"><span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= label(task.getStatus()) %></span></td>
+            <td data-label="Công việc"><%= task.getTaskTypeLabel() %></td>
+            <td data-label="Trạng thái"><span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= task.getStatusLabel() %></span></td>
             <td class="hk-row-action"><% if (mine || history) { %>
                 <a href="<%= contextPath %>/housekeeping/tasks/detail?id=<%= task.getTaskId() %>">Xem chi tiết</a>
             <% } else if ("CLEANING".equals(task.getTaskType())) { %>
@@ -137,7 +119,9 @@
 
     <% if (result.totalPages() > 1) { %><nav class="hk-pagination" aria-label="Phân trang">
         <% if (result.page() > 1) { %><a href="?<%= query(result,true) %>&page=<%= result.page()-1 %>">‹ Trước</a><% } else { %><span>‹ Trước</span><% } %>
-        <strong>Trang <%= result.page() %> / <%= result.totalPages() %></strong>
+        <% for (int i = 1; i <= result.totalPages(); i++) { %>
+            <% if (i == result.page()) { %><strong><%= i %></strong><% } else { %><a href="?<%= query(result,true) %>&page=<%= i %>"><%= i %></a><% } %>
+        <% } %>
         <% if (result.page() < result.totalPages()) { %><a href="?<%= query(result,true) %>&page=<%= result.page()+1 %>">Sau ›</a><% } else { %><span>Sau ›</span><% } %>
     </nav><% } %>
     <% } %>
