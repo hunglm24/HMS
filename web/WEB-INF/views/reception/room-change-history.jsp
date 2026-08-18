@@ -55,6 +55,7 @@
                 <label class="form-label" for="receptionistId">Người thực hiện</label>
                 <select class="form-control" id="receptionistId" name="receptionistId">
                     <option value="">Tất cả receptionist</option>
+                    <%-- Render the receptionist filter options. --%>
                     <c:forEach var="receptionist" items="${receptionists}">
                         <option value="${receptionist.id}" <c:if test="${receptionistId eq receptionist.id}">selected="selected"</c:if>>
                             <c:out value="${receptionist.fullName}" />
@@ -69,6 +70,7 @@
         </form>
     </section>
 
+    <%-- Show the loading error only when the controller provides one. --%>
     <c:if test="${not empty error}">
         <section class="room-change-history-alert error">
             <c:out value="${error}" />
@@ -88,6 +90,7 @@
                 </tr>
                 </thead>
                 <tbody>
+                <%-- Render either the empty state or the history rows. --%>
                 <c:choose>
                     <c:when test="${empty logs}">
                         <tr>
@@ -100,10 +103,12 @@
                         </tr>
                     </c:when>
                     <c:otherwise>
+                        <%-- Render each room change history entry. --%>
                         <c:forEach var="log" items="${logs}">
                             <tr data-pagination-item>
                                 <td><fmt:formatDate value="${log.createdAt}" pattern="dd/MM/yyyy HH:mm" /></td>
                                 <td>
+                                    <%-- Prefer the actor name, then fall back to a system label. --%>
                                     <c:choose>
                                         <c:when test="${not empty log.actorName}">
                                             <c:out value="${log.actorName}" />
@@ -112,6 +117,7 @@
                                     </c:choose>
                                 </td>
                                 <td>
+                                    <%-- Show the booking code when available, otherwise use the target ID. --%>
                                     <c:choose>
                                         <c:when test="${not empty log.bookingCode}">
                                             <span class="room-change-history-code"><c:out value="${log.bookingCode}" /></span>
@@ -124,6 +130,7 @@
                                 </td>
                                 <td><c:out value="${log.detail}" /></td>
                                 <td>
+                                    <%-- Show the IP address only when it exists. --%>
                                     <c:choose>
                                         <c:when test="${not empty log.ipAddress}">
                                             <span class="room-change-history-code"><c:out value="${log.ipAddress}" /></span>

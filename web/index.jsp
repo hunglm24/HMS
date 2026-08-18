@@ -78,7 +78,8 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks"><span>Buồng phòng</span><h3>Công việc phòng</h3><p>Nhận việc dọn phòng và kiểm tra checkout.</p></a>
         <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(role)) { %>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo</h3><p>Theo dõi doanh thu, công suất phòng và nhân sự.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý và hạng phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/room-types"><span>Loại phòng</span><h3>Quản lý loại phòng</h3><p>Quản lý hạng phòng, giá và sức chứa.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Buồng phòng</span><h3>Nhiệm vụ dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
         <% } else if ("ADMIN".equalsIgnoreCase(role)) { %>
             <a class="preview-card" href="${pageContext.request.contextPath}/admin/users"><span>Admin</span><h3>Người dùng</h3><p>Quản lý tài khoản và phân quyền.</p></a>

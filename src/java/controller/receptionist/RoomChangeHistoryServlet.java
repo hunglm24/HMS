@@ -21,6 +21,7 @@ public class RoomChangeHistoryServlet extends HttpServlet {
 
     @Override
     public void init() {
+        // Initialize the history service once for the servlet lifecycle.
         roomChangeHistoryService = new RoomChangeHistoryService();
     }
 
@@ -28,9 +29,11 @@ public class RoomChangeHistoryServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+            // Read and normalize the optional filter parameters.
             String bookingCode = trimToNull(request.getParameter("bookingCode"));
             LocalDate fromDate = parseDate(request.getParameter("fromDate"));
             LocalDate toDate = parseDate(request.getParameter("toDate"));
+            // Swap the range when the user picks dates in reverse order.
             if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
                 LocalDate temp = fromDate;
                 fromDate = toDate;
@@ -55,6 +58,7 @@ public class RoomChangeHistoryServlet extends HttpServlet {
     }
 
     private Long parseLong(String value) {
+        // Parse a nullable long value and fall back to null on invalid input.
         try {
             if (value == null || value.isBlank()) {
                 return null;
@@ -66,6 +70,7 @@ public class RoomChangeHistoryServlet extends HttpServlet {
     }
 
     private String trimToNull(String value) {
+        // Convert blank input into null so the filters stay consistent.
         if (value == null) {
             return null;
         }
@@ -74,6 +79,7 @@ public class RoomChangeHistoryServlet extends HttpServlet {
     }
 
     private LocalDate parseDate(String value) {
+        // Parse ISO dates from the query string and ignore invalid values.
         String normalized = trimToNull(value);
         if (normalized == null) {
             return null;

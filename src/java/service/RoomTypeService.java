@@ -5,6 +5,7 @@ import model.RoomType;
 import util.ValidationUtil;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -23,16 +24,22 @@ public class RoomTypeService {
 
     // Return every room type for the management screen.
     public List<RoomType> getAllRoomTypes() {
-        return roomTypeDao.findAll();
+        List<RoomType> roomTypes = roomTypeDao.findAll();
+        return roomTypes == null ? Collections.emptyList() : roomTypes;
     }
 
     // Filter room types in memory for the current UI state.
     public List<RoomType> findRoomTypes(String keyword, String status) {
+        // Normalize filter input before applying it to the in-memory list.
         String normalizedKeyword = ValidationUtil.normalizeLower(keyword);
         final String filterKeyword = normalizedKeyword.length() > 100
                 ? normalizedKeyword.substring(0, 100) : normalizedKeyword;
         String normalizedStatus = ValidationUtil.optionalStatus(status, STATUSES);
         List<RoomType> roomTypes = roomTypeDao.findAll();
+        if (roomTypes == null) {
+            return Collections.emptyList();
+        }
+        // Keep only room types that match the keyword and status filters.
         return roomTypes.stream()
                 .filter(roomType -> matchesKeyword(roomType, filterKeyword))
                 .filter(roomType -> normalizedStatus == null
@@ -50,6 +57,7 @@ public class RoomTypeService {
 
     // Validate and persist a room type.
     public boolean saveRoomType(RoomType roomType) throws SQLException {
+        // Validate first so the DAO only receives clean data.
         validateRoomType(roomType);
         Long roomTypeId = roomType.getId();
         ensureRoomTypeNameUnique(roomType.getName(), roomTypeId == null || roomTypeId <= 0 ? null : roomTypeId);
@@ -61,6 +69,7 @@ public class RoomTypeService {
 
     // Soft-disable a room type by switching its status.
     public boolean deactivateRoomType(long id) throws SQLException {
+        // Soft-delete by setting the status instead of removing the row.
         if (id <= 0) {
             return false;
         }
@@ -89,6 +98,7 @@ public class RoomTypeService {
 
     // Validate fields that are shared by create and update flows.
     public void validateRoomType(RoomType roomType) {
+        // Enforce the shared rules for both create and update flows.
         ValidationUtil.requireTrue(roomType != null, "Thong tin loai phong khong hop le.");
 
         String name = ValidationUtil.requireText(roomType.getName(), "Ten loai phong", 2, 100);
@@ -114,9 +124,16 @@ public class RoomTypeService {
 
     // Prevent duplicate room type names across the catalog.
     public void ensureRoomTypeNameUnique(String name, Long excludeId) {
+        // Compare names case-insensitively and skip the current record on edit.
         String normalizedName = ValidationUtil.requireText(name, "Ten loai phong", 2, 100);
-        boolean duplicated = roomTypeDao.findAll().stream()
+        List<RoomType> roomTypes = roomTypeDao.findAll();
+        if (roomTypes == null) {
+            roomTypes = Collections.emptyList();
+        }
+        // Stop when another record already uses the same normalized name.
+        boolean duplicated = roomTypes.stream()
                 .anyMatch(roomType -> {
+                    // Ignore rows without a name or the row currently being edited.
                     if (roomType.getName() == null) {
                         return false;
                     }
