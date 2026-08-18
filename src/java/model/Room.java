@@ -13,6 +13,15 @@ public class Room extends BaseEntity {
     private String currentBookingCode;
     private String currentGuestName;
     private String currentBookingStatus;
+    private java.math.BigDecimal roomTypeBasePrice;
+
+    public java.math.BigDecimal getRoomTypeBasePrice() {
+        return roomTypeBasePrice;
+    }
+
+    public void setRoomTypeBasePrice(java.math.BigDecimal roomTypeBasePrice) {
+        this.roomTypeBasePrice = roomTypeBasePrice;
+    }
 
     public long getRoomTypeId() {
         return roomTypeId;

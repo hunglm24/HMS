@@ -43,7 +43,12 @@
         <section class="section-head">
             <div>
                 <p class="section-kicker">Đặt phòng của tôi</p>
-                <h1>Booking của tôi</h1>
+                <c:if test="${not empty errorMessage}">
+                    <div style="padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; color: #721c24; background-color: #f8d7da; border-color: #f5c6cb;">
+                        ${errorMessage}
+                    </div>
+                </c:if>
+                <h1 class="section-title">Lịch sử giao dịch</h1>
                 <p>Theo dõi trạng thái đặt phòng và thanh toán.</p>
             </div>
             <a class="btn" href="${pageContext.request.contextPath}/search">Đặt phòng mới</a>
@@ -100,7 +105,14 @@
                                 </c:if>
                                 
                                 <c:if test="${b.status == 'CHECKED_OUT'}">
-                                    <button class="btn btn-secondary btn-sm" onclick="alert('Tính năng đang được phát triển!')">Đánh giá</button>
+                                    <c:choose>
+                                        <c:when test="${hasFeedbackMap[b.id]}">
+                                            <button class="btn btn-secondary btn-sm" disabled style="opacity: 0.6; cursor: not-allowed;">Đã đánh giá</button>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <a href="${pageContext.request.contextPath}/customer/feedback?bookingId=${b.id}" class="btn btn-secondary btn-sm">Đánh giá</a>
+                                        </c:otherwise>
+                                    </c:choose>
                                     <a href="${pageContext.request.contextPath}/search" class="btn btn-sm">Đặt lại</a>
                                 </c:if>
                             </div>

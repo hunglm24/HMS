@@ -10,12 +10,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import dao.RoomTypeDao;
 import model.RoomType;
 import java.util.List;
+import java.util.ArrayList;
 
 @WebServlet(name = "WalkInReservationServlet", urlPatterns = {"/receptionist/walk-in"})
 public class WalkInReservationServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private RoomTypeDao roomTypeDao = new RoomTypeDao();
-
     private dao.RoomDao roomDao = new dao.RoomDao();
 
     @Override
@@ -51,20 +51,31 @@ public class WalkInReservationServlet extends HttpServlet {
             throws ServletException, IOException {
         String checkInStr = request.getParameter("checkIn");
         String checkOutStr = request.getParameter("checkOut");
-        String roomIdStr = request.getParameter("roomId");
+        String[] roomIdsStr = request.getParameterValues("roomIds");
         String fullName = request.getParameter("fullName");
         String phone = request.getParameter("phone");
         String email = request.getParameter("email");
         String identityNumber = request.getParameter("identityNumber");
         String dobStr = request.getParameter("dateOfBirth");
         String guestsStr = request.getParameter("guests");
+        String notes = request.getParameter("notes");
+        String paymentStatus = request.getParameter("paymentStatus");
+        String paymentMethod = request.getParameter("paymentMethod");
+        String submitAction = request.getParameter("submitAction"); // CHECKIN or RESERVE
+        String totalAmountStr = request.getParameter("totalAmount");
 
         try {
             java.time.LocalDate checkIn = java.time.LocalDate.parse(checkInStr);
             java.time.LocalDate checkOut = java.time.LocalDate.parse(checkOutStr);
-            long roomId = Long.parseLong(roomIdStr);
             int guests = Integer.parseInt(guestsStr);
             java.time.LocalDate today = java.time.LocalDate.now();
+            java.math.BigDecimal totalAmount = new java.math.BigDecimal(totalAmountStr);
+
+            if (roomIdsStr == null || roomIdsStr.length == 0) {
+                request.getSession().setAttribute("error", "Vui lòng chọn ít nhất 1 phòng.");
+                response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                return;
+            }
 
             // 1. Validate dates
             if (checkIn.isBefore(today)) {
@@ -77,43 +88,54 @@ public class WalkInReservationServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
                 return;
             }
-
-            // 2. Validate Room & Capacity
-            model.Room room = roomDao.findById(roomId).orElse(null);
-            if (room == null || "INACTIVE".equals(room.getStatus()) || "MAINTENANCE".equals(room.getStatus())) {
-                request.getSession().setAttribute("error", "Phòng không hợp lệ hoặc đang bảo trì.");
-                response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
-                return;
-            }
             
-            RoomType rt = roomTypeDao.findById(room.getRoomTypeId()).orElse(null);
-            if (rt == null || guests > rt.getCapacity()) {
-                request.getSession().setAttribute("error", "Số khách vượt quá sức chứa của phòng.");
+            if ("CHECKIN".equals(submitAction) && !checkIn.equals(today)) {
+                request.getSession().setAttribute("error", "Chỉ có thể check-in nếu ngày nhận phòng là hôm nay.");
                 response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
                 return;
             }
 
-            // 3. Walk-in Check-in Validation: If checking in today, room must be clean
-            String bookingStatus = checkIn.equals(today) ? "CHECKED_IN" : "CONFIRMED";
-            if ("CHECKED_IN".equals(bookingStatus)) {
-                if ("CLEANING".equals(room.getStatus()) || "DIRTY".equals(room.getStatus()) || "NOT_READY".equals(room.getStatus())) {
-                    request.getSession().setAttribute("error", "Không thể Check-in! Phòng đang được dọn hoặc chưa sẵn sàng.");
+            // 2. Validate Rooms
+            List<model.Room> selectedRooms = new ArrayList<>();
+            List<model.Room> availablePhysicalRooms = roomDao.findAvailablePhysicalRooms(checkIn, checkOut, null);
+            int totalCapacity = 0;
+
+            for (String ridStr : roomIdsStr) {
+                long roomId = Long.parseLong(ridStr);
+                
+                // Realtime availability check
+                model.Room room = null;
+                for (model.Room r : availablePhysicalRooms) {
+                    if (r.getId() == roomId) {
+                        room = r;
+                        break;
+                    }
+                }
+                
+                if (room == null || "INACTIVE".equals(room.getStatus()) || "MAINTENANCE".equals(room.getStatus())) {
+                    request.getSession().setAttribute("error", "Phòng " + roomId + " đã bị đặt hoặc không hợp lệ.");
                     response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
                     return;
                 }
+                
+                // If CHECKIN, room must be clean
+                if ("CHECKIN".equals(submitAction)) {
+                    if ("CLEANING".equals(room.getStatus()) || "DIRTY".equals(room.getStatus()) || "NOT_READY".equals(room.getStatus())) {
+                        request.getSession().setAttribute("error", "Không thể Check-in! Phòng " + room.getRoomNumber() + " chưa sẵn sàng.");
+                        response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                        return;
+                    }
+                }
+                
+                RoomType rt = roomTypeDao.findById(room.getRoomTypeId()).orElse(null);
+                if (rt != null) {
+                    totalCapacity += rt.getCapacity();
+                }
+                selectedRooms.add(room);
             }
 
-            // 4. Booking Conflict Validation (Realtime availability check)
-            List<model.Room> availablePhysicalRooms = roomDao.findAvailablePhysicalRooms(checkIn, checkOut, null);
-            boolean isAvailable = false;
-            for (model.Room r : availablePhysicalRooms) {
-                if (r.getId() == roomId) {
-                    isAvailable = true;
-                    break;
-                }
-            }
-            if (!isAvailable) {
-                request.getSession().setAttribute("error", "Phòng đã bị đặt trong khoảng thời gian này.");
+            if (guests > totalCapacity) {
+                request.getSession().setAttribute("error", "Số khách vượt quá tổng sức chứa của các phòng đã chọn (" + totalCapacity + ").");
                 response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
                 return;
             }
@@ -133,14 +155,15 @@ public class WalkInReservationServlet extends HttpServlet {
 
             // 6. Create booking transaction
             long nights = java.time.temporal.ChronoUnit.DAYS.between(checkIn, checkOut);
-            java.math.BigDecimal total = rt.getBasePrice().multiply(new java.math.BigDecimal(nights));
             String bookingCode = "WLK-" + System.currentTimeMillis();
+            String bookingStatus = "CHECKIN".equals(submitAction) ? "CHECKED_IN" : "CONFIRMED";
+            java.math.BigDecimal deposit = "PAID".equals(paymentStatus) ? totalAmount : java.math.BigDecimal.ZERO;
 
             try (java.sql.Connection conn = util.DBConnectionUtil.getConnection()) {
                 conn.setAutoCommit(false);
                 try {
                     // Insert booking
-                    String insertBooking = "INSERT INTO bookings (booking_code, booking_source, check_in_date, check_out_date, check_in_datetime, check_out_datetime, total_room_amount, total_amount, status, customer_id) VALUES (?, 'RECEPTION', ?, ?, ?, ?, ?, ?, ?, ?)";
+                    String insertBooking = "INSERT INTO bookings (booking_code, booking_source, check_in_date, check_out_date, check_in_datetime, check_out_datetime, total_room_amount, total_amount, status, customer_id, note) VALUES (?, 'RECEPTION', ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     long bookingId = 0;
                     try (java.sql.PreparedStatement ps = conn.prepareStatement(insertBooking, java.sql.Statement.RETURN_GENERATED_KEYS)) {
                         ps.setString(1, bookingCode);
@@ -148,14 +171,15 @@ public class WalkInReservationServlet extends HttpServlet {
                         ps.setDate(3, java.sql.Date.valueOf(checkOut));
                         ps.setTimestamp(4, new java.sql.Timestamp(java.sql.Date.valueOf(checkIn).getTime()));
                         ps.setTimestamp(5, new java.sql.Timestamp(java.sql.Date.valueOf(checkOut).getTime()));
-                        ps.setBigDecimal(6, total);
-                        ps.setBigDecimal(7, total);
+                        ps.setBigDecimal(6, totalAmount);
+                        ps.setBigDecimal(7, totalAmount);
                         ps.setString(8, bookingStatus);
                         if (customerId != null) {
                             ps.setLong(9, customerId);
                         } else {
                             ps.setNull(9, java.sql.Types.BIGINT);
                         }
+                        ps.setString(10, notes);
                         ps.executeUpdate();
                         try (java.sql.ResultSet rs = ps.getGeneratedKeys()) {
                             if (rs.next()) bookingId = rs.getLong(1);
@@ -177,24 +201,41 @@ public class WalkInReservationServlet extends HttpServlet {
                         ps.executeUpdate();
                     }
 
-                    // Insert booking_rooms
+                    // Insert booking_rooms & update physical status
                     String insertRoom = "INSERT INTO booking_rooms (booking_id, room_id, price_per_night, number_of_nights, subtotal) VALUES (?, ?, ?, ?, ?)";
-                    try (java.sql.PreparedStatement ps = conn.prepareStatement(insertRoom)) {
-                        ps.setLong(1, bookingId);
-                        ps.setLong(2, roomId);
-                        ps.setBigDecimal(3, rt.getBasePrice());
-                        ps.setLong(4, nights);
-                        ps.setBigDecimal(5, total);
-                        ps.executeUpdate();
+                    for (model.Room room : selectedRooms) {
+                        RoomType rt = roomTypeDao.findById(room.getRoomTypeId()).orElse(null);
+                        java.math.BigDecimal basePrice = rt != null ? rt.getBasePrice() : java.math.BigDecimal.ZERO;
+                        java.math.BigDecimal subtotal = basePrice.multiply(new java.math.BigDecimal(nights));
+
+                        try (java.sql.PreparedStatement ps = conn.prepareStatement(insertRoom)) {
+                            ps.setLong(1, bookingId);
+                            ps.setLong(2, room.getId());
+                            ps.setBigDecimal(3, basePrice);
+                            ps.setLong(4, nights);
+                            ps.setBigDecimal(5, subtotal);
+                            ps.executeUpdate();
+                        }
+
+                        if ("CHECKED_IN".equals(bookingStatus)) {
+                            roomDao.updateStatus(conn, room.getId(), "OCCUPIED");
+                        }
                     }
 
-                    // If checked in, update physical room status
-                    if ("CHECKED_IN".equals(bookingStatus)) {
-                        roomDao.updateStatus(conn, roomId, "OCCUPIED");
+                    // Insert payment record if paid
+                    if ("PAID".equals(paymentStatus)) {
+                        String insertPayment = "INSERT INTO payments (booking_id, payment_type, payment_method, amount, status, paid_at) VALUES (?, 'PAYMENT', ?, ?, 'COMPLETED', CURRENT_TIMESTAMP)";
+                        try (java.sql.PreparedStatement ps = conn.prepareStatement(insertPayment)) {
+                            ps.setLong(1, bookingId);
+                            ps.setString(2, paymentMethod != null ? paymentMethod : "CASH");
+                            ps.setBigDecimal(3, totalAmount);
+                            ps.executeUpdate();
+                        }
                     }
 
                     conn.commit();
-                    request.getSession().setAttribute("message", "Tạo booking thành công! Mã: " + bookingCode);
+                    request.getSession().setAttribute("toastMessage", "Tạo booking thành công! Mã: " + bookingCode);
+                    request.getSession().setAttribute("toastType", "toast-success");
                     response.sendRedirect(request.getContextPath() + "/reception/bookings");
                 } catch (Exception e) {
                     conn.rollback();
@@ -208,4 +249,3 @@ public class WalkInReservationServlet extends HttpServlet {
         }
     }
 }
-
