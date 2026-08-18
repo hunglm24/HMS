@@ -19,31 +19,54 @@ public class MyBookingsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String view = "/booking-detail".equals(request.getServletPath())
-                ? "/WEB-INF/views/public/booking-detail-guest.jsp"
-                : "/WEB-INF/views/public/my-bookings.jsp";
-        
-        if (!"/booking-detail".equals(request.getServletPath())) {
-            // Fetch bookings for the logged-in user
-            model.User user = (model.User) request.getSession().getAttribute("loggedInUser");
-            if (user != null) {
-                try {
-                    String bookingCode = request.getParameter("bookingCode");
-                    String status = request.getParameter("status");
-                    String fromDate = request.getParameter("fromDate");
-                    String toDate = request.getParameter("toDate");
+        model.User user = (model.User) request.getSession().getAttribute("currentUser");
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
-                    List<Booking> bookings = bookingDao.findBookingsByCustomerId(user.getId(), bookingCode, status, fromDate, toDate);
-                    request.setAttribute("bookings", bookings);
+        if ("/booking-detail".equals(request.getServletPath())) {
+            String bookingIdStr = request.getParameter("id");
+            if (bookingIdStr != null && !bookingIdStr.isBlank()) {
+                try {
+                    long bookingId = Long.parseLong(bookingIdStr);
+                    Booking booking = bookingDao.findById(bookingId).orElse(null);
+                    
+                    if (booking == null) {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy thông tin đặt phòng.");
+                        return;
+                    }
+                    
+                    if (booking.getCustomerId() == null || booking.getCustomerId() != user.getId()) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập thông tin đặt phòng này.");
+                        return;
+                    }
+                    
+                    request.setAttribute("booking", booking);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    return;
                 }
             } else {
-                response.sendRedirect(request.getContextPath() + "/login");
+                response.sendRedirect(request.getContextPath() + "/my-bookings");
                 return;
             }
+            request.getRequestDispatcher("/WEB-INF/views/public/booking-detail-guest.jsp").forward(request, response);
+        } else {
+            // Fetch list
+            try {
+                String bookingCode = request.getParameter("bookingCode");
+                String status = request.getParameter("status");
+                String fromDate = request.getParameter("fromDate");
+                String toDate = request.getParameter("toDate");
+
+                List<Booking> bookings = bookingDao.findBookingsByCustomerId(user.getId(), bookingCode, status, fromDate, toDate);
+                request.setAttribute("bookings", bookings);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            request.getRequestDispatcher("/WEB-INF/views/public/my-bookings.jsp").forward(request, response);
         }
-        
-        request.getRequestDispatcher(view).forward(request, response);
     }
 }

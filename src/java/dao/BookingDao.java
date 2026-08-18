@@ -53,6 +53,9 @@ public class BookingDao {
                     b.setCheckOutDate(rs.getDate("check_out_date"));
                     b.setTotalAmount(rs.getBigDecimal("total_amount"));
                     b.setStatus(rs.getString("status"));
+                    b.setCancellationReason(rs.getString("cancellation_reason"));
+                    b.setCancelledAt(rs.getTimestamp("cancelled_at"));
+                    b.setNote(rs.getString("note"));
                     bookings.add(b);
                 }
             }
@@ -60,11 +63,51 @@ public class BookingDao {
         return bookings;
     }
 
+    public Optional<model.Booking> findById(long id) throws SQLException {
+        String sql = "SELECT * FROM bookings WHERE id = ?";
+        try (java.sql.Connection conn = DBConnectionUtil.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    model.Booking b = new model.Booking();
+                    b.setId(rs.getLong("id"));
+                    b.setBookingCode(rs.getString("booking_code"));
+                    b.setBookingSource(rs.getString("booking_source"));
+                    b.setCustomerId(rs.getLong("customer_id"));
+                    b.setCheckInDate(rs.getDate("check_in_date"));
+                    b.setCheckOutDate(rs.getDate("check_out_date"));
+                    b.setCheckInDatetime(rs.getTimestamp("check_in_datetime"));
+                    b.setCheckOutDatetime(rs.getTimestamp("check_out_datetime"));
+                    b.setTotalAmount(rs.getBigDecimal("total_amount"));
+                    b.setStatus(rs.getString("status"));
+                    b.setCancellationReason(rs.getString("cancellation_reason"));
+                    b.setCancelledAt(rs.getTimestamp("cancelled_at"));
+                    b.setNote(rs.getString("note"));
+                    b.setCreatedAt(rs.getTimestamp("created_at"));
+                    b.setCreatedBy(rs.getLong("created_by"));
+                    return Optional.of(b);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     public boolean updateBookingStatus(long bookingId, String status) throws SQLException {
         String sql = "UPDATE bookings SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (java.sql.Connection conn = DBConnectionUtil.getConnection();
              java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
+            ps.setLong(2, bookingId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean cancelBooking(long bookingId, String reason) throws SQLException {
+        String sql = "UPDATE bookings SET status = 'CANCELLED', cancellation_reason = ?, cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (java.sql.Connection conn = DBConnectionUtil.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, reason);
             ps.setLong(2, bookingId);
             return ps.executeUpdate() > 0;
         }
@@ -81,6 +124,8 @@ public class BookingDao {
                    b.check_in_date,
                    b.check_out_date,
                    b.status,
+                   b.cancellation_reason,
+                   b.cancelled_at,
                    b.total_amount,
                    b.note,
                    COALESCE((
