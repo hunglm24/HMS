@@ -87,11 +87,12 @@ public class PaymentServlet extends HttpServlet {
                 }
 
                 // 2. Insert into booking_guests
-                String insertGuest = "INSERT INTO booking_guests (booking_id, full_name, phone, is_primary_guest) VALUES (?, ?, ?, 1)";
+                String insertGuest = "INSERT INTO booking_guests (booking_id, full_name, phone, email, is_primary_guest) VALUES (?, ?, ?, ?, 1)";
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(insertGuest)) {
                     ps.setLong(1, bookingId);
                     ps.setString(2, fullName);
                     ps.setString(3, phone);
+                    ps.setString(4, email);
                     ps.executeUpdate();
                 }
                 

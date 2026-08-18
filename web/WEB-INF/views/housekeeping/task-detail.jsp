@@ -76,8 +76,7 @@
                         <%= item.getInitialStatus() == null ? "Không có snapshot" : HousekeepingTask.esc(item.getInitialStatus()) + " / SL " + item.getInitialQuantity() %></small></legend>
                 <label><span class="hk-label-title">Tình trạng thực tế <span class="required">*</span></span>
                     <select class="condition-select" name="condition_<%= id %>" required>
-                        <option value="">-- Chọn tình trạng --</option>
-                        <option value="NORMAL">Bình thường</option>
+                        <option value="NORMAL" selected>Bình thường</option>
                         <option value="DAMAGED">Hư hỏng</option>
                         <option value="MISSING">Thất lạc</option>
                     </select><small class="field-error">Vui lòng chọn tình trạng.</small>
@@ -87,8 +86,8 @@
                     <small>Tối đa: 15 000 000 VND</small>
                 </label>
                 <label class="hk-wide">Ghi chú sự cố
-                    <input type="text" name="note_<%= id %>" maxlength="1000" placeholder="Mô tả vị trí, mức độ hư hỏng hoặc tình trạng thất lạc">
-                    <small>Tối đa 1.000 ký tự.</small>
+                    <input class="note-input" type="text" name="note_<%= id %>" maxlength="1000" placeholder="Mô tả vị trí, mức độ hư hỏng hoặc tình trạng thất lạc">
+                    <small class="note-error" style="display: none; color: #d32f2f;">Vui lòng nhập ghi chú khi có sự cố.</small>
                 </label>
             </fieldset>
         <% } %>
@@ -156,21 +155,40 @@
                 valid = false;
             } else input.setCustomValidity('');
         });
+        form.querySelectorAll('.note-input').forEach(input => {
+            if (input.required && !input.value.trim()) {
+                input.closest('label').classList.add('has-error');
+                input.nextElementSibling.style.display = 'block';
+                valid = false;
+            } else {
+                input.closest('label').classList.remove('has-error');
+                if (input.nextElementSibling) input.nextElementSibling.style.display = 'none';
+            }
+        });
         if (!valid) {
             event.preventDefault();
-            form.querySelector('.has-error select').focus();
+            const firstError = form.querySelector('.has-error select, .has-error input, input:invalid');
+            if (firstError) firstError.focus();
         }
     });
     form.querySelectorAll('.condition-select').forEach(select => {
-        const syncFee = () => {
-            select.closest('label').classList.toggle('has-error', !select.value);
-            const fee = select.closest('fieldset').querySelector('.fee-input');
+        const syncFields = () => {
+            const group = select.closest('fieldset');
+            const fee = group.querySelector('.fee-input');
+            const note = group.querySelector('.note-input');
             const chargeable = select.value === 'DAMAGED' || select.value === 'MISSING';
+            
             fee.disabled = !chargeable;
-            if (!chargeable) fee.value = '0';
+            if (!chargeable) {
+                fee.value = '0';
+                note.required = false;
+                group.querySelector('.note-error').style.display = 'none';
+            } else {
+                note.required = true;
+            }
         };
-        select.addEventListener('change', syncFee);
-        syncFee();
+        select.addEventListener('change', syncFields);
+        syncFields();
     });
 })();
 </script>

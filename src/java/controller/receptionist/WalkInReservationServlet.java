@@ -187,16 +187,17 @@ public class WalkInReservationServlet extends HttpServlet {
                     }
 
                     // Insert booking_guests
-                    String insertGuest = "INSERT INTO booking_guests (booking_id, full_name, phone, identity_number, date_of_birth, is_primary_guest) VALUES (?, ?, ?, ?, ?, 1)";
+                    String insertGuest = "INSERT INTO booking_guests (booking_id, full_name, phone, email, identity_number, date_of_birth, is_primary_guest) VALUES (?, ?, ?, ?, ?, ?, 1)";
                     try (java.sql.PreparedStatement ps = conn.prepareStatement(insertGuest)) {
                         ps.setLong(1, bookingId);
                         ps.setString(2, fullName);
                         ps.setString(3, phone);
-                        ps.setString(4, identityNumber);
+                        ps.setString(4, email);
+                        ps.setString(5, identityNumber);
                         if (dobStr != null && !dobStr.isBlank()) {
-                            ps.setDate(5, java.sql.Date.valueOf(dobStr));
+                            ps.setDate(6, java.sql.Date.valueOf(dobStr));
                         } else {
-                            ps.setNull(5, java.sql.Types.DATE);
+                            ps.setNull(6, java.sql.Types.DATE);
                         }
                         ps.executeUpdate();
                     }
@@ -234,6 +235,16 @@ public class WalkInReservationServlet extends HttpServlet {
                     }
 
                     conn.commit();
+                    
+                    // Gửi email xác nhận nếu có email
+                    if (email != null && !email.isBlank()) {
+                        dao.BookingDao bookingDao = new dao.BookingDao();
+                        bookingDao.findById(bookingId).ifPresent(booking -> {
+                            service.EmailService emailService = new service.EmailService();
+                            emailService.sendBookingConfirmationAsync(booking, email, fullName);
+                        });
+                    }
+                    
                     request.getSession().setAttribute("toastMessage", "Tạo booking thành công! Mã: " + bookingCode);
                     request.getSession().setAttribute("toastType", "toast-success");
                     response.sendRedirect(request.getContextPath() + "/reception/bookings");

@@ -46,10 +46,12 @@
         <% } %>
 
         <% if (isManager) { %>
+            <a class="<%= activePath(uri, "/manager/invoices") ? "active" : "" %>" href="<%= cp %>/manager/invoices"><span>IV</span>Hóa đơn</a>
             <a class="<%= activePath(uri, "/manager/reports") ? "active" : "" %>" href="<%= cp %>/manager/reports"><span>RP</span>Báo cáo</a>
             <a class="<%= activePath(uri, "/manager/rooms") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng</a>
             <a class="<%= activePath(uri, "/manager/room-types") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
             <a class="<%= activePath(uri, "/manager/equipment") ? "active" : "" %>" href="<%= cp %>/manager/equipment"><span>EQ</span>Thiết bị</a>
+            <a class="<%= activePath(uri, "/manager/amenity") ? "active" : "" %>" href="<%= cp %>/manager/amenity"><span>AM</span>Tiện ích</a>
             <a class="<%= activePath(uri, "/housekeeping/tasks") ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=history"><span>HK</span>Nhiệm vụ dọn phòng</a>
             <a class="<%= activePath(uri, "/manager/pricing") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá và dịch vụ</a>
             <a class="<%= activePath(uri, "/manager/policies") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>
@@ -57,6 +59,7 @@
         <% } %>
 
         <% if (isAdmin) { %>
+            <a class="<%= activePath(uri, "/admin/invoices") ? "active" : "" %>" href="<%= cp %>/admin/invoices"><span>IV</span>Hóa đơn</a>
             <a class="<%= activePath(uri, "/admin/users") ? "active" : "" %>" href="<%= cp %>/admin/users"><span>US</span>Người dùng</a>
             <a class="<%= activePath(uri, "/admin/roles") ? "active" : "" %>" href="<%= cp %>/admin/roles"><span>RL</span>Vai trò và quyền</a>
             <a class="<%= activePath(uri, "/admin/system-config") ? "active" : "" %>" href="<%= cp %>/admin/system-config"><span>CF</span>Cấu hình</a>

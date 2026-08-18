@@ -27,4 +27,21 @@ public class PaymentDao {
         }
         return false;
     }
+
+    public java.math.BigDecimal getTotalPaidAmount(long bookingId) {
+        String sql = "SELECT SUM(amount) FROM payments WHERE booking_id = ? AND status IN ('SUCCESS', 'COMPLETED')";
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, bookingId);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    java.math.BigDecimal total = rs.getBigDecimal(1);
+                    return total != null ? total : java.math.BigDecimal.ZERO;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return java.math.BigDecimal.ZERO;
+    }
 }
