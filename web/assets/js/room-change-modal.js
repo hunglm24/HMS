@@ -1,4 +1,5 @@
 (function () {
+    // Wire the room change modal and keep its form state in sync.
     const modal = document.getElementById('roomChangeModal');
     const backdrop = document.getElementById('roomChangeBackdrop');
     if (!modal || !backdrop) return;
@@ -23,6 +24,7 @@
 
     let activeCard = null;
 
+    // Map a backend status into a matching UI tone class.
     function statusTone(status) {
         // Map backend room status to the matching UI tone.
         switch ((status || '').toUpperCase()) {
@@ -39,12 +41,14 @@
         }
     }
 
+    // Enable or disable the confirmation button.
     function setConfirmEnabled(enabled) {
         if (elements.confirmBtn) {
             elements.confirmBtn.disabled = !enabled;
         }
     }
 
+    // Keep the submit button disabled until the form is ready.
     function syncConfirmState() {
         // The confirm button stays disabled until the modal is fully valid.
         const hasBooking = !!(elements.bookingId && elements.bookingId.value);
@@ -54,6 +58,7 @@
         setConfirmEnabled(hasBooking && hasCurrentRoom && hasNewRoom && hasReason);
     }
 
+    // Update the hint that explains the expected price delta.
     function updatePriceDiff() {
         // The final price difference is only hinted here; backend decides the real value.
         if (!elements.newRoomSelect || !elements.priceDiff) {
@@ -76,6 +81,7 @@
         elements.priceDiff.textContent = 'Không phát sinh chênh lệch';
     }
 
+    // Show the modal and its backdrop together.
     function openModal() {
         // Open both overlay and dialog together so the modal behaves like one unit.
         modal.classList.add('is-open');
@@ -84,6 +90,7 @@
         backdrop.setAttribute('aria-hidden', 'false');
     }
 
+    // Hide the modal and reset its accessibility state.
     function closeModal() {
         // Close and reset aria state for accessibility.
         modal.classList.remove('is-open');
@@ -92,6 +99,7 @@
         backdrop.setAttribute('aria-hidden', 'true');
     }
 
+    // Populate the modal from the selected room card.
     window.openRoomChangeModal = function (card) {
         // Pull the current room context from the clicked room card.
         activeCard = card || null;
@@ -122,6 +130,7 @@
             elements.reason.value = '';
         }
         if (elements.newRoomSelect) {
+            // Reset the destination room selection before opening the modal.
             elements.newRoomSelect.value = '';
         }
         if (elements.newRoomNumber) {
@@ -131,6 +140,7 @@
 
         const occupied = (card && (card.dataset.roomStatus || '').toUpperCase() === 'OCCUPIED');
         if (elements.hint) {
+            // Adjust the helper text based on whether the room is occupied.
             elements.hint.textContent = occupied
                 ? 'Chọn một phòng trống phù hợp. Giá chênh lệch sẽ được xử lý theo quy trình receptionist.'
                 : 'Chức năng đổi phòng chỉ khả dụng khi phòng đang có khách.';
@@ -139,17 +149,19 @@
         openModal();
     };
 
+    // Expose a close helper for other scripts.
     window.closeRoomChangeModal = closeModal;
 
     const closeBtn = document.getElementById('roomChangeCloseBtn');
     const cancelBtn = document.getElementById('roomChangeCancelBtn');
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    // Clicking the backdrop should close the modal.
     backdrop.addEventListener('click', closeModal);
 
     if (elements.newRoomSelect) {
         elements.newRoomSelect.addEventListener('change', function () {
-            // Recompute hint text whenever the user picks a new room.
+            // Recompute the hint text whenever the user picks a new room.
             const option = elements.newRoomSelect.selectedOptions[0];
             if (elements.newRoomNumber) {
                 elements.newRoomNumber.value = option && option.dataset.roomNumber ? option.dataset.roomNumber : '';
@@ -174,6 +186,7 @@
         });
     }
 
+    // Escape should close the modal when it is open.
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && modal.classList.contains('is-open')) {
             closeModal();

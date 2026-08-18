@@ -34,6 +34,7 @@ public class RoomService {
 
     // Filter rooms in memory for the current UI state.
     public List<Room> findRooms(String keyword, Long roomTypeId, Integer floor, String status) {
+        // Normalize the incoming filters before applying them.
         String normalizedKeyword = ValidationUtil.normalizeLower(keyword);
         final String filterKeyword = normalizedKeyword.length() > 100
                 ? normalizedKeyword.substring(0, 100) : normalizedKeyword;
@@ -41,6 +42,7 @@ public class RoomService {
         Integer normalizedFloor = floor != null && floor > 0 ? floor : null;
         String normalizedStatus = ValidationUtil.optionalStatus(status, STATUSES);
 
+        // Filter the room list in memory for the current page state.
         return roomDao.findAllWithRoomTypeName().stream()
                 .filter(room -> matchesKeyword(room, filterKeyword))
                 .filter(room -> normalizedRoomTypeId == null || normalizedRoomTypeId.equals(room.getRoomTypeId()))
@@ -60,6 +62,7 @@ public class RoomService {
 
     // Validate and persist a room.
     public boolean saveRoom(Room room) throws SQLException {
+        // Validate and resolve dependencies before touching the database.
         validateRoom(room);
         ensureRoomTypeExists(room.getRoomTypeId());
         Long roomId = room.getId();
@@ -72,6 +75,7 @@ public class RoomService {
 
     // Soft-disable a room by switching its status.
     public boolean deactivateRoom(long id) throws SQLException {
+        // Soft-delete by changing the room status rather than removing it.
         if (id <= 0) {
             return false;
         }
@@ -105,6 +109,7 @@ public class RoomService {
 
     // Validate fields shared by create and update flows.
     public void validateRoom(Room room) {
+        // Enforce the shared rules for both create and update flows.
         ValidationUtil.requireTrue(room != null, "Thong tin phong khong hop le.");
 
         String roomNumber = ValidationUtil.requireText(room.getRoomNumber(), "So phong", 1, 20);
@@ -123,16 +128,20 @@ public class RoomService {
 
     // Make sure the selected room type really exists before saving.
     public void ensureRoomTypeExists(long roomTypeId) {
+        // Make sure the selected room type is still present in the catalog.
         ValidationUtil.requireTrue(roomTypeId > 0 && roomTypeDao.findById(roomTypeId).isPresent(),
                 "Loai phong khong ton tai.");
     }
 
     // Prevent duplicate room numbers within the current dataset.
     public void ensureRoomNumberUnique(String roomNumber, Long excludeId) {
+        // Compare room numbers case-insensitively and skip the current row on edit.
         String normalizedRoomNumber = ValidationUtil.requireText(roomNumber, "So phong", 1, 20);
 
+        // Stop as soon as another room already uses the same number.
         boolean duplicated = roomDao.findAll().stream()
                 .anyMatch(room -> {
+                    // Ignore rows without a number or the row currently being edited.
                     if (room.getRoomNumber() == null) return false;
                     boolean sameNumber = room.getRoomNumber().equalsIgnoreCase(normalizedRoomNumber);
                     boolean sameId = excludeId != null && excludeId > 0 && room.getId() == excludeId;

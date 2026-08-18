@@ -64,7 +64,8 @@
 
             <% if (manager) { %>
                 <a href="<%= contextPath %>/manager/reports">Báo cáo</a>
-                <a href="<%= contextPath %>/manager/rooms">Phòng &amp; Loại phòng</a>
+                <a href="<%= contextPath %>/manager/rooms">Phòng</a>
+                <a href="<%= contextPath %>/manager/room-types">Loại phòng</a>
                 <a href="<%= contextPath %>/housekeeping/tasks?view=history">Nhiệm vụ dọn phòng</a>
             <% } %>
 

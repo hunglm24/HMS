@@ -11,7 +11,7 @@
             <button class="icon-button" type="button" data-room-mgmt-close="true" aria-label="Đóng hộp thoại">×</button>
         </header>
 
-        <form class="room-management-form" method="post" action="${pageContext.request.contextPath}/manager/rooms/save-room-type">
+        <form class="room-management-form" method="post" action="${pageContext.request.contextPath}/manager/room-types/save-room-type">
             <input type="hidden" name="id" id="roomTypeIdField">
 
             <label for="roomTypeName">Tên loại phòng *</label>
