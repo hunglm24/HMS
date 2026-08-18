@@ -1,181 +1,299 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<c:set var="cp" value="${pageContext.request.contextPath}" />
+<fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý loại phòng | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/rooms.css">
+    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260816-4" />
+    <link rel="stylesheet" href="${cp}/assets/css/room-types.css" />
   </head>
-  <body class="room-management-body">
+  <body class="room-management-body room-types-preview-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
-    <main class="page-container room-management-page">
-      <section class="room-management-hero panel">
-        <div class="room-management-hero__copy">
-          <p class="room-management-kicker">Quản lý khách sạn</p>
-          <h1>Quản lý loại phòng</h1>
-          <p>Quản lý hạng phòng, giá cơ bản, sức chứa và trạng thái hoạt động của từng loại phòng.</p>
-        </div>
-
-        <div class="room-management-hero__actions">
-          <a class="btn btn-secondary" href="${pageContext.request.contextPath}/manager/rooms">
-            Quản lý phòng
-          </a>
-          <button class="btn" type="button" data-room-mgmt-open="room-type" onclick="window.RoomManagement && window.RoomManagement.openRoomTypeModal()">
-            + Thêm loại phòng
-          </button>
-        </div>
-      </section>
-
-      <c:if test="${not empty sessionScope.toastMessage}">
-        <div class="toast ${sessionScope.toastType}">
-          <c:out value="${sessionScope.toastMessage}" />
-        </div>
-        <c:remove var="toastMessage" scope="session" />
-        <c:remove var="toastType" scope="session" />
-      </c:if>
-
-      <section class="room-management-content">
-        <section class="room-management-panel panel">
-            <div class="room-management-toolbar">
-                <form class="room-management-filters" method="get" action="${pageContext.request.contextPath}/manager/room-types">
-                    <div class="room-management-filters__search">
-                        <input type="search" name="keyword" value="${pageData.keyword}" placeholder="Tìm loại phòng...">
-                    </div>
-                    <div class="room-management-filters__select">
-                        <select name="roomTypeStatus">
-                            <option value="" ${empty pageData.roomTypeStatus ? 'selected' : ''}>Trạng thái: Tất cả</option>
-                            <option value="ACTIVE" ${pageData.roomTypeStatus eq 'ACTIVE' ? 'selected' : ''}>Hoạt động</option>
-                            <option value="INACTIVE" ${pageData.roomTypeStatus eq 'INACTIVE' ? 'selected' : ''}>Ngừng hoạt động</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-secondary" type="submit">Lọc</button>
-                </form>
-                <button class="btn" type="button" data-room-mgmt-open="room-type">+ Thêm loại phòng</button>
+    <main class="page-container room-types-preview-page">
+      <section class="room-types-shell">
+        <section class="room-types-list panel">
+          <div class="room-types-topbar">
+            <div class="room-types-topbar__title">
+              <h1>Room Category</h1>
             </div>
 
-            <div class="room-management-table-wrap" data-pagination-root data-pagination-key="room-types-table" data-pagination-size="5">
-                <table class="room-management-table">
-                    <thead>
-                    <tr>
-                        <th>Tên</th>
-                        <th>Giá cơ bản</th>
-                        <th>Sức chứa</th>
-                        <th>Tổng số phòng</th>
-                        <th>Thao tác</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <c:choose>
-                        <c:when test="${empty roomTypes}">
-                            <tr>
-                                <td colspan="5">
-                                    <div class="room-management-empty">
-                                        <strong>Chưa có loại phòng nào</strong>
-                                        <span>Hãy tạo loại phòng đầu tiên để bắt đầu quản lý.</span>
-                                    </div>
-                                </td>
-                            </tr>
+            <div class="room-types-topbar__actions">
+              <span class="room-types-sort-label">Sort by:</span>
+              <div class="room-types-toolbar">
+                <button class="room-types-pill room-types-pill--dropdown" type="button">
+                  <span>Popular</span>
+                </button>
+                <form class="room-types-status-form" action="${cp}/manager/room-types" method="get">
+                  <c:if test="${not empty pageData.keyword}">
+                    <input type="hidden" name="keyword" value="${pageData.keyword}" />
+                  </c:if>
+                  <div class="room-types-select-pill">
+                    <select name="roomTypeStatus" onchange="this.form.submit()">
+                      <option value="ACTIVE" ${pageData.roomTypeStatus eq 'ACTIVE' ? 'selected' : ''}>Active</option>
+                      <option value="INACTIVE" ${pageData.roomTypeStatus eq 'INACTIVE' ? 'selected' : ''}>Inactive</option>
+                      <option value="ALL" ${pageData.roomTypeStatus eq 'ALL' ? 'selected' : ''}>All Status</option>
+                    </select>
+                    <span class="room-types-select-pill__icon" aria-hidden="true">⌄</span>
+                  </div>
+                </form>
+              </div>
+              <a class="btn btn-warning room-types-add-btn" href="${cp}/manager/room-types/new">Add Room</a>
+              <button class="room-types-icon-btn" type="button" aria-label="Filter room types">⟲</button>
+            </div>
+          </div>
+
+          <c:choose>
+            <c:when test="${not empty roomTypes}">
+              <div class="room-types-cards">
+                <c:forEach items="${roomTypes}" var="roomType" varStatus="loop">
+                  <c:url var="roomTypeDetailUrl" value="/manager/room-types">
+                    <c:if test="${not empty pageData.keyword}">
+                      <c:param name="keyword" value="${pageData.keyword}" />
+                    </c:if>
+                    <c:if test="${not empty pageData.roomTypeStatus}">
+                      <c:param name="roomTypeStatus" value="${pageData.roomTypeStatus}" />
+                    </c:if>
+                    <c:param name="selectedRoomTypeId" value="${roomType.id}" />
+                  </c:url>
+
+                  <a
+                    class="room-types-card room-types-card--link${roomType.id == selectedRoomTypeId ? ' is-selected' : ''}${loop.first && empty selectedRoomTypeId ? ' room-types-card--featured' : ''}"
+                    href="${roomTypeDetailUrl}"
+                  >
+                    <div class="room-types-card__media">
+                      <c:choose>
+                        <c:when test="${not empty roomType.imageUrl}">
+                          <div class="room-types-card__image-frame">
+                            <img src="${cp}${roomType.imageUrl}" alt="${roomType.name}" />
+                          </div>
                         </c:when>
                         <c:otherwise>
-                            <%-- Render the room type table rows. --%>
-                            <c:forEach var="roomType" items="${roomTypes}">
-                                <tr data-pagination-item>
-                                    <td>
-                                        <div class="room-management-primary">
-                                            <strong><c:out value="${roomType.name}" /></strong>
-                                            <span><c:out value="${roomType.description}" /></span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <fmt:formatNumber value="${roomType.basePrice}" type="number" groupingUsed="true" maxFractionDigits="0" />
-                                    </td>
-                                    <td><c:out value="${roomType.capacity}" /></td>
-                                    <td><c:out value="${roomType.totalQuantity}" /></td>
-                                    <td>
-                                        <div class="room-management-actions">
-                                            <button
-                                                type="button"
-                                                class="btn btn-secondary btn-sm"
-                                                data-room-mgmt-edit-room-type="true"
-                                                data-room-type-id="${roomType.id}"
-                                                data-room-type-name="${roomType.name}"
-                                                data-room-type-description="${roomType.description}"
-                                                data-room-type-capacity="${roomType.capacity}"
-                                                data-room-type-base-price="${roomType.basePrice}"
-                                                data-room-type-status="${roomType.status}">
-                                                Sửa
-                                            </button>
-                                            <a class="btn btn-danger btn-sm"
-                                               href="${pageContext.request.contextPath}/manager/room-types/deactivate-room-type?id=${roomType.id}"
-                                               data-room-mgmt-confirm="true"
-                                               data-room-mgmt-confirm-message="Bạn có muốn ngừng hoạt động loại phòng này không?">
-                                                Ngừng hoạt động
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </c:forEach>
+                          <div class="image-holder image-holder--large">
+                            <span>Image Holder</span>
+                          </div>
                         </c:otherwise>
-                    </c:choose>
-                    </tbody>
-                </table>
-                <div class="room-management-pagination" data-pagination-controls></div>
-            </div>
+                      </c:choose>
+                    </div>
 
-            <div class="room-management-mobile-list" data-pagination-root data-pagination-key="room-types-mobile" data-pagination-size="5">
-                <%-- Render the room type mobile cards. --%>
-                <c:forEach var="roomType" items="${roomTypes}">
-                    <article class="room-management-card" data-pagination-item>
-                        <div class="room-management-card__head">
-                            <div>
-                                <h3><c:out value="${roomType.name}" /></h3>
-                                <p><c:out value="${roomType.description}" /></p>
-                            </div>
-                            <span class="status-chip ${roomType.status eq 'ACTIVE' ? 'status-working' : 'status-cancelled'}">
-                                <c:out value="${roomType.status eq 'ACTIVE' ? 'Hoạt động' : 'Ngừng hoạt động'}" />
-                            </span>
+                    <div class="room-types-card__body">
+                      <div class="room-types-card__head">
+                        <div>
+                          <h3><c:out value="${roomType.name}" /></h3>
+                          <p><c:out value="${roomType.description}" /></p>
                         </div>
-                        <dl class="room-management-meta">
-                            <div><dt>Giá cơ bản</dt><dd><fmt:formatNumber value="${roomType.basePrice}" type="number" groupingUsed="true" maxFractionDigits="0" /></dd></div>
-                            <div><dt>Sức chứa</dt><dd><c:out value="${roomType.capacity}" /></dd></div>
-                            <div><dt>Tổng số phòng</dt><dd><c:out value="${roomType.totalQuantity}" /></dd></div>
-                        </dl>
-                        <div class="room-management-actions">
-                            <button
-                                type="button"
-                                class="btn btn-secondary btn-sm"
-                                data-room-mgmt-edit-room-type="true"
-                                data-room-type-id="${roomType.id}"
-                                data-room-type-name="${roomType.name}"
-                                data-room-type-description="${roomType.description}"
-                                data-room-type-capacity="${roomType.capacity}"
-                                data-room-type-base-price="${roomType.basePrice}"
-                                data-room-type-status="${roomType.status}">
-                                Sửa
-                            </button>
-                            <a class="btn btn-danger btn-sm"
-                               href="${pageContext.request.contextPath}/manager/room-types/deactivate-room-type?id=${roomType.id}"
-                               data-room-mgmt-confirm="true"
-                               data-room-mgmt-confirm-message="Bạn có muốn ngừng hoạt động loại phòng này không?">
-                                Ngừng hoạt động
-                            </a>
+
+                        <div class="room-types-status">
+                          <c:choose>
+                            <c:when test="${roomType.status eq 'ACTIVE'}">
+                              <span class="status-chip status-available"><c:out value="${roomType.status}" /></span>
+                            </c:when>
+                            <c:when test="${roomType.status eq 'INACTIVE'}">
+                              <span class="status-chip status-cancelled"><c:out value="${roomType.status}" /></span>
+                            </c:when>
+                            <c:otherwise>
+                              <span class="status-chip"><c:out value="${roomType.status}" /></span>
+                            </c:otherwise>
+                          </c:choose>
                         </div>
-                    </article>
+                      </div>
+
+                      <div class="room-types-card__price">
+                        <c:choose>
+                          <c:when test="${not empty roomType.basePrice}">
+                            <fmt:formatNumber value="${roomType.basePrice}" type="number" groupingUsed="true" maxFractionDigits="0" />
+                            <small>VND / night</small>
+                          </c:when>
+                          <c:otherwise>
+                            <small>Price not set</small>
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
+
+                      <div class="room-types-card__meta room-meta">
+                        <span class="room-meta__item">
+                          <svg class="room-meta__icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                            <path d="M8 8h8M8 12h8M8 16h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                          </svg>
+                          <span>
+                            <c:choose>
+                              <c:when test="${not empty roomType.sizeM2}">
+                                <c:out value="${roomType.sizeM2}" /> m&sup2;
+                              </c:when>
+                              <c:otherwise>-</c:otherwise>
+                            </c:choose>
+                          </span>
+                        </span>
+                        <span class="room-meta__item">
+                          <svg class="room-meta__icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 10h16v6H4z" fill="none" stroke="currentColor" stroke-width="1.6" />
+                            <path d="M6 10V7h5v3M13 10V7h5v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                          </svg>
+                          <span>
+                            <c:choose>
+                              <c:when test="${not empty roomType.bedType}">
+                                <c:out value="${roomType.bedType}" />
+                              </c:when>
+                              <c:otherwise>-</c:otherwise>
+                            </c:choose>
+                          </span>
+                        </span>
+                        <span class="room-meta__item">
+                          <svg class="room-meta__icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6" />
+                            <circle cx="16" cy="8.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                            <path d="M4 18c0-2.8 2.5-5 5.5-5s5.5 2.2 5.5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                            <path d="M13 18c.2-1.8 1.5-3.2 3.5-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                          </svg>
+                          <span>
+                            <c:choose>
+                              <c:when test="${not empty roomType.capacity}">
+                                <c:out value="${roomType.capacity}" /> guests
+                              </c:when>
+                              <c:otherwise>-</c:otherwise>
+                            </c:choose>
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </a>
                 </c:forEach>
-                <div class="room-management-pagination" data-pagination-controls></div>
-            </div>
+              </div>
+            </c:when>
+            <c:otherwise>
+              <div class="panel room-types-empty-state">
+                <h3>No room types found</h3>
+                <p>Create the first room type to start managing your catalog.</p>
+              </div>
+            </c:otherwise>
+          </c:choose>
         </section>
+
+        <aside class="room-types-detail panel">
+          <c:choose>
+            <c:when test="${not empty selectedRoomType}">
+              <div class="room-types-detail__head">
+                <div>
+                  <h2><c:out value="${selectedRoomType.name}" /></h2>
+                  <p><c:out value="${selectedRoomType.status}" /></p>
+                </div>
+                <div class="room-types-detail__actions">
+                  <a class="btn btn-secondary room-types-action-btn" href="${cp}/manager/room-types/edit?id=${selectedRoomType.id}">Edit</a>
+                  <form class="room-types-status-form room-types-status-form--toggle" action="${cp}/manager/room-types/toggle-status" method="post">
+                    <input type="hidden" name="id" value="${selectedRoomType.id}" />
+                    <c:choose>
+                      <c:when test="${selectedRoomType.status eq 'ACTIVE'}">
+                        <button class="room-status-switch room-status-switch--active" type="submit" aria-label="Deactivate room type" title="Deactivate room type">
+                          <span class="room-status-switch__knob" aria-hidden="true"></span>
+                        </button>
+                      </c:when>
+                      <c:otherwise>
+                        <button class="room-status-switch room-status-switch--inactive" type="submit" aria-label="Activate room type" title="Activate room type">
+                          <span class="room-status-switch__knob" aria-hidden="true"></span>
+                        </button>
+                      </c:otherwise>
+                    </c:choose>
+                  </form>
+                </div>
+              </div>
+
+              <div class="room-types-detail__hero">
+                <c:choose>
+                  <c:when test="${not empty selectedRoomType.imageUrl}">
+                    <div class="room-types-detail__image-frame">
+                      <img src="${cp}${selectedRoomType.imageUrl}" alt="${selectedRoomType.name}" />
+                    </div>
+                  </c:when>
+                  <c:otherwise>
+                    <div class="image-holder image-holder--hero">
+                      <span>Large Image Holder</span>
+                    </div>
+                  </c:otherwise>
+                </c:choose>
+              </div>
+
+              <div class="room-types-facts room-meta">
+                <span class="room-meta__item">
+                  <svg class="room-meta__icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                    <path d="M8 8h8M8 12h8M8 16h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                  </svg>
+                  <span>
+                    <c:choose>
+                      <c:when test="${not empty selectedRoomType.sizeM2}">
+                        <c:out value="${selectedRoomType.sizeM2}" /> m&sup2;
+                      </c:when>
+                      <c:otherwise>-</c:otherwise>
+                    </c:choose>
+                  </span>
+                </span>
+                <span class="room-meta__item">
+                  <svg class="room-meta__icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 10h16v6H4z" fill="none" stroke="currentColor" stroke-width="1.6" />
+                    <path d="M6 10V7h5v3M13 10V7h5v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                  </svg>
+                  <span>
+                    <c:choose>
+                      <c:when test="${not empty selectedRoomType.bedType}">
+                        <c:out value="${selectedRoomType.bedType}" />
+                      </c:when>
+                      <c:otherwise>-</c:otherwise>
+                    </c:choose>
+                  </span>
+                </span>
+                <span class="room-meta__item">
+                  <svg class="room-meta__icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6" />
+                    <circle cx="16" cy="8.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                    <path d="M4 18c0-2.8 2.5-5 5.5-5s5.5 2.2 5.5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                    <path d="M13 18c.2-1.8 1.5-3.2 3.5-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                  </svg>
+                  <span>
+                    <c:choose>
+                      <c:when test="${not empty selectedRoomType.capacity}">
+                        <c:out value="${selectedRoomType.capacity}" /> guests
+                      </c:when>
+                      <c:otherwise>-</c:otherwise>
+                    </c:choose>
+                  </span>
+                </span>
+              </div>
+
+              <p class="room-types-description">
+                <c:out value="${selectedRoomType.description}" />
+              </p>
+
+              <section class="room-types-section">
+                <h3>Amenities</h3>
+                <c:choose>
+                  <c:when test="${not empty selectedRoomTypeAmenities}">
+                    <div class="room-types-bullets room-types-bullets--two-col">
+                      <c:forEach items="${selectedRoomTypeAmenities}" var="amenity">
+                        <span><c:out value="${amenity.name}" /></span>
+                      </c:forEach>
+                    </div>
+                  </c:when>
+                  <c:otherwise>
+                    <p class="room-types-empty-inline">No amenities configured for this room type.</p>
+                  </c:otherwise>
+                </c:choose>
+              </section>
+            </c:when>
+            <c:otherwise>
+              <div class="room-types-empty-detail">
+                <h2>No room type selected</h2>
+                <p>Pick a room type from the list to see its detail information.</p>
+              </div>
+            </c:otherwise>
+          </c:choose>
+        </aside>
       </section>
     </main>
-
-    <jsp:include page="/WEB-INF/views/manager/modals/room-type-modal.jsp" />
-
-    <script src="${pageContext.request.contextPath}/assets/js/rooms.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/pagination.js"></script>
   </body>
 </html>

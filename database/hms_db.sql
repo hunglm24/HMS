@@ -485,6 +485,8 @@ CREATE TABLE `room_types` (
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `image_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `size_m2` decimal(6,2) DEFAULT NULL,
+  `bed_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `capacity` int unsigned NOT NULL,
   `base_price` decimal(15,2) NOT NULL,
   `status` enum('ACTIVE','INACTIVE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
@@ -495,12 +497,12 @@ CREATE TABLE `room_types` (
   CONSTRAINT `chk_room_type_capacity` CHECK ((`capacity` > 0)),
   CONSTRAINT `chk_room_type_price` CHECK ((`base_price` >= 0))
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-INSERT INTO `room_types` (`id`,`name`,`description`,`image_url`,`capacity`,`base_price`,`status`,`created_at`,`updated_at`) VALUES
-(1,'Standard','Standard room with one queen bed, suitable for 2 guests.',NULL,2,800000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23'),
-(2,'Deluxe','Deluxe room with larger space and premium amenities.',NULL,2,1200000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23'),
-(3,'Twin','Room with two single beds, suitable for 2 guests.',NULL,2,1000000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23'),
-(4,'Suite','Luxury suite with living area and premium amenities.',NULL,4,2500000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23'),
-(5,'Family','Family room suitable for groups or families.',NULL,4,1800000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23');
+INSERT INTO `room_types` (`id`,`name`,`description`,`image_url`,`size_m2`,`bed_type`,`capacity`,`base_price`,`status`,`created_at`,`updated_at`) VALUES
+(1,'Standard','Standard room with one queen bed, suitable for 2 guests.',NULL,28.00,'Queen bed',2,800000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23'),
+(2,'Deluxe','Deluxe room with larger space and premium amenities.',NULL,32.00,'King bed',2,1200000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23'),
+(3,'Twin','Room with two single beds, suitable for 2 guests.',NULL,30.00,'Two single beds',2,1000000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23'),
+(4,'Suite','Luxury suite with living area and premium amenities.',NULL,48.00,'King bed',4,2500000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23'),
+(5,'Family','Family room suitable for groups or families.',NULL,40.00,'Two queen beds',4,1800000.00,'ACTIVE','2026-08-14 08:59:23','2026-08-14 08:59:23');
 CREATE TABLE `amenity` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,

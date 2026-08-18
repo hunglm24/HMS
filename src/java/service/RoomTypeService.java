@@ -1,45 +1,48 @@
 package service;
 
+import dao.AmenityDao;
 import dao.RoomTypeDao;
+import dao.RoomTypeAmenityDao;
+import model.Amenity;
 import model.RoomType;
+import util.DBConnectionUtil;
 import util.ValidationUtil;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RoomTypeService {
     private static final Set<String> STATUSES = Set.of("ACTIVE", "INACTIVE");
     private final RoomTypeDao roomTypeDao;
+    private final AmenityDao amenityDao;
+    private final RoomTypeAmenityDao roomTypeAmenityDao;
 
     public RoomTypeService() {
-        this(new RoomTypeDao());
+        this(new RoomTypeDao(), new AmenityDao(), new RoomTypeAmenityDao());
     }
 
-    public RoomTypeService(RoomTypeDao roomTypeDao) {
+    public RoomTypeService(RoomTypeDao roomTypeDao, AmenityDao amenityDao, RoomTypeAmenityDao roomTypeAmenityDao) {
         this.roomTypeDao = roomTypeDao;
+        this.amenityDao = amenityDao;
+        this.roomTypeAmenityDao = roomTypeAmenityDao;
     }
 
-    // Return every room type for the management screen.
-    public List<RoomType> getAllRoomTypes() {
-        List<RoomType> roomTypes = roomTypeDao.findAll();
-        return roomTypes == null ? Collections.emptyList() : roomTypes;
-    }
-
-    // Filter room types in memory for the current UI state.
+    // Return room types for the management list.
     public List<RoomType> findRoomTypes(String keyword, String status) {
-        // Normalize filter input before applying it to the in-memory list.
         String normalizedKeyword = ValidationUtil.normalizeLower(keyword);
         final String filterKeyword = normalizedKeyword.length() > 100
                 ? normalizedKeyword.substring(0, 100) : normalizedKeyword;
         String normalizedStatus = ValidationUtil.optionalStatus(status, STATUSES);
+
         List<RoomType> roomTypes = roomTypeDao.findAll();
         if (roomTypes == null) {
             return Collections.emptyList();
         }
-        // Keep only room types that match the keyword and status filters.
+
         return roomTypes.stream()
                 .filter(roomType -> matchesKeyword(roomType, filterKeyword))
                 .filter(roomType -> normalizedStatus == null
@@ -47,105 +50,164 @@ public class RoomTypeService {
                 .toList();
     }
 
-    // Load one room type by its identifier.
-    public Optional<RoomType> getRoomTypeById(long id) {
-        if (id <= 0) {
-            return Optional.empty();
-        }
-        return roomTypeDao.findById(id);
+    // Validate and create a new room type.
+    public boolean createRoomType(RoomType roomType) throws SQLException {
+        return createRoomType(roomType, Collections.emptyList());
     }
 
-    // Validate and persist a room type.
-    public boolean saveRoomType(RoomType roomType) throws SQLException {
-        // Validate first so the DAO only receives clean data.
-        validateRoomType(roomType);
-        Long roomTypeId = roomType.getId();
-        ensureRoomTypeNameUnique(roomType.getName(), roomTypeId == null || roomTypeId <= 0 ? null : roomTypeId);
-        if (roomTypeId != null && roomTypeId > 0) {
-            return roomTypeDao.update(roomType);
-        }
-        return roomTypeDao.insert(roomType);
+    // Find a room type by id.
+    public RoomType findRoomTypeById(long roomTypeId) {
+        return roomTypeDao.findById(roomTypeId).orElse(null);
     }
 
-    // Soft-disable a room type by switching its status.
-    public boolean deactivateRoomType(long id) throws SQLException {
-        // Soft-delete by setting the status instead of removing the row.
-        if (id <= 0) {
-            return false;
-        }
-        Optional<RoomType> roomType = roomTypeDao.findById(id);
-        if (roomType.isEmpty()) {
-            return false;
-        }
-        RoomType value = roomType.get();
-        value.setStatus("INACTIVE");
-        return roomTypeDao.update(value);
+    // Validate and create a new room type with optional amenity relations.
+    public boolean createRoomType(RoomType roomType, List<Long> amenityIds) throws SQLException {
+        return persistRoomType(roomType, amenityIds, false);
     }
 
-    // Restore a previously inactive room type.
-    public boolean reactivateRoomType(long id) throws SQLException {
-        if (id <= 0) {
-            return false;
-        }
-        Optional<RoomType> roomType = roomTypeDao.findById(id);
-        if (roomType.isEmpty()) {
-            return false;
-        }
-        RoomType value = roomType.get();
-        value.setStatus("ACTIVE");
-        return roomTypeDao.update(value);
+    // Validate and update an existing room type with optional amenity relations.
+    public boolean updateRoomType(RoomType roomType, List<Long> amenityIds) throws SQLException {
+        return persistRoomType(roomType, amenityIds, true);
     }
 
-    // Validate fields that are shared by create and update flows.
-    public void validateRoomType(RoomType roomType) {
-        // Enforce the shared rules for both create and update flows.
-        ValidationUtil.requireTrue(roomType != null, "Thong tin loai phong khong hop le.");
+    // Toggle a room type status between ACTIVE and INACTIVE without changing other fields.
+    public boolean toggleRoomTypeStatus(long roomTypeId) throws SQLException {
+        RoomType roomType = findRoomTypeById(roomTypeId);
+        ValidationUtil.requireTrue(roomType != null, "Room type not found.");
 
-        String name = ValidationUtil.requireText(roomType.getName(), "Ten loai phong", 2, 100);
-        String description = ValidationUtil.optionalText(roomType.getDescription(), 500);
-        int capacity = ValidationUtil.requirePositiveInt(String.valueOf(roomType.getCapacity()), "Suc chua");
-        String status = ValidationUtil.optionalStatus(roomType.getStatus(), STATUSES);
+        String currentStatus = ValidationUtil.normalizeUpper(roomType.getStatus());
+        String nextStatus = "ACTIVE".equals(currentStatus) ? "INACTIVE" : "ACTIVE";
+        roomType.setStatus(nextStatus);
 
-        roomType.setName(name);
-        roomType.setDescription(description.isEmpty() ? null : description);
-        roomType.setCapacity(capacity);
-        roomType.setBasePrice(ValidationUtil.requirePositiveBigDecimal(
-                roomType.getBasePrice() == null ? null : roomType.getBasePrice().toPlainString(),
-                "Gia co ban"));
-        roomType.setStatus(status == null ? "ACTIVE" : status);
+        List<Long> selectedAmenityIds = findAmenitiesByRoomTypeId(roomTypeId).stream()
+                .map(Amenity::getId)
+                .collect(Collectors.toList());
+        return updateRoomType(roomType, selectedAmenityIds);
     }
 
-    // Guard the deactivate action until booking-related rules are implemented.
-    public void ensureRoomTypeCanBeDeactivated(long id) {
-        ValidationUtil.requireTrue(id > 0, "Khong tim thay loai phong.");
-        ValidationUtil.requireTrue(roomTypeDao.findById(id).isPresent(), "Khong tim thay loai phong.");
-        // TODO: check active bookings before allowing deactivate.
+    // Return distinct statuses found in the room_types table, with a safe fallback.
+    public List<String> findCreateStatuses() {
+        List<String> statuses = roomTypeDao.findDistinctStatuses();
+        if (statuses.isEmpty()) {
+            return List.of("ACTIVE", "INACTIVE");
+        }
+
+        java.util.LinkedHashSet<String> merged = new java.util.LinkedHashSet<>(statuses);
+        merged.add("ACTIVE");
+        merged.add("INACTIVE");
+        return List.copyOf(merged);
+    }
+
+    // Return distinct bed types found in the room_types table.
+    public List<String> findBedTypes() {
+        return roomTypeDao.findDistinctBedTypes();
+    }
+
+    // Return active amenities for the room type create form.
+    public List<Amenity> findActiveAmenities() {
+        return amenityDao.findActiveAmenities();
+    }
+
+    // Load amenities attached to a given room type.
+    public List<Amenity> findAmenitiesByRoomTypeId(long roomTypeId) {
+        if (roomTypeId <= 0L) {
+            return Collections.emptyList();
+        }
+        return roomTypeAmenityDao.findAmenitiesByRoomTypeId(roomTypeId);
     }
 
     // Prevent duplicate room type names across the catalog.
-    public void ensureRoomTypeNameUnique(String name, Long excludeId) {
-        // Compare names case-insensitively and skip the current record on edit.
+    private void ensureRoomTypeNameUnique(String name) {
+        ensureRoomTypeNameUnique(name, null);
+    }
+
+    // Prevent duplicate room type names across the catalog while excluding one record.
+    private void ensureRoomTypeNameUnique(String name, Long excludedRoomTypeId) {
         String normalizedName = ValidationUtil.requireText(name, "Ten loai phong", 2, 100);
         List<RoomType> roomTypes = roomTypeDao.findAll();
         if (roomTypes == null) {
             roomTypes = Collections.emptyList();
         }
-        // Stop when another record already uses the same normalized name.
+
         boolean duplicated = roomTypes.stream()
-                .anyMatch(roomType -> {
-                    // Ignore rows without a name or the row currently being edited.
-                    if (roomType.getName() == null) {
-                        return false;
-                    }
-                    boolean sameName = roomType.getName().equalsIgnoreCase(normalizedName);
-                    boolean sameId = excludeId != null && excludeId > 0 && roomType.getId() == excludeId;
-                    return sameName && !sameId;
-                });
+                .filter(roomType -> excludedRoomTypeId == null
+                        || roomType.getId() == null
+                        || !excludedRoomTypeId.equals(roomType.getId()))
+                .anyMatch(roomType -> roomType.getName() != null
+                        && roomType.getName().equalsIgnoreCase(normalizedName));
+
         if (duplicated) {
             throw new IllegalArgumentException("Ten loai phong nay da ton tai.");
         }
     }
 
+    // Validate common room type fields for create and update flows.
+    private void validateRoomTypeCoreFields(RoomType roomType) {
+        ValidationUtil.requireTrue(roomType != null, "Thong tin loai phong khong hop le.");
+
+        String name = ValidationUtil.requireText(roomType.getName(), "Ten loai phong", 2, 100);
+        String description = ValidationUtil.optionalText(roomType.getDescription(), 500);
+        String bedType = ValidationUtil.optionalText(roomType.getBedType(), 100);
+        java.math.BigDecimal sizeM2 = roomType.getSizeM2();
+        int capacity = ValidationUtil.requirePositiveInt(String.valueOf(roomType.getCapacity()), "Capacity");
+        Set<String> allowedStatuses = Set.copyOf(findCreateStatuses());
+        String status = ValidationUtil.optionalStatus(roomType.getStatus(), allowedStatuses);
+        List<String> allowedBedTypes = roomTypeDao.findDistinctBedTypes();
+
+        roomType.setName(name);
+        roomType.setDescription(description.isEmpty() ? null : description);
+        roomType.setBedType(bedType.isEmpty() ? null : validateBedType(bedType, allowedBedTypes));
+        if (sizeM2 != null) {
+            ValidationUtil.requireTrue(sizeM2.signum() > 0, "Room size phai lon hon 0.");
+        }
+        roomType.setSizeM2(sizeM2);
+        roomType.setCapacity(capacity);
+        roomType.setBasePrice(ValidationUtil.requirePositiveBigDecimal(
+                roomType.getBasePrice() == null ? null : roomType.getBasePrice().toPlainString(),
+                "Base price"));
+        roomType.setStatus(status == null ? "ACTIVE" : status);
+    }
+
+    // Persist a room type by create or update mode inside one transaction.
+    private boolean persistRoomType(RoomType roomType, List<Long> amenityIds, boolean updating) throws SQLException {
+        validateRoomTypeCoreFields(roomType);
+
+        List<Amenity> activeAmenities = amenityDao.findActiveAmenities();
+        Set<Long> allowedAmenityIds = activeAmenities.stream()
+                .map(Amenity::getId)
+                .collect(Collectors.toSet());
+        List<Long> sanitizedAmenityIds = normalizeAmenityIds(amenityIds, allowedAmenityIds);
+
+        if (updating) {
+            ensureRoomTypeNameUnique(roomType.getName(), roomType.getId());
+        } else {
+            ensureRoomTypeNameUnique(roomType.getName());
+        }
+
+        try (Connection conn = DBConnectionUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                if (updating) {
+                    roomTypeDao.update(conn, roomType);
+                    if (roomType.getId() != null) {
+                        roomTypeAmenityDao.replaceRoomTypeAmenities(conn, roomType.getId(), sanitizedAmenityIds);
+                    }
+                } else {
+                    long roomTypeId = roomTypeDao.insert(conn, roomType);
+                    roomTypeAmenityDao.replaceRoomTypeAmenities(conn, roomTypeId, sanitizedAmenityIds);
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException | RuntimeException ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    // Check whether a room type matches the keyword filter.
     private boolean matchesKeyword(RoomType roomType, String keyword) {
         if (keyword == null) {
             return true;
@@ -153,5 +215,34 @@ public class RoomTypeService {
         String name = ValidationUtil.normalizeLower(roomType.getName());
         String description = ValidationUtil.normalizeLower(roomType.getDescription());
         return name.contains(keyword) || description.contains(keyword);
+    }
+
+    // Validate bed type against the allowed database values when available.
+    private String validateBedType(String bedType, List<String> allowedBedTypes) {
+        if (allowedBedTypes == null || allowedBedTypes.isEmpty()) {
+            return bedType;
+        }
+
+        boolean valid = allowedBedTypes.stream()
+                .filter(value -> value != null && !value.isBlank())
+                .anyMatch(value -> value.equalsIgnoreCase(bedType));
+
+        if (!valid) {
+            throw new IllegalArgumentException("Bed type khong hop le.");
+        }
+        return bedType;
+    }
+
+    // Normalize amenity ids and reject unknown ids.
+    private List<Long> normalizeAmenityIds(List<Long> amenityIds, Set<Long> allowedAmenityIds) {
+        if (amenityIds == null || amenityIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return amenityIds.stream()
+                .filter(id -> id != null && id > 0L)
+                .distinct()
+                .peek(id -> ValidationUtil.requireTrue(allowedAmenityIds.contains(id), "Amenity khong hop le."))
+                .toList();
     }
 }
