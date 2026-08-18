@@ -16,12 +16,13 @@ import java.util.TimeZone;
 
 public class VNPayService {
     
-    public String createPaymentUrl(long amount, String orderInfo, String ipAddress) throws UnsupportedEncodingException {
+    public String createPaymentUrl(long amount, String orderInfo, String transactionRef,
+                                   String ipAddress, String returnUrl) throws UnsupportedEncodingException {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String vnp_OrderInfo = orderInfo;
         String orderType = "170000"; // Hotel code
-        String vnp_TxnRef = VNPayConfig.getRandomNumber(8);
+        String vnp_TxnRef = transactionRef;
         String vnp_IpAddr = ipAddress;
         String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
 
@@ -37,7 +38,7 @@ public class VNPayService {
         vnp_Params.put("vnp_OrderInfo", vnp_OrderInfo);
         vnp_Params.put("vnp_OrderType", orderType);
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", VNPayConfig.vnp_Returnurl);
+        vnp_Params.put("vnp_ReturnUrl", returnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
         
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
@@ -75,5 +76,24 @@ public class VNPayService {
         String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         return VNPayConfig.vnp_PayUrl + "?" + queryUrl;
+    }
+
+    public boolean verifySignature(Map<String, String> fields, String secureHash)
+            throws UnsupportedEncodingException {
+        if (secureHash == null || secureHash.isBlank()) return false;
+        List<String> names = new ArrayList<>(fields.keySet());
+        Collections.sort(names);
+        StringBuilder hashData = new StringBuilder();
+        for (String name : names) {
+            String value = fields.get(name);
+            if (value == null || value.isEmpty()) continue;
+            if (hashData.length() > 0) hashData.append('&');
+            hashData.append(name).append('=')
+                    .append(URLEncoder.encode(value, StandardCharsets.US_ASCII.toString()));
+        }
+        String expected = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
+        return java.security.MessageDigest.isEqual(
+                expected.getBytes(StandardCharsets.US_ASCII),
+                secureHash.getBytes(StandardCharsets.US_ASCII));
     }
 }

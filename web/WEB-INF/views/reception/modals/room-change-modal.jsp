@@ -67,7 +67,9 @@
                 <select name="newRoomId" id="roomChangeNewRoomId" required>
                     <option value="">Select an available room...</option>
                     <%-- Reuse the roomsByFloor data that already powers the room map --%>
+                    <%-- Reuse the room map data to populate available destination rooms. --%>
                     <c:forEach items="${roomsByFloor}" var="entry">
+                        <%-- Only allow rooms that are currently available. --%>
                         <c:forEach items="${entry.value}" var="room">
                             <c:if test="${fn:toUpperCase(room.status) eq 'AVAILABLE'}">
                                 <option value="${room.id}"

@@ -11,10 +11,12 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import config.VNPayConfig;
+import service.VNPayService;
 
 @WebServlet(name = "VNPayReturnServlet", urlPatterns = {"/payment-return"})
 public class VNPayReturnServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private final VNPayService vnPayService = new VNPayService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -37,18 +39,45 @@ public class VNPayReturnServlet extends HttpServlet {
             fields.remove("vnp_SecureHash");
         }
 
-        // Ideally, we would verify the signature using VNPayConfig.hmacSHA512
-        // and process the booking insertion to DB here if vnp_ResponseCode == "00"
-        
         String responseCode = request.getParameter("vnp_ResponseCode");
-        if ("00".equals(responseCode)) {
-            // Thanh toán thành công
-            HttpSession session = request.getSession();
-            // Xóa giỏ hàng
-            session.removeAttribute("cart");
-            request.setAttribute("paymentStatus", "SUCCESS");
-        } else {
-            // Thanh toán thất bại
+        HttpSession session = request.getSession();
+        Long bookingId = (Long) session.getAttribute("pendingBookingId");
+        String bookingCode = (String) session.getAttribute("pendingBookingCode");
+        java.math.BigDecimal amount = (java.math.BigDecimal) session.getAttribute("pendingPaymentAmount");
+
+        try {
+            boolean valid = vnPayService.verifySignature(fields, vnp_SecureHash);
+            boolean matchingRef = bookingCode != null && bookingCode.equals(request.getParameter("vnp_TxnRef"));
+            if (valid && matchingRef && bookingId != null && amount != null && "00".equals(responseCode)) {
+                try (java.sql.Connection conn = util.DBConnectionUtil.getConnection()) {
+                    conn.setAutoCommit(false);
+                    try (java.sql.PreparedStatement bookingUpdate = conn.prepareStatement(
+                            "UPDATE bookings SET status='CONFIRMED', updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='PENDING_PAYMENT'");
+                         java.sql.PreparedStatement paymentInsert = conn.prepareStatement(
+                            "INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_code, status, paid_at) "
+                                    + "VALUES (?, ?, 'ONLINE_PAYMENT', 'BOOKING_PAYMENT', ?, 'SUCCESS', CURRENT_TIMESTAMP)")) {
+                        bookingUpdate.setLong(1, bookingId);
+                        bookingUpdate.executeUpdate();
+                        paymentInsert.setLong(1, bookingId);
+                        paymentInsert.setBigDecimal(2, amount);
+                        paymentInsert.setString(3, request.getParameter("vnp_TransactionNo"));
+                        paymentInsert.executeUpdate();
+                        conn.commit();
+                    } catch (Exception ex) {
+                        conn.rollback();
+                        throw ex;
+                    }
+                }
+                session.removeAttribute("cart");
+                session.removeAttribute("pendingBookingId");
+                session.removeAttribute("pendingBookingCode");
+                session.removeAttribute("pendingPaymentAmount");
+                request.setAttribute("paymentStatus", "SUCCESS");
+            } else {
+                request.setAttribute("paymentStatus", "FAILED");
+            }
+        } catch (Exception ex) {
+            getServletContext().log("Không thể xác minh kết quả thanh toán VNPay", ex);
             request.setAttribute("paymentStatus", "FAILED");
         }
         
