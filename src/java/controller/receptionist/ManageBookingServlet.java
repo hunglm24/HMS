@@ -61,7 +61,13 @@ public class ManageBookingServlet extends HttpServlet {
                     request.getSession().setAttribute("toastMessage", "Đã xác nhận đặt phòng.");
                     request.getSession().setAttribute("toastType", "toast-success");
                 } else if ("REJECT".equals(action)) {
-                    bookingDao.updateBookingStatus(bookingId, "CANCELLED");
+                    String reason = request.getParameter("reason");
+                    if (reason == null || reason.trim().isEmpty()) {
+                        reason = "Lễ tân từ chối không có lý do";
+                    } else {
+                        reason = "Lễ tân từ chối: " + reason;
+                    }
+                    bookingDao.cancelBooking(bookingId, reason);
                     request.getSession().setAttribute("toastMessage", "Đã hủy đặt phòng.");
                     request.getSession().setAttribute("toastType", "toast-success");
                 } else if ("CHECK_IN".equals(action) || "CHECK_OUT".equals(action)) {
@@ -72,6 +78,30 @@ public class ManageBookingServlet extends HttpServlet {
                     try (java.sql.Connection conn = util.DBConnectionUtil.getConnection()) {
                         conn.setAutoCommit(false);
                         try {
+                            if ("CHECK_IN".equals(action)) {
+                                // Process room assignment changes
+                                java.util.Enumeration<String> paramNames = request.getParameterNames();
+                                java.util.Set<Long> selectedRooms = new java.util.HashSet<>();
+                                while (paramNames.hasMoreElements()) {
+                                    String paramName = paramNames.nextElement();
+                                    if (paramName.startsWith("assignedRoom_")) {
+                                        long newRoomId = Long.parseLong(request.getParameter(paramName));
+                                        if (!selectedRooms.add(newRoomId)) {
+                                            canProceed = false;
+                                            errorMessage = "Không thể gán một phòng vật lý cho nhiều phòng trong cùng booking!";
+                                            break;
+                                        }
+                                        long brId = Long.parseLong(paramName.substring("assignedRoom_".length()));
+                                        try (java.sql.PreparedStatement updateBrPs = conn.prepareStatement("UPDATE booking_rooms SET room_id = ? WHERE id = ? AND booking_id = ?")) {
+                                            updateBrPs.setLong(1, newRoomId);
+                                            updateBrPs.setLong(2, brId);
+                                            updateBrPs.setLong(3, bookingId);
+                                            updateBrPs.executeUpdate();
+                                        }
+                                    }
+                                }
+                            }
+                            
                             String sqlRooms = "SELECT r.id, r.status FROM booking_rooms br JOIN rooms r ON br.room_id = r.id WHERE br.booking_id = ?";
                             try (java.sql.PreparedStatement ps = conn.prepareStatement(sqlRooms)) {
                                 ps.setLong(1, bookingId);
@@ -127,7 +157,12 @@ public class ManageBookingServlet extends HttpServlet {
                 request.getSession().setAttribute("error", "Lỗi xử lý hệ thống.");
             }
         }
-        response.sendRedirect(request.getContextPath() + "/reception/bookings");
+        String redirect = request.getParameter("redirect");
+        if (redirect != null && !redirect.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + redirect);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/reception/bookings");
+        }
     }
 }
 

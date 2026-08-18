@@ -132,23 +132,81 @@
     </section>
 
     <c:if test="${not empty selectedBooking}">
-        <section class="selected-booking" id="selected-booking">
-            <div class="selected-booking__head">
+        <section class="selected-booking card" id="selected-booking" style="background: var(--color-white); border-radius: 12px; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px; border: 2px solid var(--color-primary-500);">
+            <div class="selected-booking__head" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
                 <div>
-                    <p class="reception-eyebrow">Selected booking</p>
-                    <h2>${fn:escapeXml(selectedBooking.bookingCode)}</h2>
+                    <p class="reception-eyebrow" style="color: var(--color-primary-600); font-weight: 600; text-transform: uppercase; font-size: 0.875rem; margin-bottom: 4px;">Quy trình Check-in</p>
+                    <h2 style="margin: 0; font-size: 1.5rem;">${fn:escapeXml(selectedBooking.bookingCode)}</h2>
                 </div>
                 <span class="status-badge status-${fn:toLowerCase(selectedBooking.status)}">${selectedBooking.status}</span>
             </div>
-            <div class="selected-booking__grid">
-                <div><span>Guest</span><strong>${fn:escapeXml(selectedBooking.guestName)}</strong></div>
-                <div><span>Phone</span><strong>${fn:escapeXml(selectedBooking.phone)}</strong></div>
-                <div><span>Check-in</span><strong><fmt:formatDate value="${selectedBooking.checkInDate}" pattern="dd/MM/yyyy" /></strong></div>
-                <div><span>Check-out</span><strong><fmt:formatDate value="${selectedBooking.checkOutDate}" pattern="dd/MM/yyyy" /></strong></div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--color-gray-200);">
+                <div><span style="display:block; color:var(--color-gray-500); font-size:0.875rem;">Khách hàng</span><strong style="font-size:1.125rem;">${fn:escapeXml(selectedBooking.guestName)}</strong></div>
+                <div><span style="display:block; color:var(--color-gray-500); font-size:0.875rem;">Số điện thoại</span><strong style="font-size:1.125rem;">${fn:escapeXml(selectedBooking.phone)}</strong></div>
+                <div><span style="display:block; color:var(--color-gray-500); font-size:0.875rem;">Nhận phòng</span><strong style="font-size:1.125rem;"><fmt:formatDate value="${selectedBooking.checkInDate}" pattern="dd/MM/yyyy" /></strong></div>
+                <div><span style="display:block; color:var(--color-gray-500); font-size:0.875rem;">Trả phòng</span><strong style="font-size:1.125rem;"><fmt:formatDate value="${selectedBooking.checkOutDate}" pattern="dd/MM/yyyy" /></strong></div>
+                <div><span style="display:block; color:var(--color-gray-500); font-size:0.875rem;">Số lượng phòng</span><strong style="font-size:1.125rem;">${selectedBooking.roomCount} phòng (${fn:escapeXml(selectedBooking.roomTypes)})</strong></div>
+                <div>
+                    <span style="display:block; color:var(--color-gray-500); font-size:0.875rem; margin-bottom: 8px;">Xếp phòng (Room Assignment)</span>
+                    <c:forEach var="asgn" items="${assignments}">
+                        <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+                            <strong style="width: 120px;">${asgn.roomTypeName}</strong>
+                            <select name="assignedRoom_${asgn.brId}" class="form-control" style="width: auto;" required>
+                                <c:forEach var="room" items="${asgn.availableRooms}">
+                                    <option value="${room.id}" ${room.id == asgn.currentRoomId ? 'selected' : ''}>Phòng ${room.roomNumber}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </c:forEach>
+                </div>
             </div>
-            <div class="selected-booking__actions">
-                <a class="btn btn-primary" href="#booking-results">Continue Check-in</a>
-            </div>
+
+            <form method="post" action="${pageContext.request.contextPath}/reception/bookings" class="checkin-form">
+                <input type="hidden" name="action" value="CHECK_IN">
+                <input type="hidden" name="id" value="${selectedBooking.bookingId}">
+                <input type="hidden" name="redirect" value="/reception/check-in">
+                
+                <c:set var="remaining" value="${selectedBooking.totalAmount - selectedBooking.depositAmount}" />
+                
+                <div style="background: var(--color-gray-50); padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                    <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.125rem;">Thông tin Thanh toán</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Tổng tiền phòng:</span>
+                        <strong><fmt:formatNumber value="${selectedBooking.totalAmount}" pattern="#,##0" /> đ</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--color-success-600);">
+                        <span>Đã thanh toán (Cọc):</span>
+                        <strong>- <fmt:formatNumber value="${selectedBooking.depositAmount}" pattern="#,##0" /> đ</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--color-gray-300); font-size: 1.25rem;">
+                        <span><strong>Cần thu thêm:</strong></span>
+                        <strong style="color: var(--color-error-600);"><fmt:formatNumber value="${remaining}" pattern="#,##0" /> đ</strong>
+                    </div>
+                    
+                    <c:if test="${remaining > 0}">
+                        <div style="margin-top: 20px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px;">Phương thức thu tiền phần còn thiếu:</label>
+                            <div style="display: flex; gap: 16px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="radio" name="paymentMethod" value="CASH" checked required> Tiền mặt
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="radio" name="paymentMethod" value="TRANSFER" required> Chuyển khoản
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="radio" name="paymentMethod" value="CARD" required> Quẹt thẻ (POS)
+                                </label>
+                            </div>
+                        </div>
+                    </c:if>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}/receptionist/edit-booking?id=${selectedBooking.bookingId}">Chi tiết / Đổi phòng</a>
+                    <button type="submit" class="btn btn-primary" style="padding: 12px 24px; font-size: 1.125rem;">Xác nhận Check-in</button>
+                </div>
+            </form>
         </section>
     </c:if>
 
