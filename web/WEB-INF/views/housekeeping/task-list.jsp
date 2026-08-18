@@ -88,7 +88,7 @@
     <section class="hk-empty"><span aria-hidden="true">✓</span><h2>Không có dữ liệu phù hợp</h2>
         <p>Hãy thử thay đổi từ khóa hoặc bộ lọc đang chọn.</p></section>
     <% } else { %>
-    <div class="hk-table-wrap"><table class="hk-table">
+    <div class="hk-table-wrap" data-pagination-root data-pagination-key="task-list-table" data-pagination-size="5"><table class="hk-table">
         <thead><tr>
             <th class="<%= sortClass(result,"room") %>"><a href="?<%= sortUrl(result,"room") %>">Phòng</a></th>
             <th class="<%= sortClass(result,"roomType") %>"><a href="?<%= sortUrl(result,"roomType") %>">Loại phòng</a></th>
@@ -97,7 +97,7 @@
             <th class="<%= sortClass(result,"status") %>"><a href="?<%= sortUrl(result,"status") %>">Trạng thái</a></th>
             <th><span class="sr-only">Thao tác</span></th>
         </tr></thead>
-        <tbody><% for (HousekeepingTask task : result.tasks()) { %><tr>
+        <tbody><% for (HousekeepingTask task : result.tasks()) { %><tr data-pagination-item>
             <td data-label="Phòng"><span class="hk-room-number"><%= HousekeepingTask.esc(task.getRoomNumber()) %></span></td>
             <td data-label="Loại phòng"><%= HousekeepingTask.esc(task.getRoomTypeName()) %></td>
             <td data-label="Tầng"><%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %></td>
@@ -117,14 +117,9 @@
         </tr><% } %></tbody>
     </table></div>
 
-    <% if (result.totalPages() > 1) { %><nav class="hk-pagination" aria-label="Phân trang">
-        <% if (result.page() > 1) { %><a href="?<%= query(result,true) %>&page=<%= result.page()-1 %>">‹ Trước</a><% } else { %><span>‹ Trước</span><% } %>
-        <% for (int i = 1; i <= result.totalPages(); i++) { %>
-            <% if (i == result.page()) { %><strong><%= i %></strong><% } else { %><a href="?<%= query(result,true) %>&page=<%= i %>"><%= i %></a><% } %>
-        <% } %>
-        <% if (result.page() < result.totalPages()) { %><a href="?<%= query(result,true) %>&page=<%= result.page()+1 %>">Sau ›</a><% } else { %><span>Sau ›</span><% } %>
-    </nav><% } %>
+    <div class="room-management-pagination" data-pagination-controls></div>
     <% } %>
 </main>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<script src="<%= contextPath %>/assets/js/pagination.js"></script>
 </body></html>

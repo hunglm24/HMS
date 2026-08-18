@@ -40,9 +40,19 @@ public class IssueListServlet extends HttpServlet {
                 page = Integer.parseInt(pageParam);
             }
 
-            int pageSize = 10;
-            String sortColumn = "created_at";
-            String sortDirection = "DESC";
+            int pageSize = 1000;
+            
+            String rawSort = request.getParameter("sort");
+            String currentSort = "created_at";
+            String sortColumn = "ht.created_at";
+            if ("id".equals(rawSort)) { sortColumn = "ht.id"; currentSort = "id"; }
+            else if ("room".equals(rawSort)) { sortColumn = "rm.room_number"; currentSort = "room"; }
+            else if ("type".equals(rawSort)) { sortColumn = "ht.task_type"; currentSort = "type"; }
+            else if ("status".equals(rawSort)) { sortColumn = "ht.status"; currentSort = "status"; }
+
+            String direction = request.getParameter("direction");
+            String sortDirection = "asc".equalsIgnoreCase(direction) ? "ASC" : "DESC";
+            String currentDir = "ASC".equals(sortDirection) ? "asc" : "desc";
 
             List<HousekeepingTask> tasks = maintenanceService.findIssueTasks(keyword, floor, sortColumn, sortDirection, page, pageSize);
             int total = maintenanceService.countIssueTasks(keyword, floor);
@@ -53,6 +63,8 @@ public class IssueListServlet extends HttpServlet {
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("search", keyword);
             request.setAttribute("floor", floorParam);
+            request.setAttribute("currentSort", currentSort);
+            request.setAttribute("currentDir", currentDir);
 
             request.getRequestDispatcher("/WEB-INF/views/housekeeping/issue-list.jsp").forward(request, response);
         } catch (Exception ex) {

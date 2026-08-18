@@ -63,6 +63,17 @@ public class VNPayReturnServlet extends HttpServlet {
                         paymentInsert.setString(3, request.getParameter("vnp_TransactionNo"));
                         paymentInsert.executeUpdate();
                         conn.commit();
+                        
+                        // Gửi email xác nhận
+                        dao.BookingDao bookingDao = new dao.BookingDao();
+                        bookingDao.findById(bookingId).ifPresent(booking -> {
+                            try {
+                                bookingDao.findCheckInBookingById(bookingId.intValue()).ifPresent(summary -> {
+                                    service.EmailService emailService = new service.EmailService();
+                                    emailService.sendBookingConfirmationAsync(booking, summary.getEmail(), summary.getGuestName());
+                                });
+                            } catch (Exception ignored) {}
+                        });
                     } catch (Exception ex) {
                         conn.rollback();
                         throw ex;

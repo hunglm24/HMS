@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.Map;
 
 public class HousekeepingService {
-    public static final int PAGE_SIZE = 10;
+    public static final int PAGE_SIZE = 1000;
     private static final Set<String> CONDITIONS = Set.of("NORMAL", "DAMAGED", "MISSING");
     private static final Set<String> TASK_TYPES = Set.of("CHECKOUT_INSPECTION", "CLEANING");
     private static final Set<String> TASK_STATUSES = Set.of("PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED");
