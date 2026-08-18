@@ -79,54 +79,77 @@ public class ManageBookingServlet extends HttpServlet {
                         conn.setAutoCommit(false);
                         try {
                             if ("CHECK_IN".equals(action)) {
-                                // Process room assignment changes
-                                java.util.Enumeration<String> paramNames = request.getParameterNames();
-                                java.util.Set<Long> selectedRooms = new java.util.HashSet<>();
-                                while (paramNames.hasMoreElements()) {
-                                    String paramName = paramNames.nextElement();
-                                    if (paramName.startsWith("assignedRoom_")) {
-                                        long newRoomId = Long.parseLong(request.getParameter(paramName));
-                                        if (!selectedRooms.add(newRoomId)) {
-                                            canProceed = false;
-                                            errorMessage = "Không thể gán một phòng vật lý cho nhiều phòng trong cùng booking!";
-                                            break;
+                                // Check if the booking's check_in_date is in the future
+                                try (java.sql.PreparedStatement datePs = conn.prepareStatement("SELECT check_in_date FROM bookings WHERE id = ?")) {
+                                    datePs.setLong(1, bookingId);
+                                    try (java.sql.ResultSet dateRs = datePs.executeQuery()) {
+                                        if (dateRs.next()) {
+                                            java.sql.Date checkInDate = dateRs.getDate("check_in_date");
+                                            if (checkInDate != null) {
+                                                java.time.LocalDate today = java.time.LocalDate.now();
+                                                if (checkInDate.toLocalDate().isAfter(today)) {
+                                                    canProceed = false;
+                                                    errorMessage = "Không thể Check-in sớm! Đơn đặt phòng này có ngày nhận phòng là " + 
+                                                                   checkInDate.toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + 
+                                                                   ". Nếu khách đến sớm, vui lòng thay đổi ngày nhận phòng trước.";
+                                                }
+                                            }
                                         }
-                                        long brId = Long.parseLong(paramName.substring("assignedRoom_".length()));
-                                        try (java.sql.PreparedStatement updateBrPs = conn.prepareStatement("UPDATE booking_rooms SET room_id = ? WHERE id = ? AND booking_id = ?")) {
-                                            updateBrPs.setLong(1, newRoomId);
-                                            updateBrPs.setLong(2, brId);
-                                            updateBrPs.setLong(3, bookingId);
-                                            updateBrPs.executeUpdate();
+                                    }
+                                }
+
+                                if (canProceed) {
+                                    // Process room assignment changes
+                                    java.util.Enumeration<String> paramNames = request.getParameterNames();
+                                    java.util.Set<Long> selectedRooms = new java.util.HashSet<>();
+                                    while (paramNames.hasMoreElements()) {
+                                        String paramName = paramNames.nextElement();
+                                        if (paramName.startsWith("assignedRoom_")) {
+                                            long newRoomId = Long.parseLong(request.getParameter(paramName));
+                                            if (!selectedRooms.add(newRoomId)) {
+                                                canProceed = false;
+                                                errorMessage = "Không thể gán một phòng vật lý cho nhiều phòng trong cùng booking!";
+                                                break;
+                                            }
+                                            long brId = Long.parseLong(paramName.substring("assignedRoom_".length()));
+                                            try (java.sql.PreparedStatement updateBrPs = conn.prepareStatement("UPDATE booking_rooms SET room_id = ? WHERE id = ? AND booking_id = ?")) {
+                                                updateBrPs.setLong(1, newRoomId);
+                                                updateBrPs.setLong(2, brId);
+                                                updateBrPs.setLong(3, bookingId);
+                                                updateBrPs.executeUpdate();
+                                            }
                                         }
                                     }
                                 }
                             }
                             
-                            String sqlRooms = "SELECT r.id, r.status FROM booking_rooms br JOIN rooms r ON br.room_id = r.id WHERE br.booking_id = ?";
-                            try (java.sql.PreparedStatement ps = conn.prepareStatement(sqlRooms)) {
-                                ps.setLong(1, bookingId);
-                                try (java.sql.ResultSet rs = ps.executeQuery()) {
-                                    while (rs.next()) {
-                                        long roomId = rs.getLong("id");
-                                        String physicalStatus = rs.getString("status");
-                                        
-                                        if ("CHECK_IN".equals(action)) {
-                                            if (!"AVAILABLE".equals(physicalStatus)) {
-                                                canProceed = false;
-                                                errorMessage = "Không thể Check-in! Một số phòng chưa sẵn sàng (Trạng thái hiện tại: " + physicalStatus + ").";
-                                                break;
-                                            } else {
-                                                // Update room physical status to OCCUPIED
-                                                try (java.sql.PreparedStatement updatePs = conn.prepareStatement("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?")) {
+                            if (canProceed) {
+                                String sqlRooms = "SELECT r.id, r.status FROM booking_rooms br JOIN rooms r ON br.room_id = r.id WHERE br.booking_id = ?";
+                                try (java.sql.PreparedStatement ps = conn.prepareStatement(sqlRooms)) {
+                                    ps.setLong(1, bookingId);
+                                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                                        while (rs.next()) {
+                                            long roomId = rs.getLong("id");
+                                            String physicalStatus = rs.getString("status");
+                                            
+                                            if ("CHECK_IN".equals(action)) {
+                                                if (!"AVAILABLE".equals(physicalStatus)) {
+                                                    canProceed = false;
+                                                    errorMessage = "Không thể Check-in! Một số phòng chưa sẵn sàng (Trạng thái hiện tại: " + physicalStatus + ").";
+                                                    break;
+                                                } else {
+                                                    // Update room physical status to OCCUPIED
+                                                    try (java.sql.PreparedStatement updatePs = conn.prepareStatement("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?")) {
+                                                        updatePs.setLong(1, roomId);
+                                                        updatePs.executeUpdate();
+                                                    }
+                                                }
+                                            } else if ("CHECK_OUT".equals(action)) {
+                                                // Update room physical status to DIRTY
+                                                try (java.sql.PreparedStatement updatePs = conn.prepareStatement("UPDATE rooms SET status = 'DIRTY' WHERE id = ?")) {
                                                     updatePs.setLong(1, roomId);
                                                     updatePs.executeUpdate();
                                                 }
-                                            }
-                                        } else if ("CHECK_OUT".equals(action)) {
-                                            // Update room physical status to DIRTY
-                                            try (java.sql.PreparedStatement updatePs = conn.prepareStatement("UPDATE rooms SET status = 'DIRTY' WHERE id = ?")) {
-                                                updatePs.setLong(1, roomId);
-                                                updatePs.executeUpdate();
                                             }
                                         }
                                     }
