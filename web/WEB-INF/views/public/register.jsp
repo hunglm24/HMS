@@ -15,7 +15,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đăng ký | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css?v=20260816-4">
 </head>
 <body>

@@ -17,9 +17,11 @@
     
     // Fetch Latest News for Public Page
     java.util.List<model.News> latestNews = java.util.Collections.emptyList();
+    java.util.List<model.RoomType> publicRoomTypes = java.util.Collections.emptyList();
     if (!internal) {
         dao.NewsDao newsDao = new dao.NewsDao();
         latestNews = newsDao.getLatestNews(3);
+        publicRoomTypes = new dao.RoomTypeDao().findActive();
     }
 %>
 <!DOCTYPE html>
@@ -43,7 +45,12 @@
                 <label>Check-in<input type="date" name="checkIn"></label>
                 <label>Check-out<input type="date" name="checkOut"></label>
                 <label>Khách<select name="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
-                <label>Loại phòng<select name="roomType"><option value="">Tất cả</option><option>Deluxe</option><option>Suite</option></select></label>
+                <label>Loại phòng<select name="roomTypeId">
+                    <option value="">Tất cả</option>
+                    <% for (model.RoomType rt : publicRoomTypes) { %>
+                        <option value="<%= rt.getId() %>"><%= rt.getName() %></option>
+                    <% } %>
+                </select></label>
                 <button type="submit">Tìm phòng</button>
             </form>
         </div>

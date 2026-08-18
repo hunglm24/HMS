@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Xác nhận bảo trì - HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <style>
         .verify-panel { max-width: 800px; margin: 0 auto; }
         .equipment-list { margin-top: 20px; }

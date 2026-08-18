@@ -48,7 +48,7 @@
             <a class="<%= activePath(uri, "/manager/rooms") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng</a>
             <a class="<%= activePath(uri, "/manager/room-types") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
             <a class="<%= activePath(uri, "/housekeeping/tasks") ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=history"><span>HK</span>Nhiệm vụ dọn phòng</a>
-            <a class="<%= activePath(uri, "/manager/pricing") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá và dịch vụ</a>
+            <a class="<%= activePath(uri, "/manager/pricing") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá, mã giảm giá</a>
             <a class="<%= activePath(uri, "/manager/policies") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>
             <a class="<%= activePath(uri, "/manager/staff") ? "active" : "" %>" href="<%= cp %>/manager/staff"><span>ST</span>Nhân sự</a>
         <% } %>

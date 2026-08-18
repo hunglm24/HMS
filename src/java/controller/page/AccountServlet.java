@@ -37,17 +37,17 @@ public class AccountServlet extends HttpServlet {
         try {
             if ("/profile".equals(request.getServletPath())) {
                 userService.updateProfile(user, request.getParameter("fullName"), request.getParameter("phone"));
-                request.setAttribute("success", "Cáº­p nháº­t há»“ sÆ¡ thÃ nh cÃ´ng.");
+                request.setAttribute("success", "Cập nhật hồ sơ thành công.");
             } else {
                 userService.changePassword(user, request.getParameter("currentPassword"),
                         request.getParameter("password"), request.getParameter("confirmPassword"));
-                request.setAttribute("success", "Äá»•i máº­t kháº©u thÃ nh cÃ´ng.");
+                request.setAttribute("success", "Đổi mật khẩu thành công.");
             }
         } catch (IllegalArgumentException ex) {
             request.setAttribute("error", ex.getMessage());
         } catch (SQLException ex) {
-            getServletContext().log("Cáº­p nháº­t tÃ i khoáº£n tháº¥t báº¡i", ex);
-            request.setAttribute("error", "Há»‡ thá»‘ng Ä‘ang báº­n. Vui lÃ²ng thá»­ láº¡i sau.");
+            getServletContext().log("Cập nhật tài khoản thất bại", ex);
+            request.setAttribute("error", "Hệ thống đang bận. Vui lòng thử lại sau.");
         }
         forward(request, response);
     }

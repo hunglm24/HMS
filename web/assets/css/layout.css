@@ -134,6 +134,14 @@
     padding: 32px;
 }
 
+body:has(> .site-header--internal) > main:not(.auth-page):not(.public-page) {
+    width: calc(100% - 260px);
+    max-width: none;
+    margin-left: 260px;
+    margin-right: 0;
+    padding: 32px;
+}
+
 .app-shell,
 .dashboard-page,
 .public-page {
@@ -562,6 +570,13 @@ body .internal-sidebar .site-footer {
     .site-header--internal + .internal-sidebar + main:not(.auth-page):not(.public-page) {
         width: min(100% - 32px, 1180px);
         margin-left: 0;
+        margin-right: auto;
+        padding: 22px 0;
+    }
+
+    body:has(> .site-header--internal) > main:not(.auth-page):not(.public-page) {
+        width: min(100% - 32px, 1180px);
+        margin-left: auto;
         margin-right: auto;
         padding: 22px 0;
     }

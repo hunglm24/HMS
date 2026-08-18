@@ -17,7 +17,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lịch sử đổi phòng | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/room-change-history.css?v=20260817-5">
 </head>
 <body class="room-change-history-body">

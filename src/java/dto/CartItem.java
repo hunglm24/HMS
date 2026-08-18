@@ -10,6 +10,7 @@ public class CartItem {
     private LocalDate checkOut;
     private int quantity;
     private int guests;
+    private BigDecimal subtotalOverride;
 
     public CartItem(RoomType roomType, LocalDate checkIn, LocalDate checkOut, int quantity, int guests) {
         this.roomType = roomType;
@@ -39,6 +40,23 @@ public class CartItem {
     }
     
     public BigDecimal getSubtotal() {
+        if (subtotalOverride != null) {
+            return subtotalOverride;
+        }
         return roomType.getBasePrice().multiply(BigDecimal.valueOf(quantity)).multiply(BigDecimal.valueOf(getNumberOfNights()));
     }
+
+    public BigDecimal getAveragePricePerNight() {
+        long nights = getNumberOfNights();
+        if (nights <= 0 || quantity <= 0) {
+            return roomType.getBasePrice();
+        }
+        return getSubtotal().divide(
+                BigDecimal.valueOf(nights).multiply(BigDecimal.valueOf(quantity)),
+                0,
+                java.math.RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal getSubtotalOverride() { return subtotalOverride; }
+    public void setSubtotalOverride(BigDecimal subtotalOverride) { this.subtotalOverride = subtotalOverride; }
 }

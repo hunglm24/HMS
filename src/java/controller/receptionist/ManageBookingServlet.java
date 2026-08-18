@@ -145,8 +145,8 @@ public class ManageBookingServlet extends HttpServlet {
                                                     }
                                                 }
                                             } else if ("CHECK_OUT".equals(action)) {
-                                                // Update room physical status to DIRTY
-                                                try (java.sql.PreparedStatement updatePs = conn.prepareStatement("UPDATE rooms SET status = 'DIRTY' WHERE id = ?")) {
+                                                // Update room physical status to cleaning queue after checkout.
+                                                try (java.sql.PreparedStatement updatePs = conn.prepareStatement("UPDATE rooms SET status = 'CLEANING' WHERE id = ?")) {
                                                     updatePs.setLong(1, roomId);
                                                     updatePs.executeUpdate();
                                                 }

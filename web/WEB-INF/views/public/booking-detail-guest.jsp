@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chi tiết booking | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <style>
         .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6); align-items: start; }
         .detail-card { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border-color); padding: var(--space-5); margin-bottom: var(--space-5); }

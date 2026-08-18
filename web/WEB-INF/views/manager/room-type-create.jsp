@@ -7,7 +7,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><c:out value="${roomTypePageTitle}" /></title>
-    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260818-1">
+    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260819-1">
     <link rel="stylesheet" href="${cp}/assets/css/room-type-create.css">
 </head>
 <body class="room-management-body room-type-create-body">

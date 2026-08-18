@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Quản lý sự cố - HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/housekeeping.css">
     <style>
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }

@@ -1,6 +1,6 @@
-@import url("./design-tokens.css?v=20260816-4");
-@import url("./components.css?v=20260816-4");
-@import url("./layout.css?v=20260816-4");
+@import url("./design-tokens.css?v=20260819-2");
+@import url("./components.css?v=20260819-2");
+@import url("./layout.css?v=20260819-2");
 @import url("design-tokens.css");
 @import url("components.css");
 
@@ -652,4 +652,63 @@ td {
     border-color: rgba(30, 79, 216, .25);
     background: rgba(255, 255, 255, .72);
     color: #173b8f;
+}
+
+/* Internal pages: header.jsp renders the fixed sidebar before each manager/staff main.
+   Keep this override at the end so .page-container and feature CSS cannot recenter under it. */
+.site-header--internal ~ main:not(.auth-page):not(.public-page),
+.site-header--internal ~ main.page-container:not(.auth-page):not(.public-page),
+.site-header--internal ~ main.hk-page,
+.internal-sidebar ~ main:not(.auth-page):not(.public-page),
+.internal-sidebar ~ main.page-container:not(.auth-page):not(.public-page),
+.internal-sidebar ~ main.hk-page,
+body > main.page-container.room-management-page,
+body > main.page-container.room-types-preview-page,
+body > main.page-container.room-type-create-page,
+body > main.page-container.manager-content,
+body > main.hk-page {
+    width: auto;
+    max-width: none;
+    margin: 0 0 0 260px;
+    padding: 32px;
+    box-sizing: border-box;
+}
+
+.site-header--internal ~ main:not(.auth-page):not(.public-page) > * {
+    min-width: 0;
+}
+
+@media (max-width: 980px) {
+    .site-header--internal ~ main:not(.auth-page):not(.public-page),
+    .site-header--internal ~ main.page-container:not(.auth-page):not(.public-page),
+    .site-header--internal ~ main.hk-page,
+    .internal-sidebar ~ main:not(.auth-page):not(.public-page),
+    .internal-sidebar ~ main.page-container:not(.auth-page):not(.public-page),
+    .internal-sidebar ~ main.hk-page,
+    body > main.page-container.room-management-page,
+    body > main.page-container.room-types-preview-page,
+    body > main.page-container.room-type-create-page,
+    body > main.page-container.manager-content,
+    body > main.hk-page {
+        width: min(100% - 32px, 1180px);
+        margin: 0 auto;
+        padding: 22px 0;
+    }
+}
+
+@media (max-width: 720px) {
+    .site-header--internal ~ main:not(.auth-page):not(.public-page),
+    .site-header--internal ~ main.page-container:not(.auth-page):not(.public-page),
+    .site-header--internal ~ main.hk-page,
+    .internal-sidebar ~ main:not(.auth-page):not(.public-page),
+    .internal-sidebar ~ main.page-container:not(.auth-page):not(.public-page),
+    .internal-sidebar ~ main.hk-page,
+    body > main.page-container.room-management-page,
+    body > main.page-container.room-types-preview-page,
+    body > main.page-container.room-type-create-page,
+    body > main.page-container.manager-content,
+    body > main.hk-page {
+        width: min(100% - 24px, 1180px);
+        padding: 18px 0 32px;
+    }
 }

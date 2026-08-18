@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
@@ -16,7 +15,6 @@ public class AuditLogDao {
     public void log(Long actorId, String action, String targetType, Long targetId,
                     String detail, String ipAddress) {
         try {
-            ensureTable();
             String sql = """
                     INSERT INTO system_logs(actor_id, action, target_type, target_id, detail, ip_address)
                     VALUES (?, ?, ?, ?, ?, ?)
@@ -229,27 +227,6 @@ public class AuditLogDao {
                 }
                 return logs;
             }
-        }
-    }
-
-    private void ensureTable() throws SQLException {
-        try (Connection connection = DBConnectionUtil.getConnection();
-             Statement statement = connection.createStatement()) {
-            statement.executeUpdate("""
-                     CREATE TABLE IF NOT EXISTS system_logs (
-                       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                       actor_id BIGINT UNSIGNED NULL,
-                       action VARCHAR(80) NOT NULL,
-                       target_type VARCHAR(80) NULL,
-                       target_id BIGINT UNSIGNED NULL,
-                       detail VARCHAR(1000) NULL,
-                       ip_address VARCHAR(64) NULL,
-                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       PRIMARY KEY (id),
-                       KEY idx_system_logs_created_at (created_at),
-                       KEY idx_system_logs_actor (actor_id)
-                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-                     """);
         }
     }
 

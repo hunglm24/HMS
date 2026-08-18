@@ -14,7 +14,6 @@ import java.util.List;
 
 public class RoleDao {
     public List<Role> findAll() throws SQLException {
-        ensurePermissionTables();
         String sql = "SELECT id, name, description, created_at FROM roles ORDER BY id";
         try (Connection connection = DBConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
@@ -87,7 +86,6 @@ public class RoleDao {
     }
 
     public List<Permission> findPermissionsForRole(long roleId) throws SQLException {
-        ensurePermissionTables();
         String sql = """
                 SELECT p.id, p.code, p.name, p.description, p.created_at,
                        CASE WHEN rp.role_id IS NULL THEN 0 ELSE 1 END AS assigned
@@ -117,7 +115,6 @@ public class RoleDao {
     }
 
     public void replaceRolePermissions(long roleId, List<Long> permissionIds) throws SQLException {
-        ensurePermissionTables();
         try (Connection connection = DBConnectionUtil.getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -142,64 +139,6 @@ public class RoleDao {
             } finally {
                 connection.setAutoCommit(true);
             }
-        }
-    }
-
-    public void ensurePermissionTables() throws SQLException {
-        try (Connection connection = DBConnectionUtil.getConnection();
-             Statement statement = connection.createStatement()) {
-            statement.executeUpdate("""
-                    CREATE TABLE IF NOT EXISTS permissions (
-                      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                      code VARCHAR(80) NOT NULL,
-                      name VARCHAR(120) NOT NULL,
-                      description VARCHAR(255) NULL,
-                      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                      PRIMARY KEY (id),
-                      UNIQUE KEY uq_permissions_code (code)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-                    """);
-            statement.executeUpdate("""
-                    CREATE TABLE IF NOT EXISTS role_permissions (
-                      role_id BIGINT UNSIGNED NOT NULL,
-                      permission_id BIGINT UNSIGNED NOT NULL,
-                      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                      PRIMARY KEY (role_id, permission_id),
-                      CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_id)
-                        REFERENCES roles(id) ON DELETE CASCADE ON UPDATE CASCADE,
-                      CONSTRAINT fk_role_permissions_permission FOREIGN KEY (permission_id)
-                        REFERENCES permissions(id) ON DELETE CASCADE ON UPDATE CASCADE
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-                    """);
-            seedPermission(connection, "USER_REGISTRATION", "User Registration",
-                    "Allow new guests and staff accounts to register through the authentication portal.");
-            seedPermission(connection, "ACCOUNT_PROFILE", "Account Details & Profile",
-                    "View and maintain personal profile, contact information and account security.");
-            seedPermission(connection, "ADMIN_USERS", "User & Roles Management",
-                    "Create accounts, update account details, reset passwords, block users and assign roles.");
-            seedPermission(connection, "ADMIN_ROLES", "Role & Permission Configuration",
-                    "Create roles, edit role descriptions and define the permissions available to each role.");
-            seedPermission(connection, "ADMIN_LOGS", "System Audit Logs",
-                    "Search and review administration activity logs for audit and troubleshooting.");
-            seedPermission(connection, "BOOKING_MANAGE", "Booking Management",
-                    "Create, confirm, update, cancel and track booking lifecycle operations.");
-            seedPermission(connection, "ROOM_MANAGE", "Room & Pricing Management",
-                    "Manage room inventory, room types, prices and availability setup.");
-            seedPermission(connection, "HOUSEKEEPING_MANAGE", "Housekeeping Operations",
-                    "Assign, update and verify housekeeping or maintenance tasks.");
-        }
-    }
-
-    private void seedPermission(Connection connection, String code, String name, String description) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("""
-                INSERT INTO permissions (code, name, description)
-                VALUES (?, ?, ?)
-                ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description)
-                """)) {
-            statement.setString(1, code);
-            statement.setString(2, name);
-            statement.setString(3, description);
-            statement.executeUpdate();
         }
     }
 

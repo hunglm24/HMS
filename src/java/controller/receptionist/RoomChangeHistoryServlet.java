@@ -52,7 +52,7 @@ public class RoomChangeHistoryServlet extends HttpServlet {
             request.setAttribute("receptionistId", receptionistId == null ? "" : String.valueOf(receptionistId));
         } catch (SQLException ex) {
             getServletContext().log("Cannot load room change history", ex);
-            request.setAttribute("error", "KhÃ´ng thá»ƒ táº£i lá»‹ch sá»­ Ä‘á»•i phÃ²ng. Vui lÃ²ng kiá»ƒm tra káº¿t ná»‘i cÆ¡ sá»Ÿ dá»¯ liá»‡u.");
+            request.setAttribute("error", "Không thể tải lịch sử đổi phòng. Vui lòng kiểm tra kết nối cơ sở dữ liệu.");
         }
         request.getRequestDispatcher("/WEB-INF/views/reception/room-change-history.jsp").forward(request, response);
     }

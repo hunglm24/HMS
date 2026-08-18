@@ -99,7 +99,7 @@ public class CheckInServlet extends HttpServlet {
             
             request.getRequestDispatcher("/WEB-INF/views/reception/check-in.jsp").forward(request, response);
         } catch (SQLException ex) {
-            getServletContext().log("KhÃƒÂ´ng thÃ¡Â»Æ’ tÃ¡ÂºÂ£i danh sÃƒÂ¡ch booking check-in", ex);
+            getServletContext().log("Không thể tải danh sách booking check-in", ex);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }

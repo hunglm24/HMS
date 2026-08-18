@@ -1,7 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Walk-in booking | HMS</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4"></head>
+<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Walk-in booking | HMS</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1"></head>
 <body><jsp:include page="/WEB-INF/views/common/header.jsp" /><main class="page-container"><section class="section-head"><div><p class="section-kicker">Lễ tân</p><h1>Đặt phòng tại quầy</h1><p>Tìm phòng trống thực tế và tạo booking.</p></div></section>
 <form class="toolbar-card" method="get" action="${pageContext.request.contextPath}/receptionist/walk-in">
     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">

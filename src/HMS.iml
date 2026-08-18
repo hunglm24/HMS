@@ -10,7 +10,7 @@
     <orderEntry type="module-library" exported="" scope="PROVIDED">
       <library>
         <CLASSES>
-          <root url="jar://C:/apache-tomcat-10.1.57/lib/servlet-api.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../Tomcat 10.1/lib/servlet-api.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

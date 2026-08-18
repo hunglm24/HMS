@@ -8,23 +8,30 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import jakarta.servlet.http.HttpSession;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import dto.CartItem;
+import dao.PromotionDao;
+import dao.SeasonalPriceRuleDao;
 import model.RoomType;
+import model.Promotion;
 import dao.RoomTypeDao;
 
 @WebServlet(name = "CartServlet", urlPatterns = {"/cart"})
 public class CartServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private RoomTypeDao roomTypeDao = new RoomTypeDao();
+    private PromotionDao promotionDao = new PromotionDao();
+    private SeasonalPriceRuleDao priceRuleDao = new SeasonalPriceRuleDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         session.setMaxInactiveInterval(30 * 60); // 30 minutes
+        refreshCartDiscount(session);
         request.getRequestDispatcher("/WEB-INF/views/public/cart.jsp").forward(request, response);
     }
 
@@ -110,11 +117,18 @@ public class CartServlet extends HttpServlet {
             } catch (Exception e) {
                 session.setAttribute("error", "Dữ liệu không hợp lệ.");
             }
+        } else if ("applyVoucher".equals(action)) {
+            applyVoucher(session, request.getParameter("promotionCode"));
+        } else if ("removeVoucher".equals(action)) {
+            clearVoucher(session);
+            session.setAttribute("toastMessage", "Đã bỏ mã giảm giá.");
+            session.setAttribute("toastType", "toast-success");
         } else if ("remove".equals(action)) {
             try {
                 int index = Integer.parseInt(request.getParameter("index"));
                 if (index >= 0 && index < cart.size()) {
                     cart.remove(index);
+                    refreshCartDiscount(session);
                 }
             } catch (Exception e) {
                 // Ignore parse errors
@@ -126,6 +140,7 @@ public class CartServlet extends HttpServlet {
                 if (index >= 0 && index < cart.size()) {
                     if (quantity <= 0) {
                         cart.remove(index);
+                        refreshCartDiscount(session);
                     } else {
                         CartItem item = cart.get(index);
                         if (item.getGuests() > item.getRoomType().getCapacity() * quantity) {
@@ -135,6 +150,7 @@ public class CartServlet extends HttpServlet {
                                     item.getCheckIn(), item.getCheckOut(), 1, quantity, null, null, null, item.getRoomType().getId());
                             if (!available.isEmpty() && available.get(0).getAvailableQuantity() >= quantity) {
                                 item.setQuantity(quantity);
+                                refreshCartDiscount(session);
                             } else {
                                 session.setAttribute("error", "Không đủ số lượng phòng trống.");
                             }
@@ -147,6 +163,97 @@ public class CartServlet extends HttpServlet {
         }
         
         response.sendRedirect(request.getContextPath() + "/cart");
+    }
+
+    private void applyVoucher(HttpSession session, String rawCode) {
+        String code = rawCode == null ? "" : rawCode.trim();
+        if (code.isEmpty()) {
+            session.setAttribute("error", "Vui lòng nhập mã giảm giá.");
+            return;
+        }
+        refreshCartPrices(session);
+        BigDecimal total = calculateCartTotal(session);
+        try {
+            Promotion promotion = promotionDao.findUsableByCode(code, total).orElse(null);
+            if (promotion == null) {
+                clearVoucher(session);
+                session.setAttribute("error", "Mã giảm giá không hợp lệ, đã hết hạn, hết lượt dùng hoặc chưa đủ giá trị đặt phòng tối thiểu.");
+                return;
+            }
+            BigDecimal discount = promotion.calculateDiscount(total);
+            session.setAttribute("appliedPromotion", promotion);
+            session.setAttribute("discountAmount", discount);
+            session.setAttribute("finalAmount", total.subtract(discount));
+            session.setAttribute("toastMessage", "Áp dụng mã giảm giá thành công.");
+            session.setAttribute("toastType", "toast-success");
+        } catch (Exception ex) {
+            session.setAttribute("error", "Không thể kiểm tra mã giảm giá. Vui lòng thử lại.");
+        }
+    }
+
+    private void refreshCartDiscount(HttpSession session) {
+        refreshCartPrices(session);
+        BigDecimal total = calculateCartTotal(session);
+        session.setAttribute("cartTotalAmount", total);
+        Promotion promotion = (Promotion) session.getAttribute("appliedPromotion");
+        if (promotion == null) {
+            session.setAttribute("discountAmount", BigDecimal.ZERO);
+            session.setAttribute("finalAmount", total);
+            return;
+        }
+        try {
+            Promotion current = promotionDao.findUsableByCode(promotion.getCode(), total).orElse(null);
+            if (current == null) {
+                clearVoucher(session);
+                session.setAttribute("error", "Mã giảm giá đã không còn hợp lệ với giỏ hàng hiện tại.");
+                session.setAttribute("finalAmount", total);
+                return;
+            }
+            BigDecimal discount = current.calculateDiscount(total);
+            session.setAttribute("appliedPromotion", current);
+            session.setAttribute("discountAmount", discount);
+            session.setAttribute("finalAmount", total.subtract(discount));
+        } catch (Exception ex) {
+            clearVoucher(session);
+            session.setAttribute("finalAmount", total);
+        }
+    }
+
+    private BigDecimal calculateCartTotal(HttpSession session) {
+        List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
+        BigDecimal total = BigDecimal.ZERO;
+        if (cart != null) {
+            for (CartItem item : cart) {
+                total = total.add(item.getSubtotal());
+            }
+        }
+        return total;
+    }
+
+    private void refreshCartPrices(HttpSession session) {
+        List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
+        if (cart == null) {
+            return;
+        }
+        for (CartItem item : cart) {
+            try {
+                BigDecimal subtotal = priceRuleDao.calculateSubtotal(
+                        item.getRoomType().getId(),
+                        item.getRoomType().getBasePrice(),
+                        item.getCheckIn(),
+                        item.getCheckOut(),
+                        item.getQuantity());
+                item.setSubtotalOverride(subtotal);
+            } catch (Exception ex) {
+                item.setSubtotalOverride(null);
+            }
+        }
+    }
+
+    private void clearVoucher(HttpSession session) {
+        session.removeAttribute("appliedPromotion");
+        session.setAttribute("discountAmount", BigDecimal.ZERO);
+        session.setAttribute("finalAmount", calculateCartTotal(session));
     }
 }
 

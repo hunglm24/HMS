@@ -120,7 +120,7 @@ public class WalkInReservationServlet extends HttpServlet {
                 
                 // If CHECKIN, room must be clean
                 if ("CHECKIN".equals(submitAction)) {
-                    if ("CLEANING".equals(room.getStatus()) || "DIRTY".equals(room.getStatus()) || "NOT_READY".equals(room.getStatus())) {
+                    if ("CLEANING".equals(room.getStatus()) || "NOT_READY".equals(room.getStatus())) {
                         request.getSession().setAttribute("error", "Không thể Check-in! Phòng " + room.getRoomNumber() + " chưa sẵn sàng.");
                         response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
                         return;
@@ -224,7 +224,7 @@ public class WalkInReservationServlet extends HttpServlet {
 
                     // Insert payment record if paid
                     if ("PAID".equals(paymentStatus)) {
-                        String insertPayment = "INSERT INTO payments (booking_id, payment_type, payment_method, amount, status, paid_at) VALUES (?, 'PAYMENT', ?, ?, 'COMPLETED', CURRENT_TIMESTAMP)";
+                        String insertPayment = "INSERT INTO payments (booking_id, payment_type, payment_method, amount, status, paid_at) VALUES (?, 'BOOKING_PAYMENT', ?, ?, 'SUCCESS', CURRENT_TIMESTAMP)";
                         try (java.sql.PreparedStatement ps = conn.prepareStatement(insertPayment)) {
                             ps.setLong(1, bookingId);
                             ps.setString(2, paymentMethod != null ? paymentMethod : "CASH");

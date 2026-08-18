@@ -1,11 +1,14 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    java.util.List<model.RoomType> publicRoomTypes = new dao.RoomTypeDao().findActive();
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HMS Hotel</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -19,7 +22,12 @@
                 <label>Check-in<input type="date" name="checkIn"></label>
                 <label>Check-out<input type="date" name="checkOut"></label>
                 <label>Khách<select name="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
-                <label>Loại phòng<select name="roomType"><option value="">Tất cả</option><option>Deluxe</option><option>Suite</option></select></label>
+                <label>Loại phòng<select name="roomTypeId">
+                    <option value="">Tất cả</option>
+                    <% for (model.RoomType rt : publicRoomTypes) { %>
+                        <option value="<%= rt.getId() %>"><%= rt.getName() %></option>
+                    <% } %>
+                </select></label>
                 <button type="submit">Tìm phòng</button>
             </form>
         </div>

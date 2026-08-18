@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Sửa Đặt Phòng | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <style>
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-group { margin-bottom: 15px; }

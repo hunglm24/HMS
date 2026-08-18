@@ -29,6 +29,22 @@ public class RoomTypeDao {
         return roomTypes;
     }
 
+    public List<RoomType> findActive() {
+        List<RoomType> roomTypes = new ArrayList<>();
+        String sql = "SELECT * FROM room_types WHERE status = 'ACTIVE' ORDER BY id ASC";
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                roomTypes.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot load active room types from database.", e);
+        }
+        return roomTypes;
+    }
+
     // Load distinct room type statuses from the database for form dropdowns.
     public List<String> findDistinctStatuses() {
         List<String> statuses = new ArrayList<>();
@@ -62,17 +78,28 @@ public class RoomTypeDao {
     public List<RoomType> findAvailableRoomTypes(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int guests, int numRooms, Double minPrice, Double maxPrice, String sort, Long roomTypeId) {
         List<RoomType> roomTypes = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
-            SELECT rt.*, 
-                   (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status != 'MAINTENANCE') AS totalActiveRooms,
-                   (SELECT COUNT(*) FROM rooms r WHERE r.room_type_id = rt.id AND r.status != 'MAINTENANCE')
-                   - 
-                   (SELECT COUNT(DISTINCT br.room_id)
-                    FROM booking_rooms br
-                    JOIN bookings b ON br.booking_id = b.id
-                    JOIN rooms r ON br.room_id = r.id
-                    WHERE r.room_type_id = rt.id
-                      AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
-                      AND b.check_in_date < ? AND b.check_out_date > ?) AS availableQuantity
+            SELECT rt.*,
+                   (
+                       SELECT COUNT(*)
+                       FROM rooms r
+                       WHERE r.room_type_id = rt.id
+                         AND r.status = 'AVAILABLE'
+                         AND NOT EXISTS (
+                             SELECT 1
+                             FROM booking_rooms br
+                             JOIN bookings b ON br.booking_id = b.id
+                             WHERE br.room_id = r.id
+                               AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                               AND b.check_in_date < ?
+                               AND b.check_out_date > ?
+                         )
+                   ) AS availableQuantity,
+                   (
+                       SELECT COUNT(*)
+                       FROM rooms r
+                       WHERE r.room_type_id = rt.id
+                         AND r.status = 'AVAILABLE'
+                   ) AS totalActiveRooms
             FROM room_types rt
             WHERE (rt.capacity * ?) >= ? AND rt.status = 'ACTIVE'
             """);

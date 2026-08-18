@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Báo cáo sự cố - HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <style>
         .form-panel { max-width: 600px; margin: 0 auto; }
         .form-group { margin-bottom: 20px; }

@@ -9,7 +9,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý loại phòng | HMS</title>
-    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260816-4" />
+    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260819-1" />
     <link rel="stylesheet" href="${cp}/assets/css/room-types.css" />
   </head>
   <body class="room-management-body room-types-preview-body">

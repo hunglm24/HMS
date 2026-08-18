@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Xác nhận đặt phòng | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
 </head>
 <body>
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -17,12 +17,12 @@
             <div>
                 <p class="section-kicker">Đặt phòng</p>
                 <h1>Thông tin đặt phòng</h1>
-                <p>Nhập thông tin người đặt và xác nhận giữ phòng.</p>
+                <p>Nhập thông tin người đặt, kiểm tra giảm giá và xác nhận thanh toán.</p>
             </div>
         </section>
         <section class="dashboard-grid">
             <form class="preview-card" method="post" action="${pageContext.request.contextPath}/checkout">
-                <span>Booker</span>
+                <span>Người đặt</span>
                 <h3>Thông tin liên hệ</h3>
                 <c:if test="${not empty sessionScope.error}">
                     <div class="message error" role="alert"><c:out value="${sessionScope.error}" /></div>
@@ -32,18 +32,18 @@
                 <label>Email<input type="email" name="email" required></label>
                 <label>Điện thoại<input name="phone" required></label>
                 <label>Ghi chú<textarea name="note"></textarea></label>
-                
+
                 <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffe69c; border-radius: 8px;">
                     <strong>Thời gian giữ giỏ hàng: </strong>
                     <span id="countdown-timer" style="font-size: 1.25rem; font-weight: bold; color: #dc3545;">15:00</span>
                 </div>
-                
+
                 <div class="info" style="margin-top: 1rem; padding: 12px 14px; border-radius: 12px;">
                     Sau khi xác nhận, bạn sẽ được chuyển đến VNPay để quét mã QR và thanh toán an toàn.
                 </div>
                 <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Xác nhận và thanh toán VNPay</button>
             </form>
-            
+
             <aside class="preview-card">
                 <span>Tóm tắt</span>
                 <h3>Giỏ hàng của bạn</h3>
@@ -51,12 +51,26 @@
                     <c:forEach var="item" items="${sessionScope.cart}">
                         <li style="margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #eee;">
                             <strong>Phòng ${item.roomType.name}</strong> x ${item.quantity}<br>
-                            <small>Từ ${item.checkIn} đến ${item.checkOut}</small><br>
+                            <small>Từ ${item.checkIn} đến ${item.checkOut} (${item.numberOfNights} đêm)</small><br>
+                            <small><fmt:formatNumber value="${item.averagePricePerNight}" pattern="#,###" var="fmtNightly" />${fn:replace(fmtNightly, ',', ' ')} VND/đêm x ${item.numberOfNights} đêm x ${item.quantity} phòng</small><br>
                             <span style="color: #666;"><fmt:formatNumber value="${item.subtotal}" pattern="#,###" var="fmtSub" />${fn:replace(fmtSub, ',', ' ')} VND</span>
                         </li>
                     </c:forEach>
                 </ul>
-                <h2 style="color: var(--primary); margin-top: 1rem;">Tổng cộng: <fmt:formatNumber value="${totalAmount}" pattern="#,###" var="fmtTot" />${fn:replace(fmtTot, ',', ' ')} VND</h2>
+                <div style="display:grid; gap: 8px; margin-top: 1rem;">
+                    <div style="display:flex; justify-content:space-between; gap: 12px;">
+                        <span>Tạm tính theo số đêm:</span>
+                        <strong><fmt:formatNumber value="${roomAmount}" pattern="#,###" var="fmtRoom" />${fn:replace(fmtRoom, ',', ' ')} VND</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap: 12px; color:#067647;">
+                        <span>Giảm giá:</span>
+                        <strong>- <fmt:formatNumber value="${discountAmount}" pattern="#,###" var="fmtDiscount" />${fn:replace(fmtDiscount, ',', ' ')} VND</strong>
+                    </div>
+                    <c:if test="${not empty sessionScope.appliedPromotion}">
+                        <div style="font-size: .9rem; color:#667085;">Mã áp dụng: <strong><c:out value="${sessionScope.appliedPromotion.code}" /></strong></div>
+                    </c:if>
+                </div>
+                <h2 style="color: var(--primary); margin-top: 1rem;">Tổng thanh toán: <fmt:formatNumber value="${totalAmount}" pattern="#,###" var="fmtTot" />${fn:replace(fmtTot, ',', ' ')} VND</h2>
             </aside>
         </section>
     </main>
@@ -80,3 +94,4 @@
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 </body>
 </html>
+

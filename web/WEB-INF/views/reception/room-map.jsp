@@ -18,7 +18,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sơ đồ phòng - HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/room-map.css?v=20260816-4">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/room-change-modal.css?v=20260816-4">
 </head>

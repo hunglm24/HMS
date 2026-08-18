@@ -310,20 +310,6 @@ public class UserDao {
     public void savePasswordResetToken(User user, String tokenHash, LocalDateTime expiresAt)
             throws SQLException {
         try (Connection connection = DBConnectionUtil.getConnection()) {
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate("""
-                    CREATE TABLE IF NOT EXISTS password_reset_token (
-                        token_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                        account_type VARCHAR(10) NOT NULL,
-                        account_id INT NOT NULL,
-                        token_hash CHAR(64) NOT NULL UNIQUE,
-                        expires_at DATETIME NOT NULL,
-                        used_at DATETIME NULL,
-                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        INDEX idx_reset_token_hash (token_hash)
-                    )
-                    """);
-            }
             try (PreparedStatement invalidate = connection.prepareStatement(
                     "UPDATE password_reset_token SET used_at = CURRENT_TIMESTAMP "
                             + "WHERE account_type = ? AND account_id = ? AND used_at IS NULL")) {

@@ -15,17 +15,17 @@ import java.util.List;
 public class SearchRoomServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
+    private final dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        List<model.RoomType> allRoomTypes = roomTypeDao.findAll();
+
+        List<model.RoomType> allRoomTypes = roomTypeDao.findActive();
         request.setAttribute("allRoomTypes", allRoomTypes);
 
         String error = validateDates(request);
-        
+
         if (error == null) {
             String checkInStr = request.getParameter("checkIn");
             String checkOutStr = request.getParameter("checkOut");
@@ -35,29 +35,39 @@ public class SearchRoomServlet extends HttpServlet {
             String maxPriceStr = request.getParameter("maxPrice");
             String sort = request.getParameter("sort");
             String roomTypeIdStr = request.getParameter("roomTypeId");
-            
-            if (checkInStr != null && checkOutStr != null && guestsStr != null) {
-                LocalDate checkIn = LocalDate.parse(checkInStr);
-                LocalDate checkOut = LocalDate.parse(checkOutStr);
-                int guests = Integer.parseInt(guestsStr);
-                int numRooms = numRoomsStr != null && !numRoomsStr.isBlank() ? Integer.parseInt(numRoomsStr) : 1;
-                Double minPrice = minPriceStr != null && !minPriceStr.isBlank() ? Double.parseDouble(minPriceStr) : null;
-                Double maxPrice = maxPriceStr != null && !maxPriceStr.isBlank() ? Double.parseDouble(maxPriceStr) : null;
-                Long roomTypeId = roomTypeIdStr != null && !roomTypeIdStr.isBlank() ? Long.parseLong(roomTypeIdStr) : null;
 
-                List<model.RoomType> availableRooms = roomTypeDao.findAvailableRoomTypes(checkIn, checkOut, guests, numRooms, minPrice, maxPrice, sort, roomTypeId);
-                request.setAttribute("availableRooms", availableRooms);
+            if (hasSearchInput(checkInStr, checkOutStr, guestsStr)) {
+                try {
+                    LocalDate checkIn = LocalDate.parse(checkInStr);
+                    LocalDate checkOut = LocalDate.parse(checkOutStr);
+                    int guests = Integer.parseInt(guestsStr);
+                    int numRooms = numRoomsStr != null && !numRoomsStr.isBlank() ? Integer.parseInt(numRoomsStr) : 1;
+                    Double minPrice = minPriceStr != null && !minPriceStr.isBlank() ? Double.parseDouble(minPriceStr) : null;
+                    Double maxPrice = maxPriceStr != null && !maxPriceStr.isBlank() ? Double.parseDouble(maxPriceStr) : null;
+                    Long roomTypeId = roomTypeIdStr != null && !roomTypeIdStr.isBlank() ? Long.parseLong(roomTypeIdStr) : null;
+
+                    List<model.RoomType> availableRooms = roomTypeDao.findAvailableRoomTypes(
+                            checkIn, checkOut, guests, numRooms, minPrice, maxPrice, sort, roomTypeId);
+                    request.setAttribute("availableRooms", availableRooms);
+                } catch (RuntimeException ex) {
+                    request.setAttribute("dateError", "Dữ liệu tìm kiếm không hợp lệ. Vui lòng kiểm tra ngày, số khách, số phòng và giá.");
+                }
             }
         }
-        
+
         request.getRequestDispatcher("/WEB-INF/views/public/search-results.jsp").forward(request, response);
+    }
+
+    private boolean hasSearchInput(String checkIn, String checkOut, String guests) {
+        return checkIn != null && checkOut != null && guests != null
+                && !checkIn.isBlank() && !checkOut.isBlank() && !guests.isBlank();
     }
 
     private String validateDates(HttpServletRequest request) {
         String checkIn = request.getParameter("checkIn");
         String checkOut = request.getParameter("checkOut");
         if (checkIn == null || checkOut == null || checkIn.isBlank() || checkOut.isBlank()) {
-            return null; // Not searching yet
+            return null;
         }
         LocalDate today = LocalDate.now();
         try {

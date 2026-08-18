@@ -21,12 +21,14 @@ public class RoomDao {
             SELECT r.*, rt.name AS room_type_name, rt.base_price AS base_price
             FROM rooms r
             JOIN room_types rt ON r.room_type_id = rt.id
-            WHERE r.status != 'MAINTENANCE'
-              AND r.id NOT IN (
-                  SELECT br.room_id
+            WHERE r.status = 'AVAILABLE'
+              AND rt.status = 'ACTIVE'
+              AND NOT EXISTS (
+                  SELECT 1
                   FROM booking_rooms br
                   JOIN bookings b ON br.booking_id = b.id
-                  WHERE b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                  WHERE br.room_id = r.id
+                    AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
                     AND b.check_in_date < ? AND b.check_out_date > ?
               )
             """);
