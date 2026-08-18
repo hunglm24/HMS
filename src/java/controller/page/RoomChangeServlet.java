@@ -20,6 +20,7 @@ public class RoomChangeServlet extends HttpServlet {
 
     @Override
     public void init() {
+        // Initialize the services once for the servlet lifecycle.
         roomChangeService = new RoomChangeService();
         auditLogService = new AuditLogService();
     }
@@ -31,6 +32,7 @@ public class RoomChangeServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         User currentUser = session == null ? null : (User) session.getAttribute("currentUser");
         if (currentUser == null) {
+            // Reject anonymous requests before reading any form fields.
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
@@ -67,6 +69,7 @@ public class RoomChangeServlet extends HttpServlet {
             }
             response.sendRedirect(request.getContextPath() + "/reception/room-map");
         } catch (SQLException ex) {
+            // Log the database failure and redirect with an error message.
             getServletContext().log("Không thể xử lý đổi phòng", ex);
             if (session != null) {
                 session.setAttribute("flashMessage", "Hệ thống đang bận. Vui lòng thử lại sau.");
@@ -77,6 +80,7 @@ public class RoomChangeServlet extends HttpServlet {
     }
 
     private long parseLong(String value) {
+        // Parse the incoming ID safely and fall back to zero on invalid input.
         try {
             return value == null || value.isBlank() ? 0L : Long.parseLong(value);
         } catch (NumberFormatException ex) {
@@ -85,6 +89,7 @@ public class RoomChangeServlet extends HttpServlet {
     }
 
     private String buildDetail(String currentRoomNumber, String newRoomNumber, String reason) {
+        // Build a human-readable audit log message for the room change event.
         String fromRoom = currentRoomNumber == null || currentRoomNumber.isBlank() ? "không rõ" : currentRoomNumber.trim();
         String toRoom = newRoomNumber == null || newRoomNumber.isBlank() ? "không rõ" : newRoomNumber.trim();
         String note = reason == null || reason.isBlank() ? "Không có lý do" : reason.trim();

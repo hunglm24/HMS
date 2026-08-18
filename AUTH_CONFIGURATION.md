@@ -42,3 +42,14 @@ HMS_SMTP_PORT=465
 - Email quên mật khẩu chứa link dùng một lần, hết hạn sau 15 phút.
 - Database chỉ lưu SHA-256 của reset token, không lưu token rõ.
 - Mỗi yêu cầu mới vô hiệu hóa reset token cũ của tài khoản.
+
+## VNPay Sandbox
+
+Khai báo trong Environment variables của cấu hình chạy Tomcat:
+
+```text
+HMS_VNPAY_TMN_CODE=<mã website sandbox do VNPay cấp>
+HMS_VNPAY_HASH_SECRET=<chuỗi bí mật sandbox do VNPay cấp>
+```
+
+Sau khi khách xác nhận đặt phòng, hệ thống chuyển đến cổng VNPay để hiển thị phương thức QR.

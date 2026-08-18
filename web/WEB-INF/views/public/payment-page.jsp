@@ -24,9 +24,13 @@
             <form class="preview-card" method="post" action="${pageContext.request.contextPath}/checkout">
                 <span>Booker</span>
                 <h3>Thông tin liên hệ</h3>
-                <label>Họ tên<input name="fullName" value="${fn:escapeXml(sessionScope.currentUser.fullName)}" required></label>
-                <label>Email<input type="email" name="email" value="${fn:escapeXml(sessionScope.currentUser.email)}" required></label>
-                <label>Điện thoại<input name="phone" value="${fn:escapeXml(sessionScope.currentUser.phone)}" required></label>
+                <c:if test="${not empty sessionScope.error}">
+                    <div class="message error" role="alert"><c:out value="${sessionScope.error}" /></div>
+                    <c:remove var="error" scope="session" />
+                </c:if>
+                <label>Họ tên<input name="fullName" required></label>
+                <label>Email<input type="email" name="email" required></label>
+                <label>Điện thoại<input name="phone" required></label>
                 <label>Ghi chú<textarea name="note"></textarea></label>
                 
                 <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffe69c; border-radius: 8px;">
@@ -34,7 +38,10 @@
                     <span id="countdown-timer" style="font-size: 1.25rem; font-weight: bold; color: #dc3545;">15:00</span>
                 </div>
                 
-                <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Xác nhận đặt phòng</button>
+                <div class="info" style="margin-top: 1rem; padding: 12px 14px; border-radius: 12px;">
+                    Sau khi xác nhận, bạn sẽ được chuyển đến VNPay để quét mã QR và thanh toán an toàn.
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Xác nhận và thanh toán VNPay</button>
             </form>
             
             <aside class="preview-card">

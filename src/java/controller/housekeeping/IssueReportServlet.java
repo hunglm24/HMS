@@ -30,6 +30,14 @@ public class IssueReportServlet extends HttpServlet {
             try {
                 long roomId = Long.parseLong(request.getParameter("roomId"));
                 java.util.List<model.HousekeepingTask.EquipmentCheck> equips = maintenanceService.findAllEquipmentsInRoom(roomId);
+                
+                java.util.Map<String, String> reportableStatuses = new java.util.LinkedHashMap<>();
+                reportableStatuses.put("NORMAL", "Bình thường");
+                reportableStatuses.put("DAMAGED", "Hư hỏng");
+                reportableStatuses.put("MISSING", "Thất lạc");
+                reportableStatuses.put("MAINTENANCE", "Bảo trì định kỳ");
+                
+                request.setAttribute("reportableStatuses", reportableStatuses);
                 request.setAttribute("equips", equips);
                 request.getRequestDispatcher("/WEB-INF/views/housekeeping/fragments/equipment-list.jsp").forward(request, response);
             } catch (Exception ex) {

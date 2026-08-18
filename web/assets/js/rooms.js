@@ -12,6 +12,7 @@
         return kind;
     }
 
+    // Open the requested modal and update its accessibility state.
     function openModal(kind) {
         const modal = modalState[normalizeModalKind(kind)];
         if (!modal) return;
@@ -19,6 +20,7 @@
         modal.setAttribute('aria-hidden', 'false');
     }
 
+    // Reset the room type modal into create mode.
     function openRoomTypeModal() {
         setText('roomTypeModalTitle', 'Thêm loại phòng');
         setValue('roomTypeIdField', '');
@@ -33,6 +35,7 @@
         openModal('room-type');
     }
 
+    // Reset the room modal into create mode.
     function openRoomModal() {
         setText('roomModalTitle', 'Thêm phòng');
         setValue('roomId', '');
@@ -44,12 +47,14 @@
         openModal('room');
     }
 
+    // Close the modal and restore its hidden state.
     function closeModal(modal) {
         if (!modal) return;
         modal.classList.remove('is-open');
         modal.setAttribute('aria-hidden', 'true');
     }
 
+    // Write a value into an input or textarea if it exists.
     function setValue(id, value) {
         const input = document.getElementById(id);
         if (input) {
@@ -57,6 +62,7 @@
         }
     }
 
+    // Toggle read-only mode for a specific field.
     function setReadonly(id, readonly) {
         const input = document.getElementById(id);
         if (input) {
@@ -64,6 +70,7 @@
         }
     }
 
+    // Limit the target field to digits only.
     function setDigitsOnly(id) {
         const input = document.getElementById(id);
         if (!input || input.dataset.digitsBound === 'true') {
@@ -71,11 +78,13 @@
         }
         input.dataset.digitsBound = 'true';
         input.addEventListener('input', () => {
+            // Strip every non-digit character from the price field.
             input.value = (input.value || '').replace(/[^\d]/g, '');
         });
     }
 
     // Update headings that are not form fields.
+    // Write plain text into a heading or label node.
     function setText(id, value) {
         const node = document.getElementById(id);
         if (node) {
@@ -83,6 +92,7 @@
         }
     }
 
+    // Bind the buttons that open each management modal.
     function bindOpenButtons() {
         document.querySelectorAll('[data-room-mgmt-open]').forEach((button) => {
             button.addEventListener('click', () => {
@@ -97,6 +107,7 @@
         });
     }
 
+    // Bind edit actions so each modal opens with existing values.
     function bindEditButtons() {
         document.querySelectorAll('[data-room-mgmt-edit-room-type="true"]').forEach((button) => {
             button.addEventListener('click', () => {
@@ -128,6 +139,7 @@
         });
     }
 
+    // Bind the shared close buttons used by both modals.
     function bindCloseButtons() {
         document.querySelectorAll('[data-room-mgmt-close="true"]').forEach((button) => {
             button.addEventListener('click', () => {
@@ -137,6 +149,7 @@
         });
     }
 
+    // Ask for confirmation before executing destructive actions.
     function bindConfirmLinks() {
         document.querySelectorAll('[data-room-mgmt-confirm="true"]').forEach((link) => {
             link.addEventListener('click', (event) => {
@@ -148,6 +161,7 @@
         });
     }
 
+    // Close any open modal when Escape is pressed.
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
         document.querySelectorAll('.room-management-modal.is-open').forEach((modal) => closeModal(modal));
