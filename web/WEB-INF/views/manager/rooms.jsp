@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="vi">
   <head>
@@ -136,6 +137,7 @@
                                                 data-room-id="${room.id}"
                                                 data-room-number="${room.roomNumber}"
                                                 data-room-type-id="${room.roomTypeId}"
+                                                data-room-type-name="${fn:escapeXml(room.roomTypeName)}"
                                                 data-room-floor="${room.floorNumber}"
                                                 data-room-status="${room.status}"
                                                 data-room-description="${room.description}">
@@ -195,6 +197,7 @@
                                 data-room-id="${room.id}"
                                 data-room-number="${room.roomNumber}"
                                 data-room-type-id="${room.roomTypeId}"
+                                data-room-type-name="${fn:escapeXml(room.roomTypeName)}"
                                 data-room-floor="${room.floorNumber}"
                                 data-room-status="${room.status}"
                                 data-room-description="${room.description}">
