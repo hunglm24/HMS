@@ -12,6 +12,7 @@ public class RoomTypeDetailServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
+    private dao.RoomTypeAmenityDao roomTypeAmenityDao = new dao.RoomTypeAmenityDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -42,6 +43,7 @@ public class RoomTypeDetailServlet extends HttpServlet {
                     }
                     
                     request.setAttribute("room", rt);
+                    request.setAttribute("roomTypeAmenities", roomTypeAmenityDao.findAmenitiesByRoomTypeId(rt.getId()));
                     request.setAttribute("isAvailable", isAvailable);
                     request.getRequestDispatcher("/WEB-INF/views/public/room-detail.jsp").forward(request, response);
                     return;

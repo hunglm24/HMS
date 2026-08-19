@@ -42,10 +42,6 @@
                 <article class="panel room-type-create-card">
                     <header class="room-type-create-card__head">
                         <h2>Basic Information</h2>
-                        <div class="room-type-create-card__tools">
-                            <button class="room-type-create-mini-btn" type="button">Save</button>
-                            <button class="room-type-create-icon-btn" type="button" aria-label="Edit basic information">✎</button>
-                        </div>
                     </header>
 
                     <label class="room-type-create-field${not empty errors.name ? ' is-error' : ''}" data-validate-field="name">
@@ -115,10 +111,6 @@
                         <div>
                             <h2>Room Configuration</h2>
                         </div>
-                        <div class="room-type-create-card__tools">
-                            <button class="room-type-create-mini-btn" type="button">Save</button>
-                            <button class="room-type-create-icon-btn" type="button" aria-label="Edit configuration">✎</button>
-                        </div>
                     </header>
 
                     <div class="room-type-create-grid-2">
@@ -176,10 +168,6 @@
                     <header class="room-type-create-card__head">
                         <div>
                             <h2>Media</h2>
-                        </div>
-                        <div class="room-type-create-card__tools">
-                            <button class="room-type-create-mini-btn" type="button">Save</button>
-                            <button class="room-type-create-icon-btn" type="button" aria-label="Edit media">✎</button>
                         </div>
                     </header>
 

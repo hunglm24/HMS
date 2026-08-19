@@ -9,7 +9,7 @@ public final class DBConnectionUtil {
     private static final String PORT = config("HMS_DB_PORT", "3306");
     private static final String DB_NAME = config("HMS_DB_NAME", "hms_db");
     private static final String USERNAME = config("HMS_DB_USERNAME", "root");
-    private static final String PASSWORD = config("HMS_DB_PASSWORD", "ngochuy2603");
+    private static final String PASSWORD = config("HMS_DB_PASSWORD", "123456");
     private static final String URL = "jdbc:mysql://" + HOST + ':' + PORT + '/' + DB_NAME
             + "?useSSL=false&allowPublicKeyRetrieval=true"
             + "&serverTimezone=Asia%2FHo_Chi_Minh&useUnicode=true&characterEncoding=UTF-8";

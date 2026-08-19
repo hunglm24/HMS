@@ -45,6 +45,23 @@ public class RoomTypeDao {
         return roomTypes;
     }
 
+    // Load a limited number of active room types for homepage highlights.
+    public List<RoomType> findActive(int limit) {
+        List<RoomType> roomTypes = new ArrayList<>();
+        String sql = "SELECT * FROM room_types WHERE status = 'ACTIVE' ORDER BY id ASC LIMIT " + Math.max(limit, 0);
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                roomTypes.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot load limited active room types from database.", e);
+        }
+        return roomTypes;
+    }
+
     // Load distinct room type statuses from the database for form dropdowns.
     public List<String> findDistinctStatuses() {
         List<String> statuses = new ArrayList<>();

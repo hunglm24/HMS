@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 )
 public class RoomTypeManagementServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final int ROOM_TYPES_PAGE_SIZE = 5;
     private static final String ACTIVE_STATUS = "ACTIVE";
     private static final String ALL_STATUS = "ALL";
     private static final long MAX_COVER_IMAGE_SIZE = 5L * 1024 * 1024;
@@ -344,32 +345,103 @@ public class RoomTypeManagementServlet extends HttpServlet {
             roomTypeStatus = ACTIVE_STATUS;
         }
         String selectedRoomTypeIdRaw = req.getParameter("selectedRoomTypeId");
+        String pageRaw = req.getParameter("page");
 
         pageData.setKeyword(keyword);
         pageData.setRoomTypeStatus(roomTypeStatus);
-        pageData.setRoomTypes(ALL_STATUS.equalsIgnoreCase(roomTypeStatus)
+        List<RoomType> allRoomTypes = ALL_STATUS.equalsIgnoreCase(roomTypeStatus)
                 ? roomTypeService.findRoomTypes(keyword, null)
-                : roomTypeService.findRoomTypes(keyword, roomTypeStatus));
+                : roomTypeService.findRoomTypes(keyword, roomTypeStatus);
 
-        RoomType selectedRoomType = resolveSelectedRoomType(pageData.getRoomTypes(), selectedRoomTypeIdRaw);
+        int currentPage = parsePage(pageRaw);
+        RoomType selectedRoomType = resolveSelectedRoomType(allRoomTypes, selectedRoomTypeIdRaw);
+        int selectedIndex = findRoomTypeIndex(allRoomTypes, selectedRoomType);
+        if (selectedIndex >= 0 && ValidationUtil.isBlank(pageRaw)) {
+            currentPage = selectedIndex / ROOM_TYPES_PAGE_SIZE + 1;
+        }
+
+        int totalPages = Math.max(1, (int) Math.ceil(allRoomTypes.size() / (double) ROOM_TYPES_PAGE_SIZE));
+        currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+        int fromIndex = Math.min((currentPage - 1) * ROOM_TYPES_PAGE_SIZE, allRoomTypes.size());
+        int toIndex = Math.min(fromIndex + ROOM_TYPES_PAGE_SIZE, allRoomTypes.size());
+        List<RoomType> pagedRoomTypes = allRoomTypes.subList(fromIndex, toIndex);
+
         if (selectedRoomType == null && !ValidationUtil.isBlank(selectedRoomTypeIdRaw)) {
             Long selectedRoomTypeId = ValidationUtil.optionalPositiveLong(selectedRoomTypeIdRaw, "Room type");
             if (selectedRoomTypeId != null) {
                 selectedRoomType = roomTypeService.findRoomTypeById(selectedRoomTypeId);
             }
         }
-        if (selectedRoomType == null && pageData.getRoomTypes() != null && !pageData.getRoomTypes().isEmpty()) {
-            selectedRoomType = pageData.getRoomTypes().get(0);
+        if (selectedRoomType == null && !pagedRoomTypes.isEmpty()) {
+            selectedRoomType = pagedRoomTypes.get(0);
         }
 
+        pageData.setRoomTypes(pagedRoomTypes);
         req.setAttribute("pageData", pageData);
-        req.setAttribute("roomTypes", pageData.getRoomTypes());
+        req.setAttribute("roomTypes", pagedRoomTypes);
         req.setAttribute("selectedRoomType", selectedRoomType);
         req.setAttribute("selectedRoomTypeId", selectedRoomType == null ? null : selectedRoomType.getId());
         req.setAttribute(
                 "selectedRoomTypeAmenities",
                 selectedRoomType == null ? List.of() : roomTypeService.findAmenitiesByRoomTypeId(selectedRoomType.getId())
         );
+        req.setAttribute("paginationCurrentPage", currentPage);
+        req.setAttribute("paginationTotalPages", totalPages);
+        req.setAttribute("paginationPrevUrl", buildRoomTypesPageUrl(req, keyword, roomTypeStatus, currentPage - 1));
+        req.setAttribute("paginationNextUrl", buildRoomTypesPageUrl(req, keyword, roomTypeStatus, currentPage + 1));
+    }
+
+    private int parsePage(String pageRaw) {
+        if (ValidationUtil.isBlank(pageRaw)) {
+            return 1;
+        }
+        try {
+            return Math.max(1, Integer.parseInt(pageRaw));
+        } catch (NumberFormatException ex) {
+            return 1;
+        }
+    }
+
+    private int findRoomTypeIndex(List<RoomType> roomTypes, RoomType selectedRoomType) {
+        if (roomTypes == null || roomTypes.isEmpty() || selectedRoomType == null || selectedRoomType.getId() == null) {
+            return -1;
+        }
+        for (int i = 0; i < roomTypes.size(); i++) {
+            RoomType roomType = roomTypes.get(i);
+            if (roomType != null && roomType.getId() != null && roomType.getId().equals(selectedRoomType.getId())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private String buildRoomTypesPageUrl(HttpServletRequest req, String keyword, String roomTypeStatus, int page) {
+        StringBuilder url = new StringBuilder(req.getContextPath()).append("/manager/room-types?");
+        boolean hasParam = false;
+        if (!ValidationUtil.isBlank(keyword)) {
+            url.append("keyword=").append(urlEncode(keyword));
+            hasParam = true;
+        }
+        if (!ValidationUtil.isBlank(roomTypeStatus)) {
+            if (hasParam) {
+                url.append('&');
+            }
+            url.append("roomTypeStatus=").append(urlEncode(roomTypeStatus));
+            hasParam = true;
+        }
+        if (hasParam) {
+            url.append('&');
+        }
+        url.append("page=").append(Math.max(page, 1));
+        return url.toString();
+    }
+
+    private String urlEncode(String value) {
+        try {
+            return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8.toString());
+        } catch (Exception ex) {
+            return value;
+        }
     }
 
     // Find the room type that matches the selected id if the request provided one.
