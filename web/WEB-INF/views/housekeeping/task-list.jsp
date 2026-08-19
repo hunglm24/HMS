@@ -48,12 +48,10 @@
             <p>Chọn công việc kiểm tra hoặc dọn phòng đang chờ nhận.</p></div>
         <div class="hk-total"><strong><%= result.totalItems() %></strong><span>kết quả</span></div>
     </section>
-<!--
     <nav class="hk-tabs" aria-label="Nhóm công việc">
-        <% if (!isManager) { %><a class="<%= !mine && !history ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=waiting">Task chờ nhận</a>
-        <a class="<%= mine ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=mine">Task của tôi</a><% } %>
+        <% if (!isManager) { %><a class="<%= mine ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=mine">Task của tôi</a><% } %>
         <a class="<%= history ? "active" : "" %>" href="<%= contextPath %>/housekeeping/tasks?view=history">Lịch sử<%= isManager ? " toàn bộ" : " của tôi" %></a>
-    </nav>-->
+    </nav>
 
     <form class="hk-filters" method="get" action="<%= contextPath %>/housekeeping/tasks">
         <input type="hidden" name="view" value="<%= HousekeepingTask.esc(result.view()) %>">
@@ -103,17 +101,9 @@
             <td data-label="Tầng"><%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %></td>
             <td data-label="Công việc"><%= task.getTaskTypeLabel() %></td>
             <td data-label="Trạng thái"><span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= task.getStatusLabel() %></span></td>
-            <td class="hk-row-action"><% if (mine || history) { %>
+            <td class="hk-row-action">
                 <a href="<%= contextPath %>/housekeeping/tasks/detail?id=<%= task.getTaskId() %>">Xem chi tiết</a>
-            <% } else if ("CLEANING".equals(task.getTaskType())) { %>
-                <form method="post" action="<%= contextPath %>/housekeeping/tasks/claim-cleaning">
-                    <input type="hidden" name="taskId" value="<%= task.getTaskId() %>">
-                    <button type="submit">Nhận dọn phòng</button>
-                </form>
-            <% } else { %><form method="post" action="<%= contextPath %>/housekeeping/tasks/claim">
-                    <input type="hidden" name="bookingRoomId" value="<%= task.getBookingRoomId() %>">
-                    <button type="submit">Nhận kiểm tra</button>
-                </form><% } %></td>
+            </td>
         </tr><% } %></tbody>
     </table></div>
 

@@ -325,7 +325,7 @@ tr:hover td {
 .form-control { width: 100%; min-height: 40px; padding: 9px 12px; border: 1px solid var(--color-border);
     border-radius: var(--radius-sm); background: var(--color-bg-surface); color: var(--color-text-primary); font: inherit; }
 .form-control:focus { border-color: var(--color-primary-600); outline: 2px solid rgba(59, 107, 240, .25); outline-offset: 1px; }
-.form-control:read-only { background: var(--color-bg-base); color: var(--color-text-secondary); cursor: not-allowed; }
+input.form-control:read-only, textarea.form-control:read-only { background: var(--color-bg-base); color: var(--color-text-secondary); cursor: not-allowed; }
 .button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; padding: 10px 16px;
     border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-1);
     font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none;

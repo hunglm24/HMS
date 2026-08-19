@@ -33,7 +33,7 @@
                 <% if (isWaiting) { %>
                     <span style="font-size: 13px; color: var(--color-text-secondary);">Đã báo cáo sự cố</span>
                 <% } else { %>
-                    <select name="status_<%= eqId %>" class="form-control" style="width: 160px; padding: 6px; font-size: 13px;">
+                    <select name="status_<%= eqId %>" style="width: 160px; padding: 6px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 4px; background-color: #fff; color: #111827; cursor: pointer;">
                         <% if (reportableStatuses != null) {
                             for (Map.Entry<String, String> entry : reportableStatuses.entrySet()) { 
                                 String val = entry.getKey();

@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Room;
 import service.RoomService;
+import service.HousekeepingService;
 import util.ValidationUtil;
 
 import java.io.IOException;
@@ -17,17 +18,20 @@ import java.sql.SQLException;
         "/manager/rooms",
         "/manager/rooms/save-room",
         "/manager/rooms/deactivate-room",
-        "/manager/rooms/delete"
+        "/manager/rooms/delete",
+        "/manager/rooms/create-task"
 })
 public class RoomManagementServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private RoomService roomService;
+    private HousekeepingService housekeepingService;
 
     @Override
     public void init() throws ServletException {
         // Initialize the service once for the servlet lifecycle.
         roomService = new RoomService();
+        housekeepingService = new HousekeepingService();
     }
 
     @Override
@@ -45,6 +49,10 @@ public class RoomManagementServlet extends HttpServlet {
             RoomManagementPageData pageData = buildPageData(req);
             req.setAttribute("pageData", pageData);
             req.setAttribute("roomTypeOptions", roomService.getRoomTypeOptions());
+            try {
+                req.setAttribute("housekeepers", housekeepingService.getHousekeepers());
+            } catch (SQLException ignored) {
+            }
             req.setAttribute("rooms", roomService.findRooms(
                     pageData.getKeyword(),
                     pageData.getRoomTypeId(),
@@ -67,6 +75,11 @@ public class RoomManagementServlet extends HttpServlet {
         // Handle only the room save endpoint for POST requests.
         if ("/manager/rooms/save-room".equals(req.getServletPath())) {
             handleSaveRoom(req, resp);
+            return;
+        }
+        
+        if ("/manager/rooms/create-task".equals(req.getServletPath())) {
+            handleCreateTask(req, resp);
             return;
         }
 
@@ -138,6 +151,28 @@ public class RoomManagementServlet extends HttpServlet {
                 req.getSession().setAttribute("toastType", "error");
             }
         }
+        resp.sendRedirect(req.getContextPath() + "/manager/rooms");
+    }
+    
+    private void handleCreateTask(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        try {
+            long roomId = ValidationUtil.requirePositiveLong(req.getParameter("roomId"), "Room");
+            String taskType = req.getParameter("taskType");
+            Long assignedTo = ValidationUtil.optionalPositiveLong(req.getParameter("assignedTo"), "Assignee");
+            String priority = req.getParameter("priority");
+            String note = req.getParameter("note");
+            
+            housekeepingService.createManualTask(roomId, taskType, assignedTo, priority, note);
+            req.getSession().setAttribute("toastMessage", "Đã tạo công việc thành công.");
+            req.getSession().setAttribute("toastType", "success");
+        } catch (IllegalArgumentException ex) {
+            req.getSession().setAttribute("toastMessage", ex.getMessage());
+            req.getSession().setAttribute("toastType", "error");
+        } catch (SQLException ex) {
+            req.getSession().setAttribute("toastMessage", "Lỗi hệ thống khi tạo công việc.");
+            req.getSession().setAttribute("toastType", "error");
+        }
+        
         resp.sendRedirect(req.getContextPath() + "/manager/rooms");
     }
 }

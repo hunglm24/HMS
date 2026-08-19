@@ -860,4 +860,116 @@ public class HousekeepingDao {
         if (connection == null) throw new SQLException("Không thể kết nối cơ sở dữ liệu");
         return connection;
     }
+
+    public void createManualTask(long roomId, String taskType, Long assignedTo, String priority, String note) throws SQLException {
+        try (Connection connection = requireConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                int floor = 0;
+                try (PreparedStatement psF = connection.prepareStatement("SELECT floor_number FROM rooms WHERE id = ?")) {
+                    psF.setLong(1, roomId);
+                    try (ResultSet rsF = psF.executeQuery()) {
+                        if (rsF.next()) floor = rsF.getInt(1);
+                    }
+                }
+                
+                if (assignedTo == null || assignedTo <= 0) {
+                    List<Long> hks = new ArrayList<>();
+                    try (PreparedStatement psHk = connection.prepareStatement("SELECT id FROM accounts WHERE role_id = (SELECT id FROM roles WHERE name='HOUSEKEEPING') ORDER BY id ASC")) {
+                        try (ResultSet rsHk = psHk.executeQuery()) {
+                            while (rsHk.next()) hks.add(rsHk.getLong(1));
+                        }
+                    }
+                    if (hks.size() >= 2) {
+                        if (floor <= 2) assignedTo = hks.get(0);
+                        else assignedTo = hks.get(1);
+                    } else if (!hks.isEmpty()) {
+                        assignedTo = hks.get(0);
+                    }
+                }
+
+                String sql = """
+                        INSERT INTO housekeeping_tasks
+                            (room_id, assigned_to, task_type, priority, status, note, started_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """;
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setLong(1, roomId);
+                    if (assignedTo != null && assignedTo > 0) {
+                        statement.setLong(2, assignedTo);
+                        statement.setString(5, "IN_PROGRESS");
+                        statement.setTimestamp(7, new java.sql.Timestamp(System.currentTimeMillis()));
+                    } else {
+                        statement.setNull(2, java.sql.Types.BIGINT);
+                        statement.setString(5, "PENDING");
+                        statement.setNull(7, java.sql.Types.TIMESTAMP);
+                    }
+                    statement.setString(3, taskType);
+                    statement.setString(4, priority);
+                    statement.setString(6, note);
+                    statement.executeUpdate();
+                }
+                
+                String roomStatus = "CLEANING".equals(taskType) ? "CLEANING" : "INSPECTION";
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE rooms SET status = ? WHERE id = ?")) {
+                    statement.setString(1, roomStatus);
+                    statement.setLong(2, roomId);
+                    statement.executeUpdate();
+                }
+                
+                connection.commit();
+            } catch (Exception e) {
+                connection.rollback();
+                throw e;
+            }
+        }
+    }
+    public void syncDatabaseState() throws SQLException {
+        String fixAvailableRoomsSql = """
+            UPDATE rooms rm SET rm.status = 'NOT_READY' 
+            WHERE rm.status = 'AVAILABLE' 
+              AND EXISTS (SELECT 1 FROM room_equipment re WHERE re.room_id = rm.id AND re.status != 'NORMAL')
+            """;
+            
+        String fixStuckTasksSql = """
+            UPDATE housekeeping_tasks ht SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP 
+            WHERE ht.task_type IN ('EQUIPMENT_REPAIR', 'EQUIPMENT_REPLACEMENT') 
+              AND ht.status IN ('PENDING', 'IN_PROGRESS') 
+              AND EXISTS (SELECT 1 FROM room_equipment re WHERE re.id = ht.room_equipment_id AND re.status = 'NORMAL')
+            """;
+            
+        String fixCleaningRoomsSql = """
+            UPDATE rooms rm SET rm.status = CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM room_equipment re
+                    WHERE re.room_id = rm.id AND re.status <> 'NORMAL'
+                ) THEN 'NOT_READY' ELSE 'AVAILABLE' END
+            WHERE rm.status = 'CLEANING' AND NOT EXISTS (
+                SELECT 1 FROM housekeeping_tasks ht 
+                WHERE ht.room_id = rm.id AND ht.task_type = 'CLEANING' AND ht.status IN ('PENDING', 'IN_PROGRESS')
+            )
+            """;
+
+        try (Connection connection = requireConnection()) {
+            boolean autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps1 = connection.prepareStatement(fixAvailableRoomsSql)) {
+                    ps1.executeUpdate();
+                }
+                try (PreparedStatement ps2 = connection.prepareStatement(fixStuckTasksSql)) {
+                    ps2.executeUpdate();
+                }
+                try (PreparedStatement ps3 = connection.prepareStatement(fixCleaningRoomsSql)) {
+                    ps3.executeUpdate();
+                }
+                connection.commit();
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(autoCommit);
+            }
+        }
+    }
 }

@@ -44,33 +44,27 @@ public class HousekeepingService {
     public TaskPage getTaskPage(long viewerId, boolean manager, String view, String keyword, Integer floor,
                                 String taskType, String status, String sort,
                                 String direction, int requestedPage) throws SQLException {
-        String selectedView = "history".equals(view) ? "history" : "mine".equals(view) ? "mine" : "waiting";
+        String selectedView = "history".equals(view) ? "history" : "mine";
         String normalizedKeyword = normalizeKeyword(keyword);
         Integer normalizedFloor = floor != null && floor >= 0 && floor <= 999 ? floor : null;
         String normalizedType = taskType != null && TASK_TYPES.contains(taskType) ? taskType : null;
         String normalizedStatus = status != null && TASK_STATUSES.contains(status) ? status : null;
         String normalizedSort = sort != null && SORTS.containsKey(sort) ? sort : "room";
         String normalizedDirection = "desc".equalsIgnoreCase(direction) ? "DESC" : "ASC";
-        String sortColumn = "waiting".equals(selectedView) && Set.of("taskType", "status", "created").contains(normalizedSort)
-                ? "rm.room_number" : SORTS.get(normalizedSort);
+        String sortColumn = SORTS.get(normalizedSort);
         int totalItems = "history".equals(selectedView)
                 ? dao.countHistory(viewerId, manager, normalizedKeyword, normalizedFloor, normalizedType, normalizedStatus)
-                : "mine".equals(selectedView)
-                    ? dao.countMyTasks(viewerId, normalizedKeyword, normalizedFloor, normalizedType,
-                        normalizedStatus != null && !Set.of("COMPLETED","CANCELLED").contains(normalizedStatus) ? normalizedStatus : null)
-                    : dao.countAvailableWork(normalizedKeyword, normalizedFloor);
+                : dao.countMyTasks(viewerId, normalizedKeyword, normalizedFloor, normalizedType,
+                        normalizedStatus != null && !Set.of("COMPLETED","CANCELLED").contains(normalizedStatus) ? normalizedStatus : null);
         int totalPages = Math.max(1, (int) Math.ceil(totalItems / (double) PAGE_SIZE));
         int page = Math.min(Math.max(1, requestedPage), totalPages);
         int offset = (page - 1) * PAGE_SIZE;
         List<HousekeepingTask> tasks = "history".equals(selectedView)
                 ? dao.findHistory(viewerId, manager, normalizedKeyword, normalizedFloor, normalizedType,
                     normalizedStatus, sortColumn, normalizedDirection, offset, PAGE_SIZE)
-                : "mine".equals(selectedView)
-                ? dao.findMyTasks(viewerId, normalizedKeyword, normalizedFloor, normalizedType,
+                : dao.findMyTasks(viewerId, normalizedKeyword, normalizedFloor, normalizedType,
                     normalizedStatus != null && Set.of("COMPLETED","CANCELLED").contains(normalizedStatus) ? null : normalizedStatus,
-                    sortColumn, normalizedDirection, offset, PAGE_SIZE)
-                : dao.findAvailableWork(normalizedKeyword, normalizedFloor, waitingSort(normalizedSort),
-                    normalizedDirection, offset, PAGE_SIZE);
+                    sortColumn, normalizedDirection, offset, PAGE_SIZE);
         return new TaskPage(tasks, page, totalPages, totalItems, selectedView,
                 normalizedKeyword, normalizedFloor, normalizedType, normalizedStatus,
                 normalizedSort, normalizedDirection.toLowerCase());
@@ -193,6 +187,18 @@ public class HousekeepingService {
         if (value == null || value.isBlank()) return null;
         String result = value.trim();
         return result.length() > 50 ? result.substring(0, 50) : result;
+    }
+
+    public void createManualTask(long roomId, String taskType, Long assignedTo, String priority, String note) throws SQLException {
+        if (roomId <= 0) throw new IllegalArgumentException("Phòng không hợp lệ");
+        if (taskType == null || !TASK_TYPES.contains(taskType)) throw new IllegalArgumentException("Loại công việc không hợp lệ");
+        if (priority == null || (!priority.equals("NORMAL") && !priority.equals("HIGH"))) throw new IllegalArgumentException("Độ ưu tiên không hợp lệ");
+        if (note == null || note.isBlank()) throw new IllegalArgumentException("Ghi chú không được để trống");
+        dao.createManualTask(roomId, taskType, assignedTo, priority, trim(note, 2000));
+    }
+
+    public List<model.User> getHousekeepers() throws SQLException {
+        return new dao.UserDao().findByRoleName("HOUSEKEEPING");
     }
 
     public record TaskPage(List<HousekeepingTask> tasks, int page, int totalPages,

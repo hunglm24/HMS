@@ -141,6 +141,12 @@
                                                 data-room-description="${room.description}">
                                                 Sửa
                                             </button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-secondary btn-sm"
+                                                onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}')">
+                                                Giao việc
+                                            </button>
                                             <a class="btn btn-danger btn-sm"
                                                href="${pageContext.request.contextPath}/manager/rooms/deactivate-room?id=${room.id}"
                                                data-room-mgmt-confirm="true"
@@ -200,6 +206,12 @@
                                 data-room-description="${room.description}">
                                 Sửa
                             </button>
+                            <button
+                                type="button"
+                                class="btn btn-secondary btn-sm"
+                                onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}')">
+                                Giao việc
+                            </button>
                             <a class="btn btn-danger btn-sm"
                                href="${pageContext.request.contextPath}/manager/rooms/deactivate-room?id=${room.id}"
                                data-room-mgmt-confirm="true"
@@ -216,6 +228,7 @@
     </main>
 
     <jsp:include page="/WEB-INF/views/manager/modals/room-modal.jsp" />
+    <jsp:include page="/WEB-INF/views/manager/modals/task-modal.jsp" />
 
     <script src="${pageContext.request.contextPath}/assets/js/rooms.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/pagination.js"></script>

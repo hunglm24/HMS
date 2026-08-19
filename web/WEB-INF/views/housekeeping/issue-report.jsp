@@ -5,8 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Báo cáo sự cố | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/housekeeping.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-5">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/housekeeping.css?v=20260819-5">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />

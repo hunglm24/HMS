@@ -27,13 +27,19 @@ public class MaintenanceLogDao {
                 """;
 
         String updateTaskSql = "UPDATE housekeeping_tasks SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+        
+        String completeSpecificTaskSql = """
+                UPDATE housekeeping_tasks SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP
+                WHERE room_equipment_id = ? AND status IN ('PENDING', 'IN_PROGRESS')
+                """;
 
         try (Connection connection = requireConnection()) {
             boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement insertLog = connection.prepareStatement(logSql);
-                     PreparedStatement updateEq = connection.prepareStatement(updateEqSql)) {
+                     PreparedStatement updateEq = connection.prepareStatement(updateEqSql);
+                     PreparedStatement completeSpecificTask = connection.prepareStatement(completeSpecificTaskSql)) {
                     for (Long eqId : equipmentIds) {
                         insertLog.setLong(1, taskId);
                         insertLog.setString(2, note);
@@ -43,9 +49,13 @@ public class MaintenanceLogDao {
 
                         updateEq.setLong(1, eqId);
                         updateEq.addBatch();
+                        
+                        completeSpecificTask.setLong(1, eqId);
+                        completeSpecificTask.addBatch();
                     }
                     insertLog.executeBatch();
                     updateEq.executeBatch();
+                    completeSpecificTask.executeBatch();
                 }
 
                 // Auto complete task if no damaged equipments are left for this room

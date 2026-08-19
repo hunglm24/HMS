@@ -1,7 +1,8 @@
 (function () {
     // Room management uses a tiny modal controller and confirm hooks.
     const modalState = {
-        room: document.getElementById('roomModal')
+        room: document.getElementById('roomModal'),
+        task: document.getElementById('taskModal')
     };
 
     // Open the requested modal and update its accessibility state.
@@ -22,6 +23,16 @@
         setValue('roomStatus', 'AVAILABLE');
         setValue('roomDescription', '');
         openModal('room');
+    }
+
+    function openTaskModal(roomId, roomNumber) {
+        setValue('taskRoomId', roomId);
+        setValue('taskRoomNumber', roomNumber);
+        setValue('taskTypeSelect', 'PERIODIC_INSPECTION');
+        setValue('taskAssignee', '');
+        setValue('taskPriority', 'NORMAL');
+        setValue('taskNote', '');
+        openModal('task');
     }
 
     // Close the modal and restore its hidden state.
@@ -99,7 +110,7 @@
 
     // Bind the shared close buttons used by both modals.
     function bindCloseButtons() {
-        document.querySelectorAll('[data-room-mgmt-close="true"]').forEach((button) => {
+        document.querySelectorAll('[data-room-mgmt-close="true"], [data-task-mgmt-close="true"]').forEach((button) => {
             button.addEventListener('click', () => {
                 const modal = button.closest('.room-management-modal');
                 closeModal(modal);
@@ -132,6 +143,7 @@
 
     window.RoomManagement = {
         openModal,
-        openRoomModal
+        openRoomModal,
+        openTaskModal
     };
 })();
