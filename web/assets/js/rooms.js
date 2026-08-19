@@ -15,6 +15,7 @@
 
     // Reset the room modal into create mode.
     function openRoomModal() {
+        removeTemporaryRoomTypeOption();
         setText('roomModalTitle', 'Thêm phòng');
         setValue('roomId', '');
         setValue('roomNumber', '');
@@ -50,6 +51,31 @@
         }
     }
 
+    // Remove any temporary room type option that was added for edit mode.
+    function removeTemporaryRoomTypeOption() {
+        const select = document.getElementById('roomTypeSelect');
+        if (!select) return;
+        select.querySelectorAll('option[data-room-mgmt-temp-room-type="true"]').forEach((option) => option.remove());
+    }
+
+    // Make sure an option exists for an inactive room type when editing.
+    function ensureRoomTypeOption(roomTypeId, roomTypeName) {
+        const select = document.getElementById('roomTypeSelect');
+        if (!select || !roomTypeId) return;
+
+        const normalizedId = String(roomTypeId);
+        const existingOption = select.querySelector(`option[value="${normalizedId}"]`);
+        if (existingOption) {
+            return;
+        }
+
+        const option = document.createElement('option');
+        option.value = normalizedId;
+        option.textContent = roomTypeName ? `${roomTypeName} (ngừng hoạt động)` : `Loại phòng #${normalizedId}`;
+        option.dataset.roomMgmtTempRoomType = 'true';
+        select.appendChild(option);
+    }
+
     // Toggle read-only mode for a specific field.
     function setReadonly(id, readonly) {
         const input = document.getElementById(id);
@@ -68,6 +94,49 @@
         input.addEventListener('input', () => {
             // Strip every non-digit character from the price field.
             input.value = (input.value || '').replace(/[^\d]/g, '');
+        });
+    }
+
+    // Prevent negative values and enforce a bounded integer range for room floor.
+    function setBoundedIntegerOnly(id, min, max) {
+        const input = document.getElementById(id);
+        if (!input || input.dataset.boundedIntegerBound === 'true') {
+            return;
+        }
+        input.dataset.boundedIntegerBound = 'true';
+
+        const sanitize = () => {
+            const digitsOnly = (input.value || '').replace(/[^\d]/g, '');
+            if (digitsOnly === '') {
+                input.value = '';
+                return;
+            }
+
+            const parsed = Number.parseInt(digitsOnly, 10);
+            if (Number.isNaN(parsed)) {
+                input.value = '';
+                return;
+            }
+
+            const clamped = Math.min(Math.max(parsed, min), max);
+            input.value = String(clamped);
+        };
+
+        input.addEventListener('beforeinput', (event) => {
+            if (event.data && /[^0-9]/.test(event.data)) {
+                event.preventDefault();
+            }
+        });
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key === '-' || event.key === 'Minus') {
+                event.preventDefault();
+            }
+        });
+
+        input.addEventListener('input', sanitize);
+        input.addEventListener('paste', () => {
+            window.setTimeout(sanitize, 0);
         });
     }
 
@@ -96,10 +165,12 @@
     function bindEditButtons() {
         document.querySelectorAll('[data-room-mgmt-edit-room="true"]').forEach((button) => {
             button.addEventListener('click', () => {
+                removeTemporaryRoomTypeOption();
                 setText('roomModalTitle', 'Sửa phòng');
                 setValue('roomId', button.dataset.roomId);
                 setValue('roomNumber', button.dataset.roomNumber);
                 setValue('roomFloor', button.dataset.roomFloor);
+                ensureRoomTypeOption(button.dataset.roomTypeId, button.dataset.roomTypeName);
                 setValue('roomTypeSelect', button.dataset.roomTypeId);
                 setValue('roomStatus', button.dataset.roomStatus || 'AVAILABLE');
                 setValue('roomDescription', button.dataset.roomDescription);
@@ -140,6 +211,7 @@
     bindEditButtons();
     bindCloseButtons();
     bindConfirmLinks();
+    setBoundedIntegerOnly('roomFloor', 0, 7);
 
     window.RoomManagement = {
         openModal,

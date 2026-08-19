@@ -64,7 +64,7 @@ public class RoomService {
     public boolean saveRoom(Room room) throws SQLException {
         // Validate and resolve dependencies before touching the database.
         validateRoom(room);
-        ensureRoomTypeExists(room.getRoomTypeId());
+        ensureRoomTypeAssignable(room);
         Long roomId = room.getId();
         ensureRoomNumberUnique(room.getRoomNumber(), roomId == null || roomId <= 0 ? null : roomId);
         if (roomId != null && roomId > 0) {
@@ -104,7 +104,7 @@ public class RoomService {
 
     // Load room types for the room form dropdown.
     public List<RoomType> getRoomTypeOptions() {
-        return roomTypeDao.findAll();
+        return roomTypeDao.findActive();
     }
 
     // Validate fields shared by create and update flows.
@@ -116,7 +116,8 @@ public class RoomService {
         ValidationUtil.requireTrue(room.getRoomTypeId() > 0, "Vui long chon loai phong.");
 
         Integer floorNumber = room.getFloorNumber();
-        ValidationUtil.requireTrue(floorNumber == null || floorNumber >= 0, "Tang khong duoc nho hon 0.");
+        ValidationUtil.requireTrue(floorNumber == null || (floorNumber >= 0 && floorNumber <= 7),
+                "Tang chi duoc trong khoang 0 den 7.");
 
         String description = ValidationUtil.optionalText(room.getDescription(), 500);
         String status = ValidationUtil.optionalStatus(room.getStatus(), STATUSES);
@@ -131,6 +132,27 @@ public class RoomService {
         // Make sure the selected room type is still present in the catalog.
         ValidationUtil.requireTrue(roomTypeId > 0 && roomTypeDao.findById(roomTypeId).isPresent(),
                 "Loai phong khong ton tai.");
+    }
+
+    // Allow new rooms to use active types only, while edits can keep the current inactive type.
+    private void ensureRoomTypeAssignable(Room room) {
+        ValidationUtil.requireTrue(room != null, "Thong tin phong khong hop le.");
+        long roomTypeId = room.getRoomTypeId();
+        ValidationUtil.requireTrue(roomTypeId > 0, "Vui long chon loai phong.");
+
+        RoomType selectedRoomType = roomTypeDao.findById(roomTypeId)
+                .orElseThrow(() -> new IllegalArgumentException("Loai phong khong ton tai."));
+        if (room.getId() == null || room.getId() <= 0) {
+            ValidationUtil.requireTrue("ACTIVE".equalsIgnoreCase(selectedRoomType.getStatus()),
+                    "Vui long chon loai phong dang hoat dong.");
+            return;
+        }
+
+        boolean isCurrentRoomType = roomDao.findById(room.getId())
+                .map(existingRoom -> existingRoom.getRoomTypeId() == roomTypeId)
+                .orElse(false);
+        ValidationUtil.requireTrue(isCurrentRoomType || "ACTIVE".equalsIgnoreCase(selectedRoomType.getStatus()),
+                "Vui long chon loai phong dang hoat dong.");
     }
 
     // Prevent duplicate room numbers within the current dataset.
