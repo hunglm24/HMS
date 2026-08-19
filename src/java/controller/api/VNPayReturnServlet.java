@@ -40,6 +40,7 @@ public class VNPayReturnServlet extends HttpServlet {
         }
 
         String responseCode = request.getParameter("vnp_ResponseCode");
+        String transactionStatus = request.getParameter("vnp_TransactionStatus");
         HttpSession session = request.getSession();
         Long bookingId = (Long) session.getAttribute("pendingBookingId");
         String bookingCode = (String) session.getAttribute("pendingBookingCode");
@@ -48,7 +49,11 @@ public class VNPayReturnServlet extends HttpServlet {
         try {
             boolean valid = vnPayService.verifySignature(fields, vnp_SecureHash);
             boolean matchingRef = bookingCode != null && bookingCode.equals(request.getParameter("vnp_TxnRef"));
-            if (valid && matchingRef && bookingId != null && amount != null && "00".equals(responseCode)) {
+            boolean matchingMerchant = VNPayConfig.vnp_TmnCode.equals(request.getParameter("vnp_TmnCode"));
+            boolean matchingAmount = amount != null && amount.movePointRight(2).toBigIntegerExact().toString()
+                    .equals(request.getParameter("vnp_Amount"));
+            if (valid && matchingMerchant && matchingRef && matchingAmount && bookingId != null
+                    && "00".equals(responseCode) && "00".equals(transactionStatus)) {
                 try (java.sql.Connection conn = util.DBConnectionUtil.getConnection()) {
                     conn.setAutoCommit(false);
                     try (java.sql.PreparedStatement bookingUpdate = conn.prepareStatement(
@@ -57,16 +62,18 @@ public class VNPayReturnServlet extends HttpServlet {
                             "INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_code, status, paid_at) "
                                     + "VALUES (?, ?, 'ONLINE_PAYMENT', 'BOOKING_PAYMENT', ?, 'SUCCESS', CURRENT_TIMESTAMP)")) {
                         bookingUpdate.setLong(1, bookingId);
-                        bookingUpdate.executeUpdate();
-                        paymentInsert.setLong(1, bookingId);
-                        paymentInsert.setBigDecimal(2, amount);
-                        paymentInsert.setString(3, request.getParameter("vnp_TransactionNo"));
-                        paymentInsert.executeUpdate();
+                        int updated = bookingUpdate.executeUpdate();
+                        if (updated == 1) {
+                            paymentInsert.setLong(1, bookingId);
+                            paymentInsert.setBigDecimal(2, amount);
+                            paymentInsert.setString(3, request.getParameter("vnp_TransactionNo"));
+                            paymentInsert.executeUpdate();
+                        }
                         conn.commit();
                         
                         // Gửi email xác nhận
                         dao.BookingDao bookingDao = new dao.BookingDao();
-                        bookingDao.findById(bookingId).ifPresent(booking -> {
+                        if (updated == 1) bookingDao.findById(bookingId).ifPresent(booking -> {
                             try {
                                 bookingDao.findCheckInBookingById(bookingId.intValue()).ifPresent(summary -> {
                                     service.EmailService emailService = new service.EmailService();

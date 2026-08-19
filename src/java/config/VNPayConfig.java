@@ -9,7 +9,7 @@ public class VNPayConfig {
     public static final String vnp_PayUrl = env("HMS_VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
     public static final String vnp_TmnCode = env("HMS_VNPAY_TMN_CODE", "TESTCODE");
     public static final String vnp_HashSecret = env("HMS_VNPAY_HASH_SECRET", "TESTSECRET");
-    public static final String vnp_apiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
+    public static final String vnp_apiUrl = env("HMS_VNPAY_API_URL", "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
 
     public static String hmacSHA512(final String key, final String data) {
         try {
@@ -43,7 +43,8 @@ public class VNPayConfig {
     }
 
     public static boolean isConfigured() {
-        return !"TESTCODE".equals(vnp_TmnCode) && !"TESTSECRET".equals(vnp_HashSecret);
+        return !"TESTCODE".equals(vnp_TmnCode) && !"TESTSECRET".equals(vnp_HashSecret)
+                && !vnp_TmnCode.isBlank() && !vnp_HashSecret.isBlank();
     }
 
     private static String env(String name, String fallback) {
