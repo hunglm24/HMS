@@ -11,6 +11,8 @@
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .helper-text { margin-top: 6px; font-size: 0.875rem; color: #2563eb; }
+        .form-section-title { margin: 20px 0 10px; font-size: 1rem; font-weight: 700; color: #111827; }
         .form-actions { margin-top: 20px; text-align: right; }
     </style>
 </head>
@@ -51,6 +53,42 @@
                 <div class="form-group">
                     <label>Ngày trả phòng (Check-out)</label>
                     <input type="date" name="checkOutDate" value="${booking.checkOutDate}" required>
+                </div>
+            </div>
+
+            <div class="form-section-title">Chọn loại phòng / phòng</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Loại phòng</label>
+                    <select name="roomType">
+                        <option value="">Không chọn loại phòng</option>
+                        <option value="STANDARD">Standard</option>
+                        <option value="DELUXE">Deluxe</option>
+                        <option value="SUITE">Suite</option>
+                        <option value="FAMILY">Family</option>
+                    </select>
+                    <div class="helper-text">Có thể chọn hoặc bỏ trống nếu chưa cần đổi loại phòng.</div>
+                </div>
+                <div class="form-group">
+                    <label>Phòng</label>
+                    <select name="roomNumber" required>
+                        <option value="">Chọn phòng</option>
+                        <optgroup label="Standard">
+                            <option value="101">101 - Standard</option>
+                            <option value="102">102 - Standard</option>
+                        </optgroup>
+                        <optgroup label="Deluxe">
+                            <option value="201">201 - Deluxe</option>
+                            <option value="202">202 - Deluxe</option>
+                        </optgroup>
+                        <optgroup label="Suite">
+                            <option value="301">301 - Suite</option>
+                        </optgroup>
+                        <optgroup label="Family">
+                            <option value="401">401 - Family</option>
+                        </optgroup>
+                    </select>
+                    <div class="helper-text">Nếu chưa muốn đổi loại phòng, bạn vẫn có thể chọn phòng trực tiếp.</div>
                 </div>
             </div>
 
