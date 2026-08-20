@@ -9,8 +9,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Amenity Management | HMS</title>
-    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260816-4" />
-    <link rel="stylesheet" href="${cp}/assets/css/amenities.css" />
+    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260820-7" />
+    <link rel="stylesheet" href="${cp}/assets/css/rooms.css?v=20260820-7" /><link rel="stylesheet" href="${cp}/assets/css/amenities.css?v=20260820-7" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   </head>
   <body class="amenity-management-body">
@@ -64,7 +64,7 @@
 
         <c:choose>
           <c:when test="${not empty amenities}">
-            <div class="amenity-table-wrap" data-pagination-root data-pagination-key="amenities" data-pagination-size="10">
+            <div class="amenity-table-wrap" data-pagination-root data-pagination-key="amenities" data-pagination-size="5">
               <table class="amenity-table">
                 <thead>
                   <tr>
@@ -118,9 +118,10 @@
                   </c:forEach>
                 </tbody>
               </table>
+              <div class="room-management-pagination" data-pagination-controls></div>
             </div>
             
-            <div data-pagination-controls class="amenity-management-pagination"></div>
+
           </c:when>
           <c:otherwise>
             <div class="amenity-empty">
@@ -172,6 +173,6 @@
     </c:if>
 
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />
-    <script src="${cp}/assets/js/pagination.js"></script>
+    <script src="${cp}/assets/js/pagination.js?v=20260820-7?v=20260820-7"></script>
   </body>
 </html>

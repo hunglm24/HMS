@@ -1,6 +1,7 @@
 package service;
 
 import dao.HousekeepingDao;
+import dto.HousekeeperWorkloadDTO;
 import model.HousekeepingTask;
 
 import java.math.BigDecimal;
@@ -24,7 +25,7 @@ public class HousekeepingService {
     private static final String NOTE_START = "[INSPECTION_NOTE]";
     private static final Map<String, String> SORTS = Map.of(
             "room", "rm.room_number", "roomType", "rt.name", "floor", "rm.floor_number",
-            "taskType", "ht.task_type", "status", "ht.status", "created", "ht.created_at");
+            "taskType", "ht.task_type", "status", "ht.status", "created", "ht.created_at", "assigned_to", "COALESCE(a.full_name, '')");
     private static final Map<String, String> CLEANING_CHECKLIST;
     static {
         Map<String, String> items = new LinkedHashMap<>();
@@ -95,7 +96,10 @@ public class HousekeepingService {
 
     public void completeInspection(long taskId, long staffId,
                                    List<HousekeepingTask.EquipmentCheck> checks,
-                                   List<String> selectedCleaningItems, String note) throws SQLException {
+                                   List<String> selectedCleaningItems,
+                                   String customCleaningTasks,
+                                   String note) throws SQLException {
+        if (taskId <= 0 || staffId <= 0) throw new IllegalArgumentException("Thông tin kiểm tra không hợp lệ");
         if (checks == null) throw new IllegalArgumentException("Thiếu kết quả kiểm tra thiết bị");
         for (HousekeepingTask.EquipmentCheck check : checks) {
             if (check.getConditionStatus() == null || !CONDITIONS.contains(check.getConditionStatus())) {
@@ -109,15 +113,11 @@ public class HousekeepingService {
             check.setNote(trim(check.getNote(), 1000));
         }
         dao.completeInspection(taskId, staffId, checks,
-                buildCleaningNote(selectedCleaningItems, trim(note, 2000)));
+                buildCleaningNote(selectedCleaningItems, customCleaningTasks, trim(note, 2000)));
     }
 
     public void startCleaning(long taskId, long staffId) throws SQLException {
         dao.startCleaning(taskId, staffId);
-    }
-
-    public void completeCleaning(long taskId, long staffId) throws SQLException {
-        dao.completeCleaning(taskId, staffId);
     }
 
     public List<HousekeepingTask.EquipmentCheck> getCleaningEquipment(long taskId) throws SQLException {
@@ -126,31 +126,113 @@ public class HousekeepingService {
 
     public Map<String, String> getCleaningChecklist() { return CLEANING_CHECKLIST; }
 
-    public List<String> getWorkItems(String note) {
-        if (note == null) return List.of();
+    public List<HousekeepingTask.WorkItem> getWorkItems(String note) {
+        if (note == null || note.isBlank()) {
+            return List.of(new HousekeepingTask.WorkItem("Dọn vệ sinh tổng quát và kiểm tra lại phòng", false));
+        }
+
+        String block = note;
         int start = note.indexOf(TASKS_START);
         int end = note.indexOf(TASKS_END);
-        if (start < 0 || end <= start) return List.of();
-        String block = note.substring(start + TASKS_START.length(), end).trim();
-        if (block.isEmpty()) return List.of();
-        List<String> result = new ArrayList<>();
-        for (String line : block.split("\\R")) {
-            String item = line.trim();
-            if (item.startsWith("- ")) item = item.substring(2).trim();
-            if (!item.isEmpty()) result.add(item);
+        if (start >= 0 && end > start) {
+            block = note.substring(start + TASKS_START.length(), end).trim();
+        } else {
+            int noteMarker = note.indexOf(NOTE_START);
+            if (noteMarker >= 0) {
+                block = note.substring(0, noteMarker).trim();
+            }
+        }
+
+        List<HousekeepingTask.WorkItem> result = new ArrayList<>();
+        for (String rawLine : block.split("\\R")) {
+            String line = rawLine.trim();
+            if (line.isEmpty() || line.startsWith("[") && line.endsWith("]") && !line.startsWith("[x]") && !line.startsWith("[X]") && !line.startsWith("[ ]")) {
+                continue;
+            }
+
+            boolean completed = false;
+            String itemName = line;
+
+            if (itemName.startsWith("- [x]") || itemName.startsWith("- [X]")) {
+                completed = true;
+                itemName = itemName.substring(5).trim();
+            } else if (itemName.startsWith("- [ ]")) {
+                completed = false;
+                itemName = itemName.substring(5).trim();
+            } else if (itemName.startsWith("[x]") || itemName.startsWith("[X]")) {
+                completed = true;
+                itemName = itemName.substring(3).trim();
+            } else if (itemName.startsWith("[ ]")) {
+                completed = false;
+                itemName = itemName.substring(3).trim();
+            } else if (itemName.startsWith("- ") || itemName.startsWith("* ") || itemName.startsWith("+ ") || itemName.startsWith("• ")) {
+                itemName = itemName.substring(2).trim();
+            } else if (itemName.startsWith("-") || itemName.startsWith("*") || itemName.startsWith("+") || itemName.startsWith("•")) {
+                itemName = itemName.substring(1).trim();
+            }
+
+            if (!itemName.isEmpty()) {
+                result.add(new HousekeepingTask.WorkItem(itemName, completed));
+            }
+        }
+
+        if (result.isEmpty()) {
+            result.add(new HousekeepingTask.WorkItem("Dọn vệ sinh tổng quát và kiểm tra lại phòng", false));
         }
         return result;
     }
 
-    public String getInspectionMessage(String note) {
-        if (note == null) return null;
-        int marker = note.indexOf(NOTE_START);
-        if (marker < 0) return note.isBlank() ? null : note;
-        String message = note.substring(marker + NOTE_START.length()).trim();
-        return message.isEmpty() ? null : message;
+    public void saveCleaningProgress(long taskId, long staffId, List<String> completedItemNames) throws SQLException {
+        Optional<HousekeepingTask> taskOpt = dao.findById(taskId, staffId, true);
+        if (taskOpt.isEmpty()) throw new IllegalArgumentException("Không tìm thấy công việc");
+        HousekeepingTask task = taskOpt.get();
+
+        List<HousekeepingTask.WorkItem> currentItems = getWorkItems(task.getNote());
+        java.util.Set<String> completedSet = completedItemNames != null ? new java.util.HashSet<>(completedItemNames) : java.util.Set.of();
+
+        StringBuilder sb = new StringBuilder(TASKS_START).append('\n');
+        for (HousekeepingTask.WorkItem item : currentItems) {
+            boolean done = completedSet.contains(item.getName());
+            sb.append(done ? "[x] " : "[ ] ").append(item.getName()).append('\n');
+        }
+        sb.append(TASKS_END);
+
+        String message = getInspectionMessage(task.getNote());
+        if (message != null && !message.isBlank()) {
+            sb.append('\n').append(NOTE_START).append('\n').append(message);
+        }
+
+        dao.updateTaskNote(taskId, staffId, sb.toString());
     }
 
-    private String buildCleaningNote(List<String> selectedItems, String message) {
+    public String getInspectionMessage(String note) {
+        if (note == null || note.isBlank()) return null;
+        int marker = note.indexOf(NOTE_START);
+        if (marker >= 0) {
+            String message = note.substring(marker + NOTE_START.length()).trim();
+            return message.isEmpty() ? null : message;
+        }
+        int start = note.indexOf(TASKS_START);
+        int end = note.indexOf(TASKS_END);
+        if (start >= 0 && end > start) {
+            String outside = note.substring(end + TASKS_END.length()).trim();
+            return outside.isEmpty() ? null : outside;
+        }
+        boolean isChecklist = false;
+        for (String line : note.split("\\R")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("-") || trimmed.startsWith("*") || trimmed.startsWith("+") || trimmed.startsWith("•") || trimmed.startsWith("[x]") || trimmed.startsWith("[ ]")) {
+                isChecklist = true;
+                break;
+            }
+        }
+        if (isChecklist) {
+            return null;
+        }
+        return note.trim();
+    }
+
+    private String buildCleaningNote(List<String> selectedItems, String customTasks, String message) {
         List<String> labels = new ArrayList<>();
         if (selectedItems != null) {
             for (String key : selectedItems) {
@@ -158,23 +240,44 @@ public class HousekeepingService {
                 if (label != null && !labels.contains(label)) labels.add(label);
             }
         }
+        if (customTasks != null && !customTasks.isBlank()) {
+            for (String rawLine : customTasks.split("\\R")) {
+                String line = rawLine.trim();
+                if (line.startsWith("-") || line.startsWith("*") || line.startsWith("+") || line.startsWith("•")) {
+                    line = line.replaceFirst("^[-*+•]\\s*", "");
+                }
+                if (!line.isBlank() && !labels.contains(line)) {
+                    labels.add(line);
+                }
+            }
+        }
         if (labels.isEmpty()) labels.add("Dọn vệ sinh tổng quát và kiểm tra lại phòng");
         StringBuilder result = new StringBuilder(TASKS_START).append('\n');
-        for (String label : labels) result.append("- ").append(label).append('\n');
+        for (String label : labels) result.append("[ ] ").append(label).append('\n');
         result.append(TASKS_END);
-        if (message != null) result.append('\n').append(NOTE_START).append('\n').append(message);
+        if (message != null && !message.isBlank()) {
+            result.append('\n').append(NOTE_START).append('\n').append(message);
+        }
         return result.toString();
     }
 
-    private String waitingSort(String sort) {
-        return switch (sort) {
-            case "roomType" -> "room_type_name";
-            case "floor" -> "floor_number";
-            case "taskType" -> "task_type";
-            case "status" -> "status";
-            case "created" -> "created_at";
-            default -> "room_number";
-        };
+    public void completeCleaning(long taskId, long staffId) throws SQLException {
+        Optional<HousekeepingTask> taskOpt = dao.findById(taskId, staffId, true);
+        if (taskOpt.isPresent()) {
+            HousekeepingTask task = taskOpt.get();
+            List<HousekeepingTask.WorkItem> currentItems = getWorkItems(task.getNote());
+            StringBuilder sb = new StringBuilder(TASKS_START).append('\n');
+            for (HousekeepingTask.WorkItem item : currentItems) {
+                sb.append("[x] ").append(item.getName()).append('\n');
+            }
+            sb.append(TASKS_END);
+            String message = getInspectionMessage(task.getNote());
+            if (message != null && !message.isBlank()) {
+                sb.append('\n').append(NOTE_START).append('\n').append(message);
+            }
+            dao.updateTaskNote(taskId, staffId, sb.toString());
+        }
+        dao.completeCleaning(taskId, staffId);
     }
 
     private String trim(String value, int max) {
@@ -189,16 +292,55 @@ public class HousekeepingService {
         return result.length() > 50 ? result.substring(0, 50) : result;
     }
 
-    public void createManualTask(long roomId, String taskType, Long assignedTo, String priority, String note) throws SQLException {
+    public void createManualTask(long roomId, String taskType, Long assignedTo, String priority, String cleaningTasks, String note) throws SQLException {
         if (roomId <= 0) throw new IllegalArgumentException("Phòng không hợp lệ");
         if (taskType == null || !TASK_TYPES.contains(taskType)) throw new IllegalArgumentException("Loại công việc không hợp lệ");
         if (priority == null || (!priority.equals("NORMAL") && !priority.equals("HIGH"))) throw new IllegalArgumentException("Độ ưu tiên không hợp lệ");
-        if (note == null || note.isBlank()) throw new IllegalArgumentException("Ghi chú không được để trống");
-        dao.createManualTask(roomId, taskType, assignedTo, priority, trim(note, 2000));
+        
+        String combinedNote;
+        if ("CLEANING".equals(taskType)) {
+            List<String> tasks = new ArrayList<>();
+            if (cleaningTasks != null && !cleaningTasks.isBlank()) {
+                for (String rawLine : cleaningTasks.split("\\R")) {
+                    String line = rawLine.trim();
+                    if (line.startsWith("-") || line.startsWith("*") || line.startsWith("+") || line.startsWith("•")) {
+                        line = line.replaceFirst("^[-*+•]\\s*", "");
+                    }
+                    if (!line.isBlank() && !tasks.contains(line)) {
+                        tasks.add(line);
+                    }
+                }
+            }
+            if (tasks.isEmpty()) tasks.add("Dọn vệ sinh tổng quát và kiểm tra lại phòng");
+            StringBuilder sb = new StringBuilder(TASKS_START).append('\n');
+            for (String t : tasks) sb.append("[ ] ").append(t).append('\n');
+            sb.append(TASKS_END);
+            if (note != null && !note.isBlank()) {
+                sb.append('\n').append(NOTE_START).append('\n').append(note.trim());
+            }
+            combinedNote = sb.toString();
+        } else {
+            combinedNote = note != null ? note.trim() : "";
+            if (combinedNote.isBlank()) combinedNote = "Kiểm tra phòng sau checkout";
+        }
+        
+        dao.createManualTask(roomId, taskType, assignedTo, priority, trim(combinedNote, 2000));
+    }
+
+    public void createManualTask(long roomId, String taskType, Long assignedTo, String priority, String note) throws SQLException {
+        createManualTask(roomId, taskType, assignedTo, priority, null, note);
     }
 
     public List<model.User> getHousekeepers() throws SQLException {
         return new dao.UserDao().findByRoleName("HOUSEKEEPING");
+    }
+
+    public List<HousekeeperWorkloadDTO> getHousekeeperWorkloads() throws SQLException {
+        return dao.getHousekeeperWorkloads();
+    }
+
+    public void syncDatabaseState() throws SQLException {
+        dao.syncDatabaseState();
     }
 
     public record TaskPage(List<HousekeepingTask> tasks, int page, int totalPages,

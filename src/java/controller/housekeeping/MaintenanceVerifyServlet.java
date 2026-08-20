@@ -1,7 +1,9 @@
 package controller.housekeeping;
 
+import dao.HousekeepingDao;
 import model.Account;
 import model.HousekeepingTask;
+import model.MaintenanceLog;
 import service.MaintenanceService;
 
 import jakarta.servlet.ServletException;
@@ -13,44 +15,64 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-@WebServlet(name = "MaintenanceVerifyServlet", urlPatterns = {"/housekeeping/issues/verify"})
+@WebServlet(name = "MaintenanceVerifyServlet", urlPatterns = {"/housekeeping/issues/verify", "/manager/issues/verify"})
 public class MaintenanceVerifyServlet extends HttpServlet {
     private final MaintenanceService maintenanceService = new MaintenanceService();
+    private final HousekeepingDao housekeepingDao = new HousekeepingDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        Account account = (Account) session.getAttribute("currentUser");
+        HttpSession session = request.getSession(false);
+        Account account = session == null ? null : (Account) session.getAttribute("currentUser");
         if (account == null || (!"HOUSEKEEPING".equals(account.getRoleName()) && !"HOTEL_MANAGER".equals(account.getRoleName()))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập");
             return;
         }
 
         try {
+            boolean isManager = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
+            if (isManager && "/housekeeping/issues/verify".equals(request.getServletPath())) {
+                String qs = request.getQueryString();
+                response.sendRedirect(request.getContextPath() + "/manager/issues/verify" + (qs != null && !qs.isBlank() ? "?" + qs : ""));
+                return;
+            }
+
             long roomId = Long.parseLong(request.getParameter("roomId"));
             long taskId = Long.parseLong(request.getParameter("taskId"));
             
-            List<HousekeepingTask.EquipmentCheck> equipments = maintenanceService.findDamagedEquipments(roomId);
-            
-            request.setAttribute("equipments", equipments);
+            List<HousekeepingTask.EquipmentCheck> damagedEquipments = maintenanceService.findDamagedEquipments(roomId);
+            List<HousekeepingTask.EquipmentCheck> allRoomEquipments = maintenanceService.findAllEquipmentsInRoom(roomId);
+            List<MaintenanceLog> logs = maintenanceService.findLogsByTaskId(taskId);
+            Optional<HousekeepingTask> task = housekeepingDao.findById(taskId, account.getId(), true);
+
+            request.setAttribute("equipments", damagedEquipments);
+            request.setAttribute("allRoomEquipments", allRoomEquipments);
+            request.setAttribute("logs", logs);
+            task.ifPresent(t -> request.setAttribute("task", t));
             request.setAttribute("roomId", roomId);
             request.setAttribute("taskId", taskId);
+            request.setAttribute("isManager", isManager);
             request.getRequestDispatcher("/WEB-INF/views/housekeeping/maintenance-verify.jsp").forward(request, response);
         } catch (Exception ex) {
-            session.setAttribute("errorMessage", "Lỗi tải thiết bị cần xác nhận: " + ex.getMessage());
-            response.sendRedirect(request.getContextPath() + "/housekeeping/issues");
+            boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
+            session.setAttribute("errorMessage", "Lỗi tải thiết bị: " + ex.getMessage());
+            response.sendRedirect(request.getContextPath() + (isMgr ? "/manager/issues" : "/housekeeping/issues"));
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        Account account = (Account) session.getAttribute("currentUser");
+        HttpSession session = request.getSession(false);
+        Account account = session == null ? null : (Account) session.getAttribute("currentUser");
         if (account == null || (!"HOUSEKEEPING".equals(account.getRoleName()) && !"HOTEL_MANAGER".equals(account.getRoleName()))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập");
             return;
         }
+
+        boolean isManager = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
+        String targetUrl = request.getContextPath() + (isManager ? "/manager/issues" : "/housekeeping/issues");
 
         try {
             long taskId = Long.parseLong(request.getParameter("taskId"));
@@ -66,10 +88,10 @@ public class MaintenanceVerifyServlet extends HttpServlet {
 
             maintenanceService.verifyMaintenance(taskId, account.getId(), equipmentIds, note);
             session.setAttribute("successMessage", "Xác nhận thiết bị sửa chữa thành công.");
-            response.sendRedirect(request.getContextPath() + "/housekeeping/issues");
+            response.sendRedirect(targetUrl);
         } catch (Exception ex) {
             session.setAttribute("errorMessage", ex.getMessage());
-            response.sendRedirect(request.getContextPath() + "/housekeeping/issues");
+            response.sendRedirect(targetUrl);
         }
     }
 }

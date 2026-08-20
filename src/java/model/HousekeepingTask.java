@@ -130,4 +130,20 @@ public class HousekeepingTask {
         public String getNote() { return note; }
         public void setNote(String note) { this.note = note; }
     }
+
+    public static class WorkItem {
+        private String name;
+        private boolean completed;
+
+        public WorkItem() {}
+        public WorkItem(String name, boolean completed) {
+            this.name = name;
+            this.completed = completed;
+        }
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public boolean isCompleted() { return completed; }
+        public void setCompleted(boolean completed) { this.completed = completed; }
+    }
 }

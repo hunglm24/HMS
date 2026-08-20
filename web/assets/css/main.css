@@ -712,3 +712,51 @@ body > main.hk-page {
         padding: 18px 0 32px;
     }
 }
+/* ==========================================================================
+   Room Management Pagination (Standardized across all tables)
+   ========================================================================== */
+.room-management-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.room-management-pagination[hidden] {
+    display: none !important;
+}
+
+.room-management-pagination__page {
+    min-height: 36px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    color: var(--color-primary-600);
+    font: 600 var(--text-body) / 1 var(--font-sans);
+    cursor: pointer;
+}
+
+.room-management-pagination__page:hover:not(:disabled) {
+    border-color: var(--color-primary-500);
+    background: var(--color-primary-100);
+}
+
+.room-management-pagination__page:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.room-management-pagination__page.is-active {
+    border-color: var(--color-primary-600);
+    background: var(--color-primary-600);
+    color: #ffffff;
+}
+
+.room-management-pagination__info {
+    color: var(--color-text-secondary);
+    font-size: var(--text-body);
+    font-weight: 600;
+}

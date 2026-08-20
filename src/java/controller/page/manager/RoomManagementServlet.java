@@ -50,7 +50,9 @@ public class RoomManagementServlet extends HttpServlet {
             req.setAttribute("pageData", pageData);
             req.setAttribute("roomTypeOptions", roomService.getRoomTypeOptions());
             try {
+                housekeepingService.syncDatabaseState();
                 req.setAttribute("housekeepers", housekeepingService.getHousekeepers());
+                req.setAttribute("housekeeperWorkloads", housekeepingService.getHousekeeperWorkloads());
             } catch (SQLException ignored) {
             }
             req.setAttribute("rooms", roomService.findRooms(
@@ -160,9 +162,10 @@ public class RoomManagementServlet extends HttpServlet {
             String taskType = req.getParameter("taskType");
             Long assignedTo = ValidationUtil.optionalPositiveLong(req.getParameter("assignedTo"), "Assignee");
             String priority = req.getParameter("priority");
+            String cleaningTasks = req.getParameter("cleaningTasks");
             String note = req.getParameter("note");
             
-            housekeepingService.createManualTask(roomId, taskType, assignedTo, priority, note);
+            housekeepingService.createManualTask(roomId, taskType, assignedTo, priority, cleaningTasks, note);
             req.getSession().setAttribute("toastMessage", "Đã tạo công việc thành công.");
             req.getSession().setAttribute("toastType", "success");
         } catch (IllegalArgumentException ex) {

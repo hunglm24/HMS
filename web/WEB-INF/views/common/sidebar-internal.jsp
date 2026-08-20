@@ -37,9 +37,9 @@
         <% } %>
 
         <% if (isHousekeeping) { %>
-            <a class="<%= activePath(uri, "/housekeeping/tasks") && !"history".equals(request.getParameter("view")) ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=mine"><span>MY</span>Task của tôi</a>
-            <a class="<%= activePath(uri, "/housekeeping/tasks") && "history".equals(request.getParameter("view")) ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=history"><span>HS</span>Lịch sử</a>
-            <a class="<%= activePath(uri, "/housekeeping/issues") ? "active" : "" %>" href="<%= cp %>/housekeeping/issues"><span>IS</span>Quản lý sự cố</a>
+            <a class="<%= (activePath(uri, "/housekeeping/tasks") || activePath(uri, "/housekeeping/tasks/detail")) && !"history".equals(request.getParameter("view")) ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=mine"><span>MY</span>Task của tôi</a>
+            <a class="<%= activePath(uri, "/housekeeping/tasks") && "history".equals(request.getParameter("view")) ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=history"><span>HS</span>Lịch sử dọn phòng</a>
+            <a class="<%= activePath(uri, "/housekeeping/issues") ? "active" : "" %>" href="<%= cp %>/housekeeping/issues"><span>IS</span>Sự cố thiết bị</a>
         <% } %>
 
         <% if (isManager) { %>
@@ -49,7 +49,8 @@
             <a class="<%= activePath(uri, "/manager/room-types") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
             <a class="<%= activePath(uri, "/manager/equipment") ? "active" : "" %>" href="<%= cp %>/manager/equipment"><span>EQ</span>Thiết bị</a>
             <a class="<%= activePath(uri, "/manager/amenity") ? "active" : "" %>" href="<%= cp %>/manager/amenity"><span>AM</span>Tiện ích</a>
-            <a class="<%= activePath(uri, "/housekeeping/tasks") ? "active" : "" %>" href="<%= cp %>/housekeeping/tasks?view=history"><span>HK</span>Nhiệm vụ dọn phòng</a>
+            <a class="<%= activePath(uri, "/manager/housekeeping") || (activePath(uri, "/housekeeping/tasks") && "history".equals(request.getParameter("view"))) ? "active" : "" %>" href="<%= cp %>/manager/housekeeping"><span>HK</span>Lịch sử dọn phòng</a>
+            <a class="<%= activePath(uri, "/manager/issues") || activePath(uri, "/housekeeping/issues") ? "active" : "" %>" href="<%= cp %>/manager/issues"><span>IS</span>Sự cố thiết bị</a>
             <a class="<%= activePath(uri, "/manager/pricing") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá, mã giảm giá</a>
             <a class="<%= activePath(uri, "/manager/policies") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>
             <a class="<%= activePath(uri, "/manager/staff") ? "active" : "" %>" href="<%= cp %>/manager/staff"><span>ST</span>Nhân sự</a>

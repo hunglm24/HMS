@@ -19,10 +19,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@WebServlet(urlPatterns = {"/housekeeping/tasks", "/housekeeping/tasks/detail",
+@WebServlet(urlPatterns = {
+        "/housekeeping/tasks", "/housekeeping/tasks/detail",
+        "/manager/housekeeping", "/manager/housekeeping/detail",
         "/housekeeping/tasks/claim", "/housekeeping/tasks/claim-cleaning",
         "/housekeeping/tasks/complete-inspection",
-        "/housekeeping/tasks/start-cleaning", "/housekeeping/tasks/complete-cleaning"})
+        "/housekeeping/tasks/start-cleaning", "/housekeeping/tasks/complete-cleaning",
+        "/housekeeping/tasks/save-progress"
+})
 public class HousekeepingServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final int ROLE_HOUSEKEEPING = 4;
@@ -40,7 +44,22 @@ public class HousekeepingServlet extends HttpServlet {
         User user = currentStaff(request, response);
         if (user == null) return;
         try {
-            if (request.getServletPath().endsWith("/detail")) {
+            service.syncDatabaseState();
+            String path = request.getServletPath();
+            boolean manager = user.getRoleId() == ROLE_MANAGER || path.startsWith("/manager/");
+
+            if (manager && "/housekeeping/tasks".equals(path)) {
+                String qs = request.getQueryString();
+                response.sendRedirect(request.getContextPath() + "/manager/housekeeping" + (qs != null && !qs.isBlank() ? "?" + qs : ""));
+                return;
+            }
+            if (manager && "/housekeeping/tasks/detail".equals(path)) {
+                String qs = request.getQueryString();
+                response.sendRedirect(request.getContextPath() + "/manager/housekeeping/detail" + (qs != null && !qs.isBlank() ? "?" + qs : ""));
+                return;
+            }
+
+            if ("/housekeeping/tasks/detail".equals(path) || "/manager/housekeeping/detail".equals(path)) {
                 showDetail(request, response, user);
             } else {
                 showList(request, response, user);
@@ -56,7 +75,13 @@ public class HousekeepingServlet extends HttpServlet {
             throws ServletException, IOException {
         User user = currentStaff(request, response);
         if (user == null) return;
+        if (user.getRoleId() == ROLE_MANAGER) {
+            response.sendError(403, "Quản lý chỉ có quyền xem và giám sát công việc.");
+            return;
+        }
+
         try {
+            service.syncDatabaseState();
             String path = request.getServletPath();
             long taskId;
             if (path.endsWith("/claim")) {
@@ -70,32 +95,45 @@ public class HousekeepingServlet extends HttpServlet {
                 return;
             }
             taskId = parseLong(request.getParameter("taskId"));
+            if (path.endsWith("/save-progress")) {
+                String[] completedItems = request.getParameterValues("completedItems");
+                List<String> completedList = completedItems != null ? List.of(completedItems) : List.of();
+                service.saveCleaningProgress(taskId, user.getUserId(), completedList);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write("{\"success\":true}");
+                return;
+            }
             if (path.endsWith("/complete-inspection")) {
                 HousekeepingTask task = service.getTaskDetail(taskId, user.getUserId(), false).orElseThrow();
                 List<HousekeepingTask.EquipmentCheck> checks = parseChecks(request,
                         service.getEquipment(task.getRoomId(), task.getBookingRoomId()));
                 service.completeInspection(taskId, user.getUserId(), checks,
-                        parameterValues(request, "cleaningItem"), request.getParameter("inspectionNote"));
+                        parameterValues(request, "cleaningItem"),
+                        request.getParameter("customCleaningTasks"),
+                        request.getParameter("inspectionNote"));
             } else if (path.endsWith("/start-cleaning")) {
                 service.startCleaning(taskId, user.getUserId());
+                response.sendRedirect(request.getContextPath() + "/housekeeping/tasks/detail?id=" + taskId);
+                return;
             } else if (path.endsWith("/complete-cleaning")) {
                 service.completeCleaning(taskId, user.getUserId());
             } else {
-                response.sendError(404);
+                response.sendError(400, "Hành động không hợp lệ.");
                 return;
             }
             response.sendRedirect(request.getContextPath() + "/housekeeping/tasks?view=mine");
-        } catch (IllegalArgumentException | java.util.NoSuchElementException ex) {
-            response.sendError(400, ex.getMessage());
-        } catch (SQLException ex) {
-            getServletContext().log("Không thể cập nhật công việc dọn phòng", ex);
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             response.sendError(409, ex.getMessage());
+        } catch (SQLException ex) {
+            getServletContext().log("Không thể xử lý công việc dọn phòng", ex);
+            response.sendError(500, "Lỗi cơ sở dữ liệu khi cập nhật công việc.");
         }
     }
 
     private void showList(HttpServletRequest request, HttpServletResponse response, User user)
             throws SQLException, ServletException, IOException {
-        boolean manager = user.getRoleId() == ROLE_MANAGER;
+        boolean manager = user.getRoleId() == ROLE_MANAGER || request.getServletPath().startsWith("/manager/");
         String requestedView = manager ? "history" : request.getParameter("view");
         HousekeepingService.TaskPage result = service.getTaskPage(user.getUserId(), manager,
                 requestedView, request.getParameter("q"),
@@ -110,29 +148,30 @@ public class HousekeepingServlet extends HttpServlet {
     private void showDetail(HttpServletRequest request, HttpServletResponse response, User user)
             throws SQLException, ServletException, IOException {
         long taskId = parseLong(request.getParameter("id"));
-        boolean manager = user.getRoleId() == ROLE_MANAGER;
+        boolean manager = user.getRoleId() == ROLE_MANAGER || request.getServletPath().startsWith("/manager/");
         Optional<HousekeepingTask> task = service.getTaskDetail(taskId, user.getUserId(), manager);
         if (task.isEmpty()) {
             response.sendError(404, "Không tìm thấy công việc.");
             return;
         }
-        if (manager && !"COMPLETED".equals(task.get().getStatus())
-                && !"CANCELLED".equals(task.get().getStatus())) {
-            response.sendError(403, "Quản lý chỉ có quyền xem lịch sử dọn phòng.");
-            return;
-        }
-        request.setAttribute("task", task.get());
-        request.setAttribute("workItems", service.getWorkItems(task.get().getNote()));
-        request.setAttribute("inspectionMessage", service.getInspectionMessage(task.get().getNote()));
-        boolean history = "COMPLETED".equals(task.get().getStatus()) || "CANCELLED".equals(task.get().getStatus());
+        HousekeepingTask item = task.get();
+        request.setAttribute("task", item);
+        request.setAttribute("isManager", manager);
+        request.setAttribute("workItems", service.getWorkItems(item.getNote()));
+        request.setAttribute("inspectionMessage", service.getInspectionMessage(item.getNote()));
+        boolean history = "COMPLETED".equals(item.getStatus()) || "CANCELLED".equals(item.getStatus());
         request.setAttribute("history", history);
-        if ("CHECKOUT_INSPECTION".equals(task.get().getTaskType()) && history) {
-            request.setAttribute("equipment", service.getInspectionResults(taskId));
-        } else if ("CHECKOUT_INSPECTION".equals(task.get().getTaskType())) {
+        if ("CHECKOUT_INSPECTION".equals(item.getTaskType()) && (history || manager)) {
+            List<HousekeepingTask.EquipmentCheck> results = service.getInspectionResults(taskId);
+            if (results.isEmpty()) {
+                results = service.getEquipment(item.getRoomId(), item.getBookingRoomId());
+            }
+            request.setAttribute("equipment", results);
+        } else if ("CHECKOUT_INSPECTION".equals(item.getTaskType())) {
             request.setAttribute("equipment", service.getEquipment(
-                    task.get().getRoomId(), task.get().getBookingRoomId()));
+                    item.getRoomId(), item.getBookingRoomId()));
             request.setAttribute("cleaningChecklist", service.getCleaningChecklist());
-        } else if ("CLEANING".equals(task.get().getTaskType())) {
+        } else if ("CLEANING".equals(item.getTaskType())) {
             request.setAttribute("equipment", service.getCleaningEquipment(taskId));
         }
         request.getRequestDispatcher("/WEB-INF/views/housekeeping/task-detail.jsp").forward(request, response);
@@ -148,17 +187,17 @@ public class HousekeepingServlet extends HttpServlet {
         List<HousekeepingTask.EquipmentCheck> checks = new ArrayList<>();
         for (HousekeepingTask.EquipmentCheck source : equipment) {
             String suffix = String.valueOf(source.getRoomEquipmentId());
+            String condition = request.getParameter("condition_" + suffix);
+            if (condition == null || condition.isBlank()) {
+                condition = "NORMAL";
+            }
+            String note = request.getParameter("note_" + suffix);
+            BigDecimal fee = BigDecimal.ZERO;
             HousekeepingTask.EquipmentCheck check = new HousekeepingTask.EquipmentCheck();
             check.setRoomEquipmentId(source.getRoomEquipmentId());
-            check.setQuantity(source.getQuantity());
-            check.setConditionStatus(request.getParameter("condition_" + suffix));
-            String fee = request.getParameter("fee_" + suffix);
-            try {
-                check.setDamageFee(fee == null || fee.isBlank() ? BigDecimal.ZERO : new BigDecimal(fee));
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Phí bồi thường không hợp lệ");
-            }
-            check.setNote(request.getParameter("note_" + suffix));
+            check.setConditionStatus(condition);
+            check.setDamageFee(fee);
+            check.setNote(note);
             checks.add(check);
         }
         return checks;
@@ -186,24 +225,25 @@ public class HousekeepingServlet extends HttpServlet {
             long result = Long.parseLong(value);
             if (result <= 0) throw new NumberFormatException();
             return result;
-        } catch (RuntimeException ex) {
-            throw new IllegalArgumentException("ID không hợp lệ");
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Mã công việc không hợp lệ.");
         }
     }
 
-    private int parseInt(String value, int fallback) {
+    private int parseInt(String value, int defaultValue) {
         try {
-            return value == null ? fallback : Integer.parseInt(value);
-        } catch (NumberFormatException ex) {
-            return fallback;
+            int result = Integer.parseInt(value);
+            return result > 0 ? result : defaultValue;
+        } catch (Exception ex) {
+            return defaultValue;
         }
     }
 
     private Integer parseNullableInt(String value) {
         if (value == null || value.isBlank()) return null;
         try {
-            return Integer.valueOf(value);
-        } catch (NumberFormatException ex) {
+            return Integer.parseInt(value.trim());
+        } catch (Exception ex) {
             return null;
         }
     }

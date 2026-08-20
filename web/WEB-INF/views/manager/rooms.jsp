@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý phòng | HMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/rooms.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/rooms.css?v=20260820-7">
   </head>
   <body class="room-management-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -146,7 +146,7 @@
                                             <button
                                                 type="button"
                                                 class="btn btn-secondary btn-sm"
-                                                onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}')">
+                                                onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}', ${empty room.floorNumber ? 0 : room.floorNumber})">
                                                 Giao việc
                                             </button>
                                             <a class="btn btn-danger btn-sm"
@@ -212,7 +212,7 @@
                             <button
                                 type="button"
                                 class="btn btn-secondary btn-sm"
-                                onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}')">
+                                onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}', ${empty room.floorNumber ? 0 : room.floorNumber})">
                                 Giao việc
                             </button>
                             <a class="btn btn-danger btn-sm"
@@ -233,7 +233,7 @@
     <jsp:include page="/WEB-INF/views/manager/modals/room-modal.jsp" />
     <jsp:include page="/WEB-INF/views/manager/modals/task-modal.jsp" />
 
-    <script src="${pageContext.request.contextPath}/assets/js/rooms.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/pagination.js"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/rooms.js?v=20260820-5"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/pagination.js?v=20260820-7?v=20260820-7"></script>
   </body>
 </html>

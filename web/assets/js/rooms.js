@@ -26,13 +26,128 @@
         openModal('room');
     }
 
-    function openTaskModal(roomId, roomNumber) {
+    // Parse Housekeeper workload data
+    function getHkWorkloads() {
+        const dataEl = document.getElementById('housekeeperWorkloadData');
+        if (!dataEl) return [];
+        try {
+            return JSON.parse(dataEl.textContent || '[]');
+        } catch (e) {
+            return [];
+        }
+    }
+
+    let currentTaskFloor = 0;
+
+    function getDefaultHkForFloor(floor) {
+        const list = getHkWorkloads();
+        if (!list || list.length === 0) return null;
+        if (list.length === 1) return list[0];
+        const fl = Number(floor) || 0;
+        if (fl <= 2) return list[0];
+        return list[1] || list[0];
+    }
+
+    function updateTaskAssigneeFeedback() {
+        const select = document.getElementById('taskAssigneeSelect');
+        const noticeEl = document.getElementById('taskQueueNotice');
+        const noticeText = document.getElementById('taskQueueNoticeText');
+        if (!noticeEl || !noticeText) return;
+
+        const workloads = getHkWorkloads();
+        const selectedId = select ? select.value : '';
+
+        let targetHk = null;
+        let isDefault = false;
+
+        if (!selectedId) {
+            targetHk = getDefaultHkForFloor(currentTaskFloor);
+            isDefault = true;
+        } else {
+            targetHk = workloads.find(function(h) { return String(h.userId) === String(selectedId); });
+        }
+
+        if (!targetHk) {
+            noticeEl.style.display = 'none';
+            return;
+        }
+
+        if (targetHk.inProgressCount > 0) {
+            noticeEl.style.display = 'flex';
+            noticeEl.className = 'task-queue-notice is-warning';
+            noticeText.textContent = (isDefault ? 'Nhân viên mặc định theo tầng (' : '') + targetHk.fullName + (isDefault ? ')' : '') +
+                ' đang bận dọn phòng ' + (targetHk.currentRoomNumber || 'khác') +
+                (targetHk.pendingCount > 0 ? ' (có ' + targetHk.pendingCount + ' việc chờ).' : '.') +
+                ' Công việc này sẽ được xếp vào hàng đợi chờ xử lý.';
+        } else if (targetHk.pendingCount > 0) {
+            noticeEl.style.display = 'flex';
+            noticeEl.className = 'task-queue-notice is-info';
+            noticeText.textContent = (isDefault ? 'Nhân viên mặc định theo tầng (' : '') + targetHk.fullName + (isDefault ? ')' : '') +
+                ' đang có ' + targetHk.pendingCount + ' việc chờ trong hàng đợi.';
+        } else {
+            noticeEl.style.display = 'flex';
+            noticeEl.className = 'task-queue-notice is-success';
+            noticeText.textContent = 'Nhân viên ' + targetHk.fullName + ' đang rảnh và sẵn sàng thực hiện ngay.';
+        }
+    }
+
+    // Toggle cleaning tasks group visibility based on selected task type
+    function syncTaskModalFields() {
+        const typeSelect = document.getElementById('taskTypeSelect');
+        const cleaningGroup = document.getElementById('cleaningTasksGroup');
+        if (typeSelect && cleaningGroup) {
+            if (typeSelect.value === 'CHECKOUT_INSPECTION') {
+                cleaningGroup.style.display = 'none';
+            } else {
+                cleaningGroup.style.display = 'block';
+            }
+        }
+    }
+    function openTaskModal(roomId, roomNumber, floorNumber) {
+        currentTaskFloor = Number(floorNumber) || 0;
+        if (!currentTaskFloor && roomNumber) {
+            const match = String(roomNumber).trim().match(/^(\d)/);
+            if (match) {
+                currentTaskFloor = Number.parseInt(match[1], 10) || 0;
+            }
+        }
         setValue('taskRoomId', roomId);
-        setValue('taskRoomNumber', roomNumber);
-        setValue('taskTypeSelect', 'PERIODIC_INSPECTION');
-        setValue('taskAssignee', '');
+        const floorText = currentTaskFloor > 0 ? ' (Tầng ' + currentTaskFloor + ')' : '';
+        setValue('taskRoomNumber', 'Phòng ' + (roomNumber || '') + floorText);
+        setValue('taskTypeSelect', 'CHECKOUT_INSPECTION');
         setValue('taskPriority', 'NORMAL');
+        setValue('taskCleaningTasks', '');
         setValue('taskNote', '');
+        setValue('taskAssigneeSelect', '');
+
+        // Update default HK card
+        const defaultHk = getDefaultHkForFloor(currentTaskFloor);
+        const nameEl = document.getElementById('taskDefaultHkName');
+        const badgeEl = document.getElementById('taskDefaultHkBadge');
+        const subEl = document.getElementById('taskDefaultHkSub');
+
+        if (defaultHk) {
+            if (nameEl) {
+                const floorRoleText = currentTaskFloor <= 2 ? 'Phụ trách Tầng 1 - 2' : 'Phụ trách Tầng 3+';
+                nameEl.textContent = defaultHk.fullName + ' (' + floorRoleText + ')';
+            }
+            if (badgeEl) {
+                badgeEl.className = 'hk-status-badge ' + (defaultHk.badgeClass || 'badge-available');
+                badgeEl.textContent = defaultHk.badgeText || 'Đang rảnh';
+            }
+            if (subEl) {
+                subEl.innerHTML = '<span>Hôm nay: <strong>' + (defaultHk.completedToday || 0) + '</strong> phòng đã hoàn thành</span>';
+            }
+        } else {
+            if (nameEl) nameEl.textContent = 'Chưa có nhân viên Housekeeping';
+            if (badgeEl) {
+                badgeEl.className = 'hk-status-badge badge-pending';
+                badgeEl.textContent = 'Chưa phân công';
+            }
+        }
+
+        updateTaskAssigneeFeedback();
+        syncTaskModalFields();
         openModal('task');
     }
 
@@ -213,9 +328,15 @@
     bindConfirmLinks();
     setBoundedIntegerOnly('roomFloor', 0, 7);
 
+    const taskAssigneeEl = document.getElementById('taskAssigneeSelect');
+    if (taskAssigneeEl) {
+        taskAssigneeEl.addEventListener('change', updateTaskAssigneeFeedback);
+    }
+
     window.RoomManagement = {
         openModal,
         openRoomModal,
         openTaskModal
     };
 })();
+
