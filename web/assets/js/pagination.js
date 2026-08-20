@@ -30,7 +30,13 @@
 
     function renderPagination(root) {
         const items = getItems(root);
-        const controls = root.querySelector('[data-pagination-controls]');
+        let controls = root.querySelector('[data-pagination-controls]');
+        if (!controls && root.nextElementSibling && root.nextElementSibling.matches('[data-pagination-controls]')) {
+            controls = root.nextElementSibling;
+        }
+        if (!controls && root.parentElement) {
+            controls = root.parentElement.querySelector('[data-pagination-controls]');
+        }
         if (!controls) return;
 
         const pageSize = getPageSize(root);
@@ -46,7 +52,13 @@
             items.forEach((item, index) => {
                 const start = (currentPage - 1) * pageSize;
                 const end = start + pageSize;
-                item.hidden = index < start || index >= end;
+                const isHidden = (index < start || index >= end);
+                item.hidden = isHidden;
+                if (isHidden) {
+                    item.style.setProperty('display', 'none', 'important');
+                } else {
+                    item.style.removeProperty('display');
+                }
             });
 
             controls.innerHTML = '';
@@ -81,5 +93,9 @@
         document.querySelectorAll('[data-pagination-root]').forEach(renderPagination);
     }
 
-    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();

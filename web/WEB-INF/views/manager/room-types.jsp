@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý loại phòng | HMS</title>
     <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260819-1" />
-    <link rel="stylesheet" href="${cp}/assets/css/room-types.css" />
+    <link rel="stylesheet" href="${cp}/assets/css/room-types.css?v=20260819-2" />
   </head>
   <body class="room-management-body room-types-preview-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -50,7 +50,7 @@
 
           <c:choose>
             <c:when test="${not empty roomTypes}">
-              <div class="room-types-cards">
+              <div class="room-types-cards" id="roomTypesCards">
                 <c:forEach items="${roomTypes}" var="roomType" varStatus="loop">
                   <c:url var="roomTypeDetailUrl" value="/manager/room-types">
                     <c:if test="${not empty pageData.keyword}">
@@ -165,6 +165,7 @@
                   </a>
                 </c:forEach>
               </div>
+              <jsp:include page="/WEB-INF/views/common/pagination.jsp" />
             </c:when>
             <c:otherwise>
               <div class="panel room-types-empty-state">

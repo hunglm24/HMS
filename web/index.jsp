@@ -9,19 +9,65 @@
             return "";
         }
     }
+
+    private String escapeHtml(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        StringBuilder escaped = new StringBuilder(value.length() + 16);
+        for (char ch : value.toCharArray()) {
+            switch (ch) {
+                case '&':
+                    escaped.append("&amp;");
+                    break;
+                case '<':
+                    escaped.append("&lt;");
+                    break;
+                case '>':
+                    escaped.append("&gt;");
+                    break;
+                case '"':
+                    escaped.append("&quot;");
+                    break;
+                case '\'':
+                    escaped.append("&#39;");
+                    break;
+                default:
+                    escaped.append(ch);
+                    break;
+            }
+        }
+        return escaped.toString();
+    }
+
+    private String resolveImageSrc(String contextPath, String imageUrl, String fallbackUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return fallbackUrl;
+        }
+        String trimmed = imageUrl.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed;
+        }
+        if (trimmed.startsWith("/")) {
+            return contextPath + trimmed;
+        }
+        return contextPath + "/" + trimmed;
+    }
 %>
 <%
     Object currentUser = session.getAttribute("currentUser");
     String role = indexBeanString(currentUser, "getRoleName");
     boolean internal = currentUser != null && !"CUSTOMER".equalsIgnoreCase(role);
-    
-    // Fetch Latest News for Public Page
+
     java.util.List<model.News> latestNews = java.util.Collections.emptyList();
     java.util.List<model.RoomType> publicRoomTypes = java.util.Collections.emptyList();
+    java.util.List<model.RoomType> featuredRoomTypes = java.util.Collections.emptyList();
     if (!internal) {
         dao.NewsDao newsDao = new dao.NewsDao();
+        dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
         latestNews = newsDao.getLatestNews(3);
-        publicRoomTypes = new dao.RoomTypeDao().findActive();
+        publicRoomTypes = roomTypeDao.findActive();
+        featuredRoomTypes = roomTypeDao.findActive(2);
     }
 %>
 <!DOCTYPE html>
@@ -41,46 +87,73 @@
             <p class="hero-kicker">Hệ thống quản lý khách sạn</p>
             <h1>Đặt phòng nhanh, trải nghiệm khách sạn gọn gàng.</h1>
             <p>Tìm phòng, xem hạng phòng và quản lý booking cá nhân trong một giao diện đơn giản.</p>
-            <form class="booking-strip" method="get" action="${pageContext.request.contextPath}/search">
-                <label>Check-in<input type="date" name="checkIn"></label>
-                <label>Check-out<input type="date" name="checkOut"></label>
+            <form class="booking-strip" method="get" action="${pageContext.request.contextPath}/search" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
+                <label>Check-in<input type="date" name="checkIn" required></label>
+                <label>Check-out<input type="date" name="checkOut" required></label>
                 <label>Khách<select name="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
                 <label>Loại phòng<select name="roomTypeId">
                     <option value="">Tất cả</option>
                     <% for (model.RoomType rt : publicRoomTypes) { %>
-                        <option value="<%= rt.getId() %>"><%= rt.getName() %></option>
+                        <option value="<%= rt.getId() %>"><%= escapeHtml(rt.getName()) %></option>
                     <% } %>
                 </select></label>
                 <button type="submit">Tìm phòng</button>
             </form>
         </div>
     </section>
+
     <section class="section-head">
         <div><p class="section-kicker">Nổi bật</p><h2>Phòng nổi bật</h2></div>
         <a class="btn btn-secondary" href="${pageContext.request.contextPath}/search">Xem tất cả</a>
     </section>
+
     <section class="room-card-grid">
-        <article class="room-showcase-card">
-            <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=900&q=80" alt="Deluxe room">
-            <div class="room-showcase-card__body"><h3>Deluxe City View</h3><p>Phòng sáng, đầy đủ tiện nghi, phù hợp cho kỳ nghỉ ngắn ngày.</p><div class="room-meta"><span>2 khách</span><span>32 m2</span><span>Bữa sáng</span></div><a class="btn" href="${pageContext.request.contextPath}/room-detail">Xem chi tiết</a></div>
-        </article>
-        <article class="room-showcase-card">
-            <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80" alt="Suite room">
-            <div class="room-showcase-card__body"><h3>Executive Suite</h3><p>Không gian rộng, có khu tiếp khách và view thành phố.</p><div class="room-meta"><span>3 khách</span><span>48 m2</span><span>Mini bar</span></div><a class="btn" href="${pageContext.request.contextPath}/room-detail">Xem chi tiết</a></div>
-        </article>
+        <% if (featuredRoomTypes.isEmpty()) { %>
+            <p>Hiện chưa có loại phòng nổi bật nào.</p>
+        <% } else { %>
+            <% for (model.RoomType roomType : featuredRoomTypes) {
+                String imageUrl = resolveImageSrc(
+                        request.getContextPath(),
+                        roomType.getImageUrl(),
+                        "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80");
+                String description = roomType.getDescription() != null && !roomType.getDescription().isBlank()
+                        ? roomType.getDescription()
+                        : "Thông tin phòng đang được cập nhật.";
+                String bedType = roomType.getBedType() != null && !roomType.getBedType().isBlank()
+                        ? roomType.getBedType()
+                        : "Tiện ích";
+                String sizeText = roomType.getSizeM2() != null
+                        ? roomType.getSizeM2().stripTrailingZeros().toPlainString()
+                        : "-";
+            %>
+                <article class="room-showcase-card">
+                    <img src="<%= escapeHtml(imageUrl) %>" alt="<%= escapeHtml(roomType.getName()) %>">
+                    <div class="room-showcase-card__body">
+                        <h3><%= escapeHtml(roomType.getName()) %></h3>
+                        <p><%= escapeHtml(description) %></p>
+                        <div class="room-meta">
+                            <span><%= roomType.getCapacity() %> khách</span>
+                            <span><%= "-".equals(sizeText) ? "-" : sizeText %> m2</span>
+                            <span><%= escapeHtml(bedType) %></span>
+                        </div>
+                        <a class="btn" href="<%= request.getContextPath() %>/room-detail?id=<%= roomType.getId() %>">Xem chi tiết</a>
+                    </div>
+                </article>
+            <% } %>
+        <% } %>
     </section>
-    
+
     <% if (!latestNews.isEmpty()) { %>
     <section class="section-head" style="margin-top: 40px;">
-        <div><p class="section-kicker">Tin tức</p><h2>Khuyến mãi & Sự kiện</h2></div>
+        <div><p class="section-kicker">Tin tức</p><h2>Khuyến mãi &amp; Sự kiện</h2></div>
         <a class="btn btn-secondary" href="${pageContext.request.contextPath}/news">Xem tất cả</a>
     </section>
     <section class="room-card-grid">
-        <% for(model.News n : latestNews) { %>
+        <% for (model.News n : latestNews) { %>
         <article class="room-showcase-card">
             <img src="<%= n.getThumbnailUrl() != null && !n.getThumbnailUrl().isEmpty() ? n.getThumbnailUrl() : "https://via.placeholder.com/900x500?text=News" %>" alt="News Image">
             <div class="room-showcase-card__body">
-                <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= n.getTitle() %></h3>
+                <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= escapeHtml(n.getTitle()) %></h3>
                 <div class="room-meta" style="margin-top: 8px; color: #666; font-size: 14px;">
                     <span><%= n.getPublishedAt() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(n.getPublishedAt()) : "" %></span>
                 </div>
@@ -111,8 +184,8 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/reception/room-map"><span>Phòng</span><h3>Sơ đồ phòng</h3><p>Xem nhanh tình trạng phòng theo tầng.</p></a>
         <% } else if ("HOUSEKEEPING".equalsIgnoreCase(role)) { %>
             <div style="display: flex; gap: 16px; flex-wrap: wrap; grid-column: 1 / -1;">
-                <a class="btn btn-primary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/tasks">Nhận Task phòng</a>
-                <a class="btn btn-secondary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/issues">Báo cáo & Quản lý sự cố</a>
+                <a class="btn btn-primary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/tasks">Nhận task phòng</a>
+                <a class="btn btn-secondary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/issues">Báo cáo &amp; quản lý sự cố</a>
             </div>
         <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(role)) { %>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo</h3><p>Theo dõi doanh thu, công suất phòng và nhân sự.</p></a>
@@ -120,7 +193,6 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/room-types"><span>Loại phòng</span><h3>Quản lý loại phòng</h3><p>Quản lý hạng phòng, giá và sức chứa.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Buồng phòng</span><h3>Nhiệm vụ dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/news"><span>Tin tức</span><h3>Quản lý tin tức</h3><p>Thêm, sửa, xóa các chương trình khuyến mãi.</p></a>
-
         <% } else if ("ADMIN".equalsIgnoreCase(role)) { %>
             <article class="preview-card admin-action-card">
                 <span>Admin</span>

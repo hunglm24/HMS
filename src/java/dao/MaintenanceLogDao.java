@@ -1,10 +1,13 @@
 package dao;
 
+import model.MaintenanceLog;
 import util.DBConnectionUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MaintenanceLogDao {
@@ -20,13 +23,20 @@ public class MaintenanceLogDao {
 
         String updateEqSql = "UPDATE room_equipment SET status = 'NORMAL' WHERE id = ?";
 
-        String checkTaskCompleteSql = """
+        String updateTaskSql = "UPDATE housekeeping_tasks SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+
+        String checkRoomCompleteSql = """
                 SELECT COUNT(*) FROM room_equipment re
                 JOIN housekeeping_tasks ht ON ht.room_id = re.room_id
                 WHERE ht.id = ? AND re.status IN ('DAMAGED', 'MISSING', 'WAITING_REPAIR', 'WAITING_REPLACEMENT', 'MAINTENANCE')
                 """;
 
-        String updateTaskSql = "UPDATE housekeeping_tasks SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String restoreRoomSql = """
+                UPDATE rooms rm
+                JOIN housekeeping_tasks ht ON ht.room_id = rm.id
+                SET rm.status = 'AVAILABLE'
+                WHERE ht.id = ? AND rm.status IN ('NOT_READY', 'MAINTENANCE')
+                """;
 
         try (Connection connection = requireConnection()) {
             boolean autoCommit = connection.getAutoCommit();
@@ -48,21 +58,27 @@ public class MaintenanceLogDao {
                     updateEq.executeBatch();
                 }
 
-                // Auto complete task if no damaged equipments are left for this room
-                boolean allFixed = true;
-                try (PreparedStatement check = connection.prepareStatement(checkTaskCompleteSql)) {
+                // Complete this specific task
+                try (PreparedStatement complete = connection.prepareStatement(updateTaskSql)) {
+                    complete.setLong(1, taskId);
+                    complete.executeUpdate();
+                }
+
+                // If no damaged equipment left in the room, restore room to AVAILABLE
+                boolean allRoomFixed = true;
+                try (PreparedStatement check = connection.prepareStatement(checkRoomCompleteSql)) {
                     check.setLong(1, taskId);
-                    try (java.sql.ResultSet rs = check.executeQuery()) {
+                    try (ResultSet rs = check.executeQuery()) {
                         if (rs.next()) {
-                            allFixed = (rs.getInt(1) == 0);
+                            allRoomFixed = (rs.getInt(1) == 0);
                         }
                     }
                 }
 
-                if (allFixed) {
-                    try (PreparedStatement complete = connection.prepareStatement(updateTaskSql)) {
-                        complete.setLong(1, taskId);
-                        complete.executeUpdate();
+                if (allRoomFixed) {
+                    try (PreparedStatement restoreRoom = connection.prepareStatement(restoreRoomSql)) {
+                        restoreRoom.setLong(1, taskId);
+                        restoreRoom.executeUpdate();
                     }
                 }
 
@@ -72,6 +88,43 @@ public class MaintenanceLogDao {
                 throw ex;
             } finally {
                 connection.setAutoCommit(autoCommit);
+            }
+        }
+    }
+
+    public List<MaintenanceLog> findLogsByTaskId(long taskId) throws SQLException {
+        String sql = """
+                SELECT eml.id, eml.housekeeping_task_id, eml.room_equipment_id, e.name AS equipment_name,
+                       eml.action_type, eml.previous_status, eml.new_status, eml.note,
+                       eml.confirmed_by, a.full_name AS confirmed_by_name, eml.confirmed_at
+                FROM equipment_maintenance_logs eml
+                JOIN room_equipment re ON re.id = eml.room_equipment_id
+                JOIN equipment e ON e.id = re.equipment_id
+                LEFT JOIN accounts a ON a.id = eml.confirmed_by
+                WHERE eml.housekeeping_task_id = ?
+                ORDER BY eml.confirmed_at DESC
+                """;
+        try (Connection connection = requireConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, taskId);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<MaintenanceLog> logs = new ArrayList<>();
+                while (rs.next()) {
+                    MaintenanceLog log = new MaintenanceLog();
+                    log.setId(rs.getLong("id"));
+                    log.setHousekeepingTaskId(rs.getLong("housekeeping_task_id"));
+                    log.setRoomEquipmentId(rs.getLong("room_equipment_id"));
+                    log.setEquipmentName(rs.getString("equipment_name"));
+                    log.setActionType(rs.getString("action_type"));
+                    log.setPreviousStatus(rs.getString("previous_status"));
+                    log.setNewStatus(rs.getString("new_status"));
+                    log.setNote(rs.getString("note"));
+                    log.setConfirmedBy(rs.getLong("confirmed_by"));
+                    log.setConfirmedByName(rs.getString("confirmed_by_name"));
+                    log.setConfirmedAt(rs.getTimestamp("confirmed_at"));
+                    logs.add(log);
+                }
+                return logs;
             }
         }
     }

@@ -674,3 +674,56 @@ body > .internal-sidebar ~ main.amenity-management-page {
         max-height: 128px;
     }
 }
+
+/* ==========================================================================
+   Room Management Matching Pagination Component
+   ========================================================================== */
+.room-management-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3, 12px);
+    margin-top: var(--space-4, 20px);
+    margin-bottom: var(--space-4, 20px);
+    flex-wrap: wrap;
+}
+
+.room-management-pagination[hidden] {
+    display: none !important;
+}
+
+.room-management-pagination__page {
+    min-height: 36px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-md, 8px);
+    background: var(--color-bg-surface, #ffffff);
+    color: var(--color-primary-600, #2563eb);
+    font: 600 var(--text-body, 14px) / 1 var(--font-sans, inherit);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.room-management-pagination__page:hover:not(:disabled) {
+    border-color: var(--color-primary-500, #3b82f6);
+    background: var(--color-primary-100, #eff6ff);
+}
+
+.room-management-pagination__page:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.room-management-pagination__page.is-active {
+    border-color: var(--color-primary-600, #2563eb);
+    background: var(--color-primary-600, #2563eb);
+    color: #ffffff;
+}
+
+.room-management-pagination__info {
+    color: var(--color-text-secondary, #64748b);
+    font-size: var(--text-body, 14px);
+    font-weight: 600;
+}

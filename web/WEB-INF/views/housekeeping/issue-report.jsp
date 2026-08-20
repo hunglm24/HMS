@@ -5,8 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Báo cáo sự cố | HMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/housekeeping.css?v=20260816-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-5">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/housekeeping.css?v=20260819-5">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -31,7 +31,7 @@
                 <select name="roomId" id="roomId" required>
                     <option value="">-- Chọn phòng --</option>
                     <c:forEach var="room" items="${rooms}">
-                        <option value="${room.id}" ${selectedRoomId eq room.id ? 'selected' : ''}>P.${room.roomNumber} - ${room.roomTypeName}</option>
+                        <option value="${room.id}" ${room.id == preselectedRoomId ? 'selected' : ''}>P.${room.roomNumber} - ${room.roomTypeName}</option>
                     </c:forEach>
                 </select>
             </label>
@@ -77,10 +77,11 @@ roomSelect.addEventListener('change', function() {
             container.innerHTML = '<span style="color: var(--color-error-600);">Lỗi tải thiết bị</span>';
         });
 });
-
-if (roomSelect.value) {
-    roomSelect.dispatchEvent(new Event('change'));
-}
+// Auto-load equipment if roomId is preselected
+(function() {
+    var sel = document.getElementById("roomId");
+    if (sel && sel.value) { sel.dispatchEvent(new Event("change")); }
+})();
 </script>
 </body>
 </html>

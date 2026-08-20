@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.List;
 import model.Room;
 
-@WebServlet(name = "IssueReportServlet", urlPatterns = {"/housekeeping/issues/report"})
+@WebServlet(name = "IssueReportServlet", urlPatterns = {"/housekeeping/issues/report", "/manager/issues/report"})
 public class IssueReportServlet extends HttpServlet {
     private final MaintenanceService maintenanceService = new MaintenanceService();
     private final RoomService roomService = new RoomService();
@@ -48,12 +48,11 @@ public class IssueReportServlet extends HttpServlet {
             return;
         }
 
-        List<Room> rooms = roomService.getAllRooms();
-        request.setAttribute("rooms", rooms);
-
-        Long selectedRoomId = parsePositiveLong(request.getParameter("roomId"));
-        if (selectedRoomId != null && rooms.stream().anyMatch(room -> room.getId() == selectedRoomId)) {
-            request.setAttribute("selectedRoomId", selectedRoomId);
+        request.setAttribute("rooms", roomService.getAllRooms());
+        String preselectedRoomIdStr = request.getParameter("roomId");
+        if (preselectedRoomIdStr != null && !preselectedRoomIdStr.isBlank()) {
+            try { request.setAttribute("preselectedRoomId", Long.parseLong(preselectedRoomIdStr)); }
+            catch (NumberFormatException ignored) {}
         }
         request.getRequestDispatcher("/WEB-INF/views/housekeeping/issue-report.jsp").forward(request, response);
     }
@@ -93,7 +92,8 @@ public class IssueReportServlet extends HttpServlet {
             }
 
             session.setAttribute("successMessage", "Báo cáo sự cố thành công.");
-            response.sendRedirect(request.getContextPath() + "/housekeeping/issues");
+                        boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
+            response.sendRedirect(request.getContextPath() + (isMgr ? "/manager/issues" : "/housekeeping/issues"));
         } catch (Exception ex) {
             session.setAttribute("errorMessage", ex.getMessage());
             Long roomId = parsePositiveLong(request.getParameter("roomId"));

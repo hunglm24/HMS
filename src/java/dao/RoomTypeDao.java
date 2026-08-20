@@ -45,6 +45,23 @@ public class RoomTypeDao {
         return roomTypes;
     }
 
+    // Load a limited number of active room types for homepage highlights.
+    public List<RoomType> findActive(int limit) {
+        List<RoomType> roomTypes = new ArrayList<>();
+        String sql = "SELECT * FROM room_types WHERE status = 'ACTIVE' ORDER BY id ASC LIMIT " + Math.max(limit, 0);
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                roomTypes.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot load limited active room types from database.", e);
+        }
+        return roomTypes;
+    }
+
     // Load distinct room type statuses from the database for form dropdowns.
     public List<String> findDistinctStatuses() {
         List<String> statuses = new ArrayList<>();
@@ -75,7 +92,7 @@ public class RoomTypeDao {
         return bedTypes;
     }
 
-    public List<RoomType> findAvailableRoomTypes(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int guests, int numRooms, Double minPrice, Double maxPrice, String sort, Long roomTypeId) {
+    public List<RoomType> findAvailableRoomTypes(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int guests, int numRooms, Double minPrice, Double maxPrice, String sort, Long roomTypeId, int limit, int offset) {
         List<RoomType> roomTypes = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT rt.*,
@@ -121,6 +138,78 @@ public class RoomTypeDao {
         } else if ("PRICE_DESC".equals(sort)) {
             sql.append(" ORDER BY rt.base_price DESC");
         }
+        
+        sql.append(" LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIdx = 1;
+            ps.setDate(paramIdx++, java.sql.Date.valueOf(checkOut));
+            ps.setDate(paramIdx++, java.sql.Date.valueOf(checkIn));
+            ps.setInt(paramIdx++, numRooms);
+            ps.setInt(paramIdx++, guests);
+            
+            if (roomTypeId != null && roomTypeId > 0) {
+                ps.setLong(paramIdx++, roomTypeId);
+            }
+            if (minPrice != null) {
+                ps.setDouble(paramIdx++, minPrice);
+            }
+            if (maxPrice != null) {
+                ps.setDouble(paramIdx++, maxPrice);
+            }
+            
+            ps.setInt(paramIdx++, numRooms);
+            ps.setInt(paramIdx++, limit);
+            ps.setInt(paramIdx++, offset);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    RoomType rt = mapRow(rs);
+                    rt.setAvailableQuantity(rs.getInt("availableQuantity"));
+                    rt.setTotalQuantity(rs.getInt("totalActiveRooms"));
+                    roomTypes.add(rt);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return roomTypes;
+    }
+
+    public int countAvailableRoomTypes(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int guests, int numRooms, Double minPrice, Double maxPrice, Long roomTypeId) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*) FROM (
+                SELECT rt.id,
+                       (
+                           SELECT COUNT(*)
+                           FROM rooms r
+                           WHERE r.room_type_id = rt.id
+                             AND r.status = 'AVAILABLE'
+                             AND NOT EXISTS (
+                                 SELECT 1
+                                 FROM booking_rooms br
+                                 JOIN bookings b ON br.booking_id = b.id
+                                 WHERE br.room_id = r.id
+                                   AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                                   AND b.check_in_date < ?
+                                   AND b.check_out_date > ?
+                             )
+                       ) AS availableQuantity
+                FROM room_types rt
+                WHERE (rt.capacity * ?) >= ? AND rt.status = 'ACTIVE'
+            """);
+
+        if (roomTypeId != null && roomTypeId > 0) {
+            sql.append(" AND rt.id = ?");
+        }
+        if (minPrice != null) {
+            sql.append(" AND rt.base_price >= ?");
+        }
+        if (maxPrice != null) {
+            sql.append(" AND rt.base_price <= ?");
+        }
+        
+        sql.append(" HAVING availableQuantity >= ?) AS subquery");
 
         try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int paramIdx = 1;
@@ -142,17 +231,14 @@ public class RoomTypeDao {
             ps.setInt(paramIdx++, numRooms);
             
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    RoomType rt = mapRow(rs);
-                    rt.setAvailableQuantity(rs.getInt("availableQuantity"));
-                    rt.setTotalQuantity(rs.getInt("totalActiveRooms"));
-                    roomTypes.add(rt);
+                if (rs.next()) {
+                    return rs.getInt(1);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return roomTypes;
+        return 0;
     }
 
     // Tìm một loại phòng theo ID

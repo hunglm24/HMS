@@ -3,7 +3,12 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Walk-in booking | HMS</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1"></head>
 <body><jsp:include page="/WEB-INF/views/common/header.jsp" /><main class="page-container"><section class="section-head"><div><p class="section-kicker">Lễ tân</p><h1>Đặt phòng tại quầy</h1><p>Tìm phòng trống thực tế và tạo booking.</p></div></section>
-<form class="toolbar-card" method="get" action="${pageContext.request.contextPath}/receptionist/walk-in">
+<c:if test="${not empty error}">
+    <div style="padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; color: #721c24; background-color: #f8d7da; border-color: #f5c6cb;">
+        ${error}
+    </div>
+</c:if>
+<form class="toolbar-card" method="get" action="${pageContext.request.contextPath}/receptionist/walk-in" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
         <label>Check-in<input type="date" name="checkIn" value="${param.checkIn}" id="topCheckIn" required></label>
         <label>Check-out<input type="date" name="checkOut" value="${param.checkOut}" id="topCheckOut" required></label>
@@ -18,7 +23,7 @@
 </form>
 
 <c:if test="${not empty availablePhysicalRooms}">
-    <form class="preview-card form-panel" method="post" action="${pageContext.request.contextPath}/receptionist/walk-in" id="walkinForm">
+    <form class="preview-card form-panel" method="post" action="${pageContext.request.contextPath}/receptionist/walk-in" id="walkinForm" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
         <h3>1. Chọn phòng</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px;">
             <c:forEach var="r" items="${availablePhysicalRooms}">
@@ -34,12 +39,12 @@
 
         <h3>2. Thông tin khách hàng</h3>
         <div class="form-grid">
-            <label>Họ tên<input name="fullName" required></label>
-            <label>Điện thoại<input name="phone" required></label>
-            <label>Email (Tùy chọn)<input type="email" name="email"></label>
-            <label>CMND/Passport (Tùy chọn)<input name="identityNumber"></label>
-            <label>Số khách<input type="number" name="guests" min="1" value="2" required></label>
-            <label>Ghi chú<input name="notes"></label>
+            <label>Họ tên<input name="fullName" value="${param.fullName}" required></label>
+            <label>Điện thoại<input name="phone" value="${param.phone}" required></label>
+            <label>Email (Tùy chọn)<input type="email" name="email" value="${param.email}"></label>
+            <label>CMND/Passport (Tùy chọn)<input name="identityNumber" value="${param.identityNumber}"></label>
+            <label>Số khách<input type="number" name="guests" value="${not empty param.guests ? param.guests : '2'}" min="1" required></label>
+            <label>Ghi chú<input name="notes" value="${param.notes}"></label>
             <input type="hidden" name="checkIn" id="checkInVal" value="${param.checkIn}">
             <input type="hidden" name="checkOut" id="checkOutVal" value="${param.checkOut}">
         </div>
@@ -54,9 +59,9 @@
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <label>Trạng thái thanh toán
-                    <select name="paymentStatus" id="paymentStatus" required onchange="togglePaymentMethod()">
-                        <option value="UNPAID">Thanh toán khi trả phòng (Trả sau)</option>
-                        <option value="PAID">Đã thanh toán đủ (Trả trước)</option>
+                    <select name="paymentStatus" id="paymentStatus" onchange="togglePaymentMethod()">
+                        <option value="UNPAID" ${param.paymentStatus == 'UNPAID' ? 'selected' : ''}>Thanh toán khi trả phòng (Trả sau)</option>
+                        <option value="PAID" ${param.paymentStatus == 'PAID' ? 'selected' : ''}>Đã thanh toán đủ (Trả trước)</option>
                     </select>
                 </label>
                 <label id="paymentMethodLabel" style="opacity: 0.5; pointer-events: none;">Phương thức

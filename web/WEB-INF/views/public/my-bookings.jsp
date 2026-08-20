@@ -127,6 +127,21 @@
                     </div>
                 </c:otherwise>
             </c:choose>
+            <c:if test="${totalPages > 1}">
+                <div style="display: flex; justify-content: center; gap: 8px; margin-top: 24px;">
+                    <c:if test="${currentPage > 1}">
+                        <a href="${pageContext.request.contextPath}/my-bookings?bookingCode=${param.bookingCode}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&page=${currentPage - 1}" class="btn btn-secondary">&laquo; Trước</a>
+                    </c:if>
+                    
+                    <c:forEach begin="1" end="${totalPages}" var="p">
+                        <a href="${pageContext.request.contextPath}/my-bookings?bookingCode=${param.bookingCode}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&page=${p}" class="btn ${p == currentPage ? 'btn-primary' : 'btn-secondary'}">${p}</a>
+                    </c:forEach>
+                    
+                    <c:if test="${currentPage < totalPages}">
+                        <a href="${pageContext.request.contextPath}/my-bookings?bookingCode=${param.bookingCode}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&page=${currentPage + 1}" class="btn btn-secondary">Sau &raquo;</a>
+                    </c:if>
+                </div>
+            </c:if>
         </div>
     </main>
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />

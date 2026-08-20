@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="vi">
   <head>
@@ -7,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý phòng | HMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/rooms.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/rooms.css?v=20260820-7">
   </head>
   <body class="room-management-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -136,10 +137,17 @@
                                                 data-room-id="${room.id}"
                                                 data-room-number="${room.roomNumber}"
                                                 data-room-type-id="${room.roomTypeId}"
+                                                data-room-type-name="${fn:escapeXml(room.roomTypeName)}"
                                                 data-room-floor="${room.floorNumber}"
                                                 data-room-status="${room.status}"
                                                 data-room-description="${room.description}">
                                                 Sửa
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-secondary btn-sm"
+                                                onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}', ${empty room.floorNumber ? 0 : room.floorNumber})">
+                                                Giao việc
                                             </button>
                                             <a class="btn btn-danger btn-sm"
                                                href="${pageContext.request.contextPath}/manager/rooms/deactivate-room?id=${room.id}"
@@ -195,10 +203,17 @@
                                 data-room-id="${room.id}"
                                 data-room-number="${room.roomNumber}"
                                 data-room-type-id="${room.roomTypeId}"
+                                data-room-type-name="${fn:escapeXml(room.roomTypeName)}"
                                 data-room-floor="${room.floorNumber}"
                                 data-room-status="${room.status}"
                                 data-room-description="${room.description}">
                                 Sửa
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-secondary btn-sm"
+                                onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}', ${empty room.floorNumber ? 0 : room.floorNumber})">
+                                Giao việc
                             </button>
                             <a class="btn btn-danger btn-sm"
                                href="${pageContext.request.contextPath}/manager/rooms/deactivate-room?id=${room.id}"
@@ -216,8 +231,9 @@
     </main>
 
     <jsp:include page="/WEB-INF/views/manager/modals/room-modal.jsp" />
+    <jsp:include page="/WEB-INF/views/manager/modals/task-modal.jsp" />
 
-    <script src="${pageContext.request.contextPath}/assets/js/rooms.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/pagination.js"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/rooms.js?v=20260820-5"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/pagination.js?v=20260820-7?v=20260820-7"></script>
   </body>
 </html>

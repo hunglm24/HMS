@@ -65,33 +65,61 @@ public class WalkInReservationServlet extends HttpServlet {
         String totalAmountStr = request.getParameter("totalAmount");
 
         try {
+            if (checkInStr == null || checkInStr.isBlank() || checkOutStr == null || checkOutStr.isBlank()) {
+                request.setAttribute("error", "Vui lòng nhập đầy đủ Ngày nhận và Ngày trả phòng.");
+                doGet(request, response);
+                return;
+            }
+            if (fullName == null || fullName.trim().isEmpty()) {
+                request.setAttribute("error", "Vui lòng nhập Họ tên khách hàng.");
+                doGet(request, response);
+                return;
+            }
+            if (phone == null || phone.trim().isEmpty()) {
+                request.setAttribute("error", "Vui lòng nhập Số điện thoại.");
+                doGet(request, response);
+                return;
+            }
+
             java.time.LocalDate checkIn = java.time.LocalDate.parse(checkInStr);
             java.time.LocalDate checkOut = java.time.LocalDate.parse(checkOutStr);
-            int guests = Integer.parseInt(guestsStr);
+            int guests = 2;
+            try {
+                guests = Integer.parseInt(guestsStr);
+                if (guests <= 0) {
+                    request.setAttribute("error", "Số khách phải lớn hơn 0.");
+                    doGet(request, response);
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                request.setAttribute("error", "Số lượng khách không hợp lệ.");
+                doGet(request, response);
+                return;
+            }
             java.time.LocalDate today = java.time.LocalDate.now();
-            java.math.BigDecimal totalAmount = new java.math.BigDecimal(totalAmountStr);
+            java.math.BigDecimal totalAmount = totalAmountStr != null && !totalAmountStr.isBlank() ? new java.math.BigDecimal(totalAmountStr) : java.math.BigDecimal.ZERO;
 
             if (roomIdsStr == null || roomIdsStr.length == 0) {
-                request.getSession().setAttribute("error", "Vui lòng chọn ít nhất 1 phòng.");
-                response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                request.setAttribute("error", "Vui lòng chọn ít nhất 1 phòng.");
+                doGet(request, response);
                 return;
             }
 
             // 1. Validate dates
             if (checkIn.isBefore(today)) {
-                request.getSession().setAttribute("error", "Ngày nhận phòng không thể trong quá khứ.");
-                response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                request.setAttribute("error", "Ngày nhận phòng không thể trong quá khứ.");
+                doGet(request, response);
                 return;
             }
             if (!checkIn.isBefore(checkOut)) {
-                request.getSession().setAttribute("error", "Ngày trả phòng phải sau ngày nhận phòng.");
-                response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                request.setAttribute("error", "Ngày trả phòng phải sau ngày nhận phòng.");
+                doGet(request, response);
                 return;
             }
             
             if ("CHECKIN".equals(submitAction) && !checkIn.equals(today)) {
-                request.getSession().setAttribute("error", "Chỉ có thể check-in nếu ngày nhận phòng là hôm nay.");
-                response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                request.setAttribute("error", "Chỉ có thể check-in nếu ngày nhận phòng là hôm nay.");
+                doGet(request, response);
                 return;
             }
 
@@ -113,16 +141,16 @@ public class WalkInReservationServlet extends HttpServlet {
                 }
                 
                 if (room == null || "INACTIVE".equals(room.getStatus()) || "MAINTENANCE".equals(room.getStatus())) {
-                    request.getSession().setAttribute("error", "Phòng " + roomId + " đã bị đặt hoặc không hợp lệ.");
-                    response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                    request.setAttribute("error", "Phòng " + roomId + " đã bị đặt hoặc không hợp lệ.");
+                    doGet(request, response);
                     return;
                 }
                 
                 // If CHECKIN, room must be clean
                 if ("CHECKIN".equals(submitAction)) {
                     if ("CLEANING".equals(room.getStatus()) || "NOT_READY".equals(room.getStatus())) {
-                        request.getSession().setAttribute("error", "Không thể Check-in! Phòng " + room.getRoomNumber() + " chưa sẵn sàng.");
-                        response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                        request.setAttribute("error", "Không thể Check-in! Phòng " + room.getRoomNumber() + " chưa sẵn sàng.");
+                        doGet(request, response);
                         return;
                     }
                 }
@@ -135,8 +163,8 @@ public class WalkInReservationServlet extends HttpServlet {
             }
 
             if (guests > totalCapacity) {
-                request.getSession().setAttribute("error", "Số khách vượt quá tổng sức chứa của các phòng đã chọn (" + totalCapacity + ").");
-                response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+                request.setAttribute("error", "Số khách vượt quá tổng sức chứa của các phòng đã chọn (" + totalCapacity + ").");
+                doGet(request, response);
                 return;
             }
 
@@ -255,8 +283,8 @@ public class WalkInReservationServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            request.getSession().setAttribute("error", "Dữ liệu không hợp lệ: " + e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/receptionist/walk-in?checkIn=" + checkInStr + "&checkOut=" + checkOutStr);
+            request.setAttribute("error", "Dữ liệu không hợp lệ: " + e.getMessage());
+            doGet(request, response);
         }
     }
 }

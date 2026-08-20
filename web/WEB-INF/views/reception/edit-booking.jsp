@@ -32,7 +32,7 @@
             <c:remove var="error" scope="session" />
         </c:if>
 
-        <form method="post" action="${pageContext.request.contextPath}/receptionist/edit-booking" class="toolbar-card" style="display: block;">
+        <form method="post" action="${pageContext.request.contextPath}/receptionist/edit-booking" class="toolbar-card" style="display: block;" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
             <input type="hidden" name="id" value="${booking.id}">
             
             <div class="form-grid">
