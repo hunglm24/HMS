@@ -45,10 +45,21 @@ public class SearchRoomServlet extends HttpServlet {
                     Double minPrice = minPriceStr != null && !minPriceStr.isBlank() ? Double.parseDouble(minPriceStr) : null;
                     Double maxPrice = maxPriceStr != null && !maxPriceStr.isBlank() ? Double.parseDouble(maxPriceStr) : null;
                     Long roomTypeId = roomTypeIdStr != null && !roomTypeIdStr.isBlank() ? Long.parseLong(roomTypeIdStr) : null;
+                    
+                    String pageStr = request.getParameter("page");
+                    int page = pageStr != null && !pageStr.isBlank() ? Integer.parseInt(pageStr) : 1;
+                    int limit = 10;
+                    int offset = (page - 1) * limit;
 
                     List<model.RoomType> availableRooms = roomTypeDao.findAvailableRoomTypes(
-                            checkIn, checkOut, guests, numRooms, minPrice, maxPrice, sort, roomTypeId);
+                            checkIn, checkOut, guests, numRooms, minPrice, maxPrice, sort, roomTypeId, limit, offset);
+                    
+                    int totalRecords = roomTypeDao.countAvailableRoomTypes(checkIn, checkOut, guests, numRooms, minPrice, maxPrice, roomTypeId);
+                    int totalPages = (int) Math.ceil((double) totalRecords / limit);
+                    
                     request.setAttribute("availableRooms", availableRooms);
+                    request.setAttribute("currentPage", page);
+                    request.setAttribute("totalPages", totalPages);
                 } catch (RuntimeException ex) {
                     request.setAttribute("dateError", "Dữ liệu tìm kiếm không hợp lệ. Vui lòng kiểm tra ngày, số khách, số phòng và giá.");
                 }
@@ -66,9 +77,36 @@ public class SearchRoomServlet extends HttpServlet {
     private String validateDates(HttpServletRequest request) {
         String checkIn = request.getParameter("checkIn");
         String checkOut = request.getParameter("checkOut");
-        if (checkIn == null || checkOut == null || checkIn.isBlank() || checkOut.isBlank()) {
-            return null;
+        String guestsStr = request.getParameter("guests");
+        String numRoomsStr = request.getParameter("numRooms");
+        
+        if (checkIn == null && checkOut == null && guestsStr == null) {
+            return null; // initial load
         }
+        
+        if (checkIn == null || checkOut == null || checkIn.isBlank() || checkOut.isBlank()) {
+            request.setAttribute("dateError", "Vui lòng nhập đầy đủ ngày nhận và trả phòng.");
+            return "error";
+        }
+        
+        try {
+            if (guestsStr != null && !guestsStr.isBlank()) {
+                if (Integer.parseInt(guestsStr) <= 0) {
+                    request.setAttribute("dateError", "Số khách phải lớn hơn 0.");
+                    return "error";
+                }
+            }
+            if (numRoomsStr != null && !numRoomsStr.isBlank()) {
+                if (Integer.parseInt(numRoomsStr) <= 0) {
+                    request.setAttribute("dateError", "Số phòng phải lớn hơn 0.");
+                    return "error";
+                }
+            }
+        } catch (NumberFormatException e) {
+            request.setAttribute("dateError", "Số lượng khách hoặc phòng không hợp lệ.");
+            return "error";
+        }
+        
         LocalDate today = LocalDate.now();
         try {
             LocalDate in = LocalDate.parse(checkIn);

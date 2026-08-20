@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public class BookingDao {
 
-    public List<model.Booking> findBookingsByCustomerId(long customerId, String bookingCode, String status, String fromDate, String toDate) throws SQLException {
+    public List<model.Booking> findBookingsByCustomerId(long customerId, String bookingCode, String status, String fromDate, String toDate, int limit, int offset) throws SQLException {
         List<model.Booking> bookings = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM bookings WHERE customer_id = ?");
         List<Object> params = new ArrayList<>();
@@ -41,7 +41,9 @@ public class BookingDao {
             params.add(java.sql.Date.valueOf(toDate));
         }
         
-        sql.append(" ORDER BY created_at DESC");
+        sql.append(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
 
         try (java.sql.Connection conn = DBConnectionUtil.getConnection();
              java.sql.PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -65,6 +67,46 @@ public class BookingDao {
             }
         }
         return bookings;
+    }
+    
+    public int countBookingsByCustomerId(long customerId, String bookingCode, String status, String fromDate, String toDate) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM bookings WHERE customer_id = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(customerId);
+
+        if (bookingCode != null && !bookingCode.trim().isEmpty()) {
+            sql.append(" AND booking_code LIKE ?");
+            params.add("%" + bookingCode.trim() + "%");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            if ("UPCOMING".equalsIgnoreCase(status.trim())) {
+                sql.append(" AND status IN ('PENDING_PAYMENT', 'CONFIRMED')");
+            } else {
+                sql.append(" AND status = ?");
+                params.add(status.trim());
+            }
+        }
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            sql.append(" AND check_in_date >= ?");
+            params.add(java.sql.Date.valueOf(fromDate));
+        }
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            sql.append(" AND check_in_date <= ?");
+            params.add(java.sql.Date.valueOf(toDate));
+        }
+        
+        try (java.sql.Connection conn = DBConnectionUtil.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
     }
 
     public Optional<model.Booking> findById(long id) throws SQLException {

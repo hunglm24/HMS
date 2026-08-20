@@ -82,17 +82,17 @@
                                         </div>
                                     </div>
                                     <div class="cart-card-actions">
-                                        <form method="post" action="${pageContext.request.contextPath}/cart" style="display:inline-block; margin:0;">
+                                        <form method="post" action="${pageContext.request.contextPath}/cart" style="display:inline-block; margin:0;" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
                                             <input type="hidden" name="action" value="update">
                                             <input type="hidden" name="index" value="${status.index}">
                                             <div class="qty-control">
-                                                <button type="button" onclick="this.form.quantity.value = Math.max(0, parseInt(this.form.quantity.value) - 1); this.form.submit();">-</button>
+                                                <button type="button" onclick="if(this.form.dataset.submitted) return; this.form.quantity.value = Math.max(0, parseInt(this.form.quantity.value) - 1); this.form.submit();">-</button>
                                                 <input type="number" name="quantity" value="${item.quantity}" readonly>
-                                                <button type="button" onclick="this.form.quantity.value = parseInt(this.form.quantity.value) + 1; this.form.submit();">+</button>
+                                                <button type="button" onclick="if(this.form.dataset.submitted) return; this.form.quantity.value = parseInt(this.form.quantity.value) + 1; this.form.submit();">+</button>
                                             </div>
                                         </form>
 
-                                        <form method="post" action="${pageContext.request.contextPath}/cart" style="display:inline-block; margin:0;">
+                                        <form method="post" action="${pageContext.request.contextPath}/cart" style="display:inline-block; margin:0;" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
                                             <input type="hidden" name="action" value="remove">
                                             <input type="hidden" name="index" value="${status.index}">
                                             <button type="submit" style="color:var(--color-error-600); background:none; border:none; cursor:pointer; font-size: var(--text-sm); padding: 0;">Xóa</button>
@@ -106,15 +106,15 @@
 
                     <div class="cart-summary">
                         <h3 style="margin-top: 0; margin-bottom: var(--space-4);">Tóm tắt chi phí</h3>
-                        <form class="voucher-input" method="post" action="${pageContext.request.contextPath}/cart">
+                        <form class="voucher-input" method="post" action="${pageContext.request.contextPath}/cart" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
                             <input type="hidden" name="action" value="applyVoucher">
-                            <input type="text" name="promotionCode" placeholder="Nhập mã giảm giá" value="${sessionScope.appliedPromotion.code}">
+                            <input type="text" name="promotionCode" placeholder="Nhập mã giảm giá" value="${sessionScope.appliedPromotion.code}" required>
                             <button type="submit" class="btn btn-secondary">Áp dụng</button>
                         </form>
                         <c:if test="${not empty sessionScope.appliedPromotion}">
                             <div class="summary-row" style="align-items:center;">
                                 <span>Đang áp dụng: <strong><c:out value="${sessionScope.appliedPromotion.code}" /></strong></span>
-                                <form method="post" action="${pageContext.request.contextPath}/cart" style="margin:0;">
+                                <form method="post" action="${pageContext.request.contextPath}/cart" style="margin:0;" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
                                     <input type="hidden" name="action" value="removeVoucher">
                                     <button type="submit" style="border:0;background:none;color:#b42318;cursor:pointer;">Bỏ mã</button>
                                 </form>

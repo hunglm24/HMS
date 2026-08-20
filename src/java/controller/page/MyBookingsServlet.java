@@ -64,8 +64,18 @@ public class MyBookingsServlet extends HttpServlet {
                 String fromDate = request.getParameter("fromDate");
                 String toDate = request.getParameter("toDate");
 
-                List<Booking> bookings = bookingDao.findBookingsByCustomerId(user.getId(), bookingCode, status, fromDate, toDate);
+                String pageStr = request.getParameter("page");
+                int page = pageStr != null && !pageStr.isBlank() ? Integer.parseInt(pageStr) : 1;
+                int limit = 10;
+                int offset = (page - 1) * limit;
+
+                List<Booking> bookings = bookingDao.findBookingsByCustomerId(user.getId(), bookingCode, status, fromDate, toDate, limit, offset);
                 request.setAttribute("bookings", bookings);
+                
+                int totalRecords = bookingDao.countBookingsByCustomerId(user.getId(), bookingCode, status, fromDate, toDate);
+                int totalPages = (int) Math.ceil((double) totalRecords / limit);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", totalPages);
                 
                 try {
                     java.util.Map<Long, Boolean> hasFeedbackMap = new java.util.HashMap<>();

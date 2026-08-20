@@ -27,8 +27,18 @@ public class ManageBookingServlet extends HttpServlet {
             String toDate = request.getParameter("toDate");
             String source = request.getParameter("source");
 
-            List<CheckInBookingSummary> bookings = bookingDao.findCheckInBookings(keyword, status, null, null, null, null, 0, 100, fromDate, toDate, source);
+            String pageStr = request.getParameter("page");
+            int page = pageStr != null && !pageStr.isBlank() ? Integer.parseInt(pageStr) : 1;
+            int limit = 10;
+            int offset = (page - 1) * limit;
+
+            List<CheckInBookingSummary> bookings = bookingDao.findCheckInBookings(keyword, status, null, null, null, null, offset, limit, fromDate, toDate, source);
             request.setAttribute("bookings", bookings);
+            
+            int totalListRecords = bookingDao.countCheckInBookings(keyword, status, null, null, fromDate, toDate, source);
+            int totalPages = (int) Math.ceil((double) totalListRecords / limit);
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
             
             // Fetch metrics
             int allCount = bookingDao.countCheckInBookings(null, null, null, null, null, null, null);

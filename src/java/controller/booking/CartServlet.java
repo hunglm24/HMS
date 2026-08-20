@@ -56,6 +56,12 @@ public class CartServlet extends HttpServlet {
                 int guests = Integer.parseInt(request.getParameter("guests"));
                 int quantity = Integer.parseInt(request.getParameter("quantity"));
                 
+                if (quantity <= 0) {
+                    session.setAttribute("error", "Số lượng phòng phải lớn hơn 0.");
+                    response.sendRedirect(request.getContextPath() + "/cart");
+                    return;
+                }
+                
                 // Validation: Check-in < Check-out
                 if (!checkIn.isBefore(checkOut)) {
                     session.setAttribute("error", "Ngày trả phòng phải sau ngày nhận phòng.");
@@ -97,7 +103,7 @@ public class CartServlet extends HttpServlet {
                     
                     // Re-check availability from database
                     java.util.List<RoomType> available = roomTypeDao.findAvailableRoomTypes(
-                            checkIn, checkOut, 1, totalRequested, null, null, null, roomId);
+                            checkIn, checkOut, 1, totalRequested, null, null, null, roomId, 1, 0);
                     
                     if (!available.isEmpty() && available.get(0).getAvailableQuantity() >= totalRequested) {
                         if (existingItem != null) {
@@ -147,7 +153,7 @@ public class CartServlet extends HttpServlet {
                             session.setAttribute("error", "Số lượng phòng quá ít so với số lượng khách.");
                         } else {
                             java.util.List<RoomType> available = roomTypeDao.findAvailableRoomTypes(
-                                    item.getCheckIn(), item.getCheckOut(), 1, quantity, null, null, null, item.getRoomType().getId());
+                                    item.getCheckIn(), item.getCheckOut(), 1, quantity, null, null, null, item.getRoomType().getId(), 1, 0);
                             if (!available.isEmpty() && available.get(0).getAvailableQuantity() >= quantity) {
                                 item.setQuantity(quantity);
                                 refreshCartDiscount(session);
