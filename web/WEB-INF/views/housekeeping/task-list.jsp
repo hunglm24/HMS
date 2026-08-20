@@ -77,18 +77,16 @@
                 <option value="PENDING" <%= "PENDING".equals(result.status()) ? "selected" : "" %>>Chờ thực hiện</option>
                 <option value="IN_PROGRESS" <%= "IN_PROGRESS".equals(result.status()) ? "selected" : "" %>>Đang thực hiện</option>
                 <option value="COMPLETED" <%= "COMPLETED".equals(result.status()) ? "selected" : "" %>>Hoàn thành</option>
-                
                 <% } else if (mine) { %>
                 <option value="PENDING" <%= "PENDING".equals(result.status()) ? "selected" : "" %>>Chờ thực hiện</option>
                 <option value="IN_PROGRESS" <%= "IN_PROGRESS".equals(result.status()) ? "selected" : "" %>>Đang thực hiện</option>
                 <% } else { %>
                 <option value="COMPLETED" <%= "COMPLETED".equals(result.status()) ? "selected" : "" %>>Hoàn thành</option>
-                
                 <% } %>
             </select>
         </label>
         <div class="hk-filter-actions">
-            <button type="submit">Áp dụng</button>
+            <button type="submit">Lọc</button>
             <a href="<%= baseUrl %><%= isManager ? "" : "?view=" + enc(result.view()) %>">Đặt lại</a>
         </div>
     </form>

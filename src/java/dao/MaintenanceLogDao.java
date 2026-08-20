@@ -23,17 +23,19 @@ public class MaintenanceLogDao {
 
         String updateEqSql = "UPDATE room_equipment SET status = 'NORMAL' WHERE id = ?";
 
-        String checkTaskCompleteSql = """
+        String updateTaskSql = "UPDATE housekeeping_tasks SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+
+        String checkRoomCompleteSql = """
                 SELECT COUNT(*) FROM room_equipment re
                 JOIN housekeeping_tasks ht ON ht.room_id = re.room_id
                 WHERE ht.id = ? AND re.status IN ('DAMAGED', 'MISSING', 'WAITING_REPAIR', 'WAITING_REPLACEMENT', 'MAINTENANCE')
                 """;
 
-        String updateTaskSql = "UPDATE housekeeping_tasks SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP WHERE id = ?";
-        
-        String completeSpecificTaskSql = """
-                UPDATE housekeeping_tasks SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP
-                WHERE room_equipment_id = ? AND status IN ('PENDING', 'IN_PROGRESS')
+        String restoreRoomSql = """
+                UPDATE rooms rm
+                JOIN housekeeping_tasks ht ON ht.room_id = rm.id
+                SET rm.status = 'AVAILABLE'
+                WHERE ht.id = ? AND rm.status IN ('NOT_READY', 'MAINTENANCE')
                 """;
 
         try (Connection connection = requireConnection()) {
@@ -41,8 +43,7 @@ public class MaintenanceLogDao {
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement insertLog = connection.prepareStatement(logSql);
-                     PreparedStatement updateEq = connection.prepareStatement(updateEqSql);
-                     PreparedStatement completeSpecificTask = connection.prepareStatement(completeSpecificTaskSql)) {
+                     PreparedStatement updateEq = connection.prepareStatement(updateEqSql)) {
                     for (Long eqId : equipmentIds) {
                         insertLog.setLong(1, taskId);
                         insertLog.setString(2, note);
@@ -52,38 +53,29 @@ public class MaintenanceLogDao {
 
                         updateEq.setLong(1, eqId);
                         updateEq.addBatch();
-                        
-                        completeSpecificTask.setLong(1, eqId);
-                        completeSpecificTask.addBatch();
                     }
                     insertLog.executeBatch();
                     updateEq.executeBatch();
-                    completeSpecificTask.executeBatch();
                 }
 
-                // Auto complete task if no damaged equipments are left for this room
-                boolean allFixed = true;
-                try (PreparedStatement check = connection.prepareStatement(checkTaskCompleteSql)) {
+                // Complete this specific task
+                try (PreparedStatement complete = connection.prepareStatement(updateTaskSql)) {
+                    complete.setLong(1, taskId);
+                    complete.executeUpdate();
+                }
+
+                // If no damaged equipment left in the room, restore room to AVAILABLE
+                boolean allRoomFixed = true;
+                try (PreparedStatement check = connection.prepareStatement(checkRoomCompleteSql)) {
                     check.setLong(1, taskId);
                     try (ResultSet rs = check.executeQuery()) {
                         if (rs.next()) {
-                            allFixed = (rs.getInt(1) == 0);
+                            allRoomFixed = (rs.getInt(1) == 0);
                         }
                     }
                 }
 
-                if (allFixed) {
-                    try (PreparedStatement complete = connection.prepareStatement(updateTaskSql)) {
-                        complete.setLong(1, taskId);
-                        complete.executeUpdate();
-                    }
-                    // Khôi phục trạng thái phòng về AVAILABLE nếu phòng đang ở NOT_READY hoặc MAINTENANCE
-                    String restoreRoomSql = """
-                            UPDATE rooms rm
-                            JOIN housekeeping_tasks ht ON ht.room_id = rm.id
-                            SET rm.status = 'AVAILABLE'
-                            WHERE ht.id = ? AND rm.status IN ('NOT_READY', 'MAINTENANCE')
-                            """;
+                if (allRoomFixed) {
                     try (PreparedStatement restoreRoom = connection.prepareStatement(restoreRoomSql)) {
                         restoreRoom.setLong(1, taskId);
                         restoreRoom.executeUpdate();

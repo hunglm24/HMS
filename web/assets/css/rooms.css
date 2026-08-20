@@ -83,7 +83,7 @@
 }
 
 .room-management-filters--rooms {
-    grid-template-columns: minmax(240px, 2fr) minmax(120px, 0.8fr) minmax(180px, 1.2fr) minmax(160px, 1fr) auto;
+    grid-template-columns: minmax(220px, 2fr) minmax(100px, 0.8fr) minmax(160px, 1.2fr) minmax(140px, 1fr) auto auto;
 }
 
 .room-management-filters input,
@@ -537,4 +537,23 @@
     .room-management-actions .btn {
         flex: 1 1 0;
     }
+}
+
+.btn-primary {
+    background: #175cd3 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+.btn-primary:hover {
+    background: #154fb9 !important;
+}
+
+.btn-secondary {
+    background: #f2f4f7 !important;
+    color: #344054 !important;
+    border: 1px solid #d0d5dd !important;
+}
+.btn-secondary:hover {
+    background: #e4e7ec !important;
+    color: #101828 !important;
 }

@@ -9,7 +9,7 @@
     
     if (equips == null || equips.isEmpty()) {
 %>
-    <div style="padding: 12px; color: var(--color-text-secondary);">Không có thiết bị.</div>
+    <div style="padding: 12px; color: var(--color-text-secondary);">Không có thiết bị nào trong phòng này.</div>
 <%
     } else {
         for (EquipmentCheck eq : equips) {
@@ -19,14 +19,20 @@
             String eqStatusLabel = eq.getCurrentStatusLabel();
             long eqId = eq.getRoomEquipmentId();
             String currentStatus = eq.getCurrentStatus();
+            boolean maintainable = eq.isMaintainable();
 %>
         <div class="equipment-list-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--color-border);">
             <input type="hidden" name="roomEquipmentIds" value="<%= eqId %>">
             <input type="hidden" name="currentStatus_<%= eqId %>" value="<%= currentStatus %>">
             
             <div class="eq-info" style="flex: 1;">
-                <span class="eq-name" style="font-weight: 600; display: block; margin-bottom: 4px;"><%= eqName %></span>
-                <span class="eq-status <%= statusClass %>"><%= eqStatusLabel %></span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="eq-name" style="font-weight: 600;"><%= eqName %></span>
+                    <% if (!maintainable) { %>
+                        <span style="font-size: 11px; font-weight: 600; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px;">Đồ thay thế</span>
+                    <% } %>
+                </div>
+                <span class="eq-status <%= statusClass %>" style="display: inline-block; margin-top: 4px;"><%= eqStatusLabel %></span>
             </div>
             
             <div class="eq-action">
@@ -38,6 +44,9 @@
                             for (Map.Entry<String, String> entry : reportableStatuses.entrySet()) { 
                                 String val = entry.getKey();
                                 String lbl = entry.getValue();
+                                if (!maintainable && "MAINTENANCE".equals(val)) {
+                                    continue; // Skip maintenance option for non-maintainable items (e.g. Bath towel)
+                                }
                         %>
                             <option value="<%= val %>" <%= val.equals(currentStatus) ? "selected" : "" %>><%= lbl %></option>
                         <%  }

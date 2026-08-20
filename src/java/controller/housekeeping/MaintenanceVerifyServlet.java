@@ -42,10 +42,20 @@ public class MaintenanceVerifyServlet extends HttpServlet {
             long roomId = Long.parseLong(request.getParameter("roomId"));
             long taskId = Long.parseLong(request.getParameter("taskId"));
             
-            List<HousekeepingTask.EquipmentCheck> damagedEquipments = maintenanceService.findDamagedEquipments(roomId);
+            Optional<HousekeepingTask> task = housekeepingDao.findById(taskId, account.getId(), true);
+
+            List<HousekeepingTask.EquipmentCheck> damagedEquipments = new ArrayList<>();
+            if (task.isPresent() && task.get().getRoomEquipmentId() != null) {
+                damagedEquipments = maintenanceService.findDamagedEquipmentById(task.get().getRoomEquipmentId());
+                if (damagedEquipments.isEmpty() && !"COMPLETED".equals(task.get().getStatus())) {
+                    damagedEquipments = maintenanceService.findDamagedEquipments(roomId);
+                }
+            } else {
+                damagedEquipments = maintenanceService.findDamagedEquipments(roomId);
+            }
+
             List<HousekeepingTask.EquipmentCheck> allRoomEquipments = maintenanceService.findAllEquipmentsInRoom(roomId);
             List<MaintenanceLog> logs = maintenanceService.findLogsByTaskId(taskId);
-            Optional<HousekeepingTask> task = housekeepingDao.findById(taskId, account.getId(), true);
 
             request.setAttribute("equipments", damagedEquipments);
             request.setAttribute("allRoomEquipments", allRoomEquipments);
@@ -83,6 +93,13 @@ public class MaintenanceVerifyServlet extends HttpServlet {
             if (equipmentParams != null) {
                 for (String param : equipmentParams) {
                     equipmentIds.add(Long.parseLong(param));
+                }
+            }
+
+            if (equipmentIds.isEmpty()) {
+                Optional<HousekeepingTask> task = housekeepingDao.findById(taskId, account.getId(), true);
+                if (task.isPresent() && task.get().getRoomEquipmentId() != null) {
+                    equipmentIds.add(task.get().getRoomEquipmentId());
                 }
             }
 

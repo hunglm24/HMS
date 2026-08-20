@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class EquipmentDao {
-    // Load every equipment row for the management list.
     public List<Equipment> findAll() {
         List<Equipment> equipments = new ArrayList<>();
         String sql = "SELECT * FROM equipment ORDER BY id ASC";
@@ -30,7 +29,6 @@ public class EquipmentDao {
         return equipments;
     }
 
-    // Find one equipment row by its primary key.
     public Optional<Equipment> findById(long id) {
         String sql = "SELECT * FROM equipment WHERE id = ?";
 
@@ -48,11 +46,10 @@ public class EquipmentDao {
         return Optional.empty();
     }
 
-    // Insert a new equipment row using the provided connection.
     public long insert(Connection conn, Equipment equipment) throws SQLException {
         String sql = """
-                INSERT INTO equipment (name, description, image_url, default_compensation_price, status)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO equipment (name, description, image_url, default_compensation_price, status, is_maintainable)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -61,6 +58,7 @@ public class EquipmentDao {
             ps.setString(3, equipment.getImageUrl());
             ps.setBigDecimal(4, equipment.getDefaultCompensationPrice());
             ps.setString(5, equipment.getStatus());
+            ps.setBoolean(6, equipment.isMaintainable());
 
             int affected = ps.executeUpdate();
             if (affected > 0) {
@@ -77,11 +75,10 @@ public class EquipmentDao {
         throw new SQLException("Cannot create equipment.");
     }
 
-    // Update an existing equipment row using the provided connection.
     public int update(Connection conn, Equipment equipment) throws SQLException {
         String sql = """
                 UPDATE equipment
-                   SET name = ?, description = ?, image_url = ?, default_compensation_price = ?, status = ?
+                   SET name = ?, description = ?, image_url = ?, default_compensation_price = ?, status = ?, is_maintainable = ?
                  WHERE id = ?
                 """;
 
@@ -91,12 +88,12 @@ public class EquipmentDao {
             ps.setString(3, equipment.getImageUrl());
             ps.setBigDecimal(4, equipment.getDefaultCompensationPrice());
             ps.setString(5, equipment.getStatus());
-            ps.setLong(6, equipment.getId());
+            ps.setBoolean(6, equipment.isMaintainable());
+            ps.setLong(7, equipment.getId());
             return ps.executeUpdate();
         }
     }
 
-    // Convert one database row into an Equipment model.
     private Equipment mapRow(ResultSet rs) throws SQLException {
         Equipment equipment = new Equipment();
         equipment.setId(rs.getLong("id"));
@@ -105,6 +102,11 @@ public class EquipmentDao {
         equipment.setImageUrl(rs.getString("image_url"));
         equipment.setDefaultCompensationPrice(rs.getBigDecimal("default_compensation_price"));
         equipment.setStatus(rs.getString("status"));
+        try {
+            equipment.setMaintainable(rs.getBoolean("is_maintainable"));
+        } catch (SQLException ignored) {
+            equipment.setMaintainable(true);
+        }
         equipment.setCreatedAt(rs.getTimestamp("created_at"));
         equipment.setUpdatedAt(rs.getTimestamp("updated_at"));
         return equipment;

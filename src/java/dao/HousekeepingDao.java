@@ -864,6 +864,33 @@ public class HousekeepingDao {
             }
         }
     }
+    public List<HousekeepingTask.EquipmentCheck> findDamagedEquipmentById(long roomEquipmentId) throws SQLException {
+        String sql = """
+                SELECT re.id, e.name, re.quantity, re.status,
+                       NULL AS initial_status, NULL AS initial_quantity
+                FROM room_equipment re
+                JOIN equipment e ON e.id = re.equipment_id
+                WHERE re.id = ? AND re.status IN ('DAMAGED', 'MISSING', 'WAITING_REPAIR', 'WAITING_REPLACEMENT', 'MAINTENANCE')
+                ORDER BY e.name
+                """;
+        try (Connection connection = requireConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, roomEquipmentId);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<HousekeepingTask.EquipmentCheck> result = new ArrayList<>();
+                while (rs.next()) {
+                    HousekeepingTask.EquipmentCheck item = new HousekeepingTask.EquipmentCheck();
+                    item.setRoomEquipmentId(rs.getLong("id"));
+                    item.setEquipmentName(rs.getString("name"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setCurrentStatus(rs.getString("status"));
+                    result.add(item);
+                }
+                return result;
+            }
+        }
+    }
+
     public List<HousekeepingTask.EquipmentCheck> findDamagedEquipments(long roomId) throws SQLException {
         String sql = """
                 SELECT re.id, e.name, re.quantity, re.status,

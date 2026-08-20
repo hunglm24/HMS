@@ -43,23 +43,23 @@
         <% } %>
 
         <% if (isManager) { %>
-            <a class="<%= activePath(uri, "/manager/invoices") ? "active" : "" %>" href="<%= cp %>/manager/invoices"><span>IV</span>Hóa đơn</a>
             <a class="<%= activePath(uri, "/manager/reports") ? "active" : "" %>" href="<%= cp %>/manager/reports"><span>RP</span>Báo cáo</a>
             <a class="<%= activePath(uri, "/manager/rooms") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng</a>
             <a class="<%= activePath(uri, "/manager/room-types") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
             <a class="<%= activePath(uri, "/manager/equipment") ? "active" : "" %>" href="<%= cp %>/manager/equipment"><span>EQ</span>Thiết bị</a>
-            <a class="<%= activePath(uri, "/manager/amenity") ? "active" : "" %>" href="<%= cp %>/manager/amenity"><span>AM</span>Tiện ích</a>
+            <a class="<%= activePath(uri, "/manager/amenities") || activePath(uri, "/manager/amenity") ? "active" : "" %>" href="<%= cp %>/manager/amenities"><span>AM</span>Tiện nghi</a>
             <a class="<%= activePath(uri, "/manager/housekeeping") || (activePath(uri, "/housekeeping/tasks") && "history".equals(request.getParameter("view"))) ? "active" : "" %>" href="<%= cp %>/manager/housekeeping"><span>HK</span>Lịch sử dọn phòng</a>
             <a class="<%= activePath(uri, "/manager/issues") || activePath(uri, "/housekeeping/issues") ? "active" : "" %>" href="<%= cp %>/manager/issues"><span>IS</span>Sự cố thiết bị</a>
+            <a class="<%= activePath(uri, "/manager/invoices") ? "active" : "" %>" href="<%= cp %>/manager/invoices"><span>IV</span>Hóa đơn</a>
             <a class="<%= activePath(uri, "/manager/pricing") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá, mã giảm giá</a>
             <a class="<%= activePath(uri, "/manager/policies") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>
             <a class="<%= activePath(uri, "/manager/staff") ? "active" : "" %>" href="<%= cp %>/manager/staff"><span>ST</span>Nhân sự</a>
         <% } %>
 
         <% if (isAdmin) { %>
-            <a class="<%= activePath(uri, "/admin/invoices") ? "active" : "" %>" href="<%= cp %>/admin/invoices"><span>IV</span>Hóa đơn</a>
             <a class="<%= activePath(uri, "/admin/users") ? "active" : "" %>" href="<%= cp %>/admin/users"><span>US</span>Người dùng</a>
             <a class="<%= activePath(uri, "/admin/roles") ? "active" : "" %>" href="<%= cp %>/admin/roles"><span>RL</span>Vai trò và quyền</a>
+            <a class="<%= activePath(uri, "/admin/invoices") ? "active" : "" %>" href="<%= cp %>/admin/invoices"><span>IV</span>Hóa đơn</a>
             <a class="<%= activePath(uri, "/admin/system-config") ? "active" : "" %>" href="<%= cp %>/admin/system-config"><span>CF</span>Cấu hình</a>
             <a class="<%= activePath(uri, "/admin/logs") ? "active" : "" %>" href="<%= cp %>/admin/logs"><span>LG</span>Nhật ký</a>
         <% } %>

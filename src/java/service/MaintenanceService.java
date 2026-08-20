@@ -38,6 +38,10 @@ public class MaintenanceService {
         return countIssueTasks(keyword, floor, null, null);
     }
 
+    public List<HousekeepingTask.EquipmentCheck> findDamagedEquipmentById(long roomEquipmentId) throws SQLException {
+        return housekeepingDao.findDamagedEquipmentById(roomEquipmentId);
+    }
+
     public List<HousekeepingTask.EquipmentCheck> findDamagedEquipments(long roomId) throws SQLException {
         return housekeepingDao.findDamagedEquipments(roomId);
     }

@@ -108,7 +108,7 @@
         <c:if test="${not empty logs}">
         <div class="verify-card">
             <h2>🛠️ Lịch sử sửa chữa & Nghiệm thu thiết bị</h2>
-            <p style="color: #64748b; font-size: 13.5px; margin: 0 0 12px 0;">Chi tiết các thiết bị đã được kỹ thuật viên sửa chữa và nhân viên xác nhận hoàn tất.</p>
+            <p style="color: #64748b; font-size: 13.5px; margin: 0 0 12px 0;">Chi tiết thiết bị đã được kỹ thuật viên sửa chữa và nhân viên xác nhận hoàn tất.</p>
             <div style="overflow-x: auto;">
                 <table class="log-table">
                     <thead>
@@ -141,8 +141,8 @@
         <!-- DANH SÁCH THIẾT BỊ ĐÃ XỬ LÝ (KHI TASK HOÀN THÀNH NHƯNG CHƯA CÓ LOGS CŨ) -->
         <c:if test="${empty logs && task != null && task.status eq 'COMPLETED'}">
         <div class="verify-card">
-            <h2>🛠️ Danh sách thiết bị trong phòng đã hoàn tất bảo trì</h2>
-            <p style="color: #16a34a; font-size: 13.5px; font-weight: 600; margin: 0 0 12px 0;">✓ Công việc bảo trì đã hoàn tất, toàn bộ thiết bị trong phòng hoạt động bình thường.</p>
+            <h2>🛠️ Thiết bị đã hoàn tất sửa chữa</h2>
+            <p style="color: #16a34a; font-size: 13.5px; font-weight: 600; margin: 0 0 12px 0;">✓ Công việc bảo trì cho thiết bị này đã hoàn tất, thiết bị hoạt động bình thường.</p>
             <div class="equipment-list">
                 <c:forEach var="equip" items="${allRoomEquipments}">
                     <c:if test="${empty task.roomEquipmentId or task.roomEquipmentId eq equip.roomEquipmentId}">
@@ -158,11 +158,11 @@
         </div>
         </c:if>
 
-        <!-- FORM XÁC NHẬN SỬA CHỮA (NẾU TASK CHƯA HOÀN THÀNH VÀ CÒN THIẾT BỊ HỎNG) -->
+        <!-- FORM XÁC NHẬN SỬA CHỮA (CHỈ HIỂN THỊ THIẾT BỊ LIÊN QUAN ĐẾN TASK NÀY) -->
         <c:if test="${not empty equipments}">
         <div class="verify-card">
             <h2>🔧 Xác nhận thiết bị đã được sửa xong</h2>
-            <p style="color: #64748b; font-size: 13.5px; margin: 0 0 16px 0;">Tích chọn những thiết bị đã được sửa chữa hoặc thay thế thành công để khôi phục trạng thái hoạt động bình thường.</p>
+            <p style="color: #64748b; font-size: 13.5px; margin: 0 0 16px 0;">Xác nhận thiết bị dưới đây đã được sửa chữa hoặc thay thế thành công để khôi phục trạng thái hoạt động bình thường.</p>
             
             <form action="<%= cp %><%= isManager ? "/manager/issues/verify" : "/housekeeping/issues/verify" %>" method="post">
                 <input type="hidden" name="taskId" value="${taskId}">
@@ -170,7 +170,7 @@
                 <div class="equipment-list">
                     <c:forEach var="equip" items="${equipments}">
                         <div class="equipment-item">
-                            <input type="checkbox" name="equipmentIds" value="${equip.roomEquipmentId}" id="equip_${equip.roomEquipmentId}">
+                            <input type="checkbox" name="equipmentIds" value="${equip.roomEquipmentId}" id="equip_${equip.roomEquipmentId}" checked>
                             <div class="equipment-info">
                                 <label for="equip_${equip.roomEquipmentId}" style="cursor: pointer; display: block; font-weight: 600; color: #1e293b;">
                                     ${HousekeepingTask.esc(equip.equipmentName)}
