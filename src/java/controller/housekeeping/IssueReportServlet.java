@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
+import model.Room;
 
 @WebServlet(name = "IssueReportServlet", urlPatterns = {"/housekeeping/issues/report", "/manager/issues/report"})
 public class IssueReportServlet extends HttpServlet {
@@ -94,7 +96,18 @@ public class IssueReportServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + (isMgr ? "/manager/issues" : "/housekeeping/issues"));
         } catch (Exception ex) {
             session.setAttribute("errorMessage", ex.getMessage());
-            response.sendRedirect(request.getContextPath() + "/housekeeping/issues/report");
+            Long roomId = parsePositiveLong(request.getParameter("roomId"));
+            response.sendRedirect(request.getContextPath() + "/housekeeping/issues/report"
+                    + (roomId == null ? "" : "?roomId=" + roomId));
+        }
+    }
+
+    private Long parsePositiveLong(String value) {
+        try {
+            long parsed = Long.parseLong(value);
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException ex) {
+            return null;
         }
     }
 }

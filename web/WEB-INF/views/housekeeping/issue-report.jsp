@@ -57,7 +57,8 @@
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 
 <script>
-document.getElementById('roomId').addEventListener('change', function() {
+var roomSelect = document.getElementById('roomId');
+roomSelect.addEventListener('change', function() {
     var roomId = this.value;
     var container = document.getElementById('equipmentListContainer');
     if (!roomId) {

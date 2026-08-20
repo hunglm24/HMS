@@ -4,17 +4,19 @@ import config.VNPayConfig;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class VNPayService {
+    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final DateTimeFormatter VNPAY_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     
     public String createPaymentUrl(long amount, String orderInfo, String transactionRef,
                                    String ipAddress, String returnUrl) throws UnsupportedEncodingException {
@@ -41,35 +43,25 @@ public class VNPayService {
         vnp_Params.put("vnp_ReturnUrl", returnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
         
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-        
-        cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+        LocalDateTime createTime = LocalDateTime.now(VIETNAM_ZONE);
+        vnp_Params.put("vnp_CreateDate", createTime.format(VNPAY_DATE_FORMAT));
+        vnp_Params.put("vnp_ExpireDate", createTime.plusMinutes(15).format(VNPAY_DATE_FORMAT));
         
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
-        Iterator<String> itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = itr.next();
+        for (String fieldName : fieldNames) {
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                if (itr.hasNext()) {
+                if (hashData.length() > 0) {
                     query.append('&');
                     hashData.append('&');
                 }
+                String encodedName = encode(fieldName);
+                String encodedValue = encode(fieldValue);
+                hashData.append(encodedName).append('=').append(encodedValue);
+                query.append(encodedName).append('=').append(encodedValue);
             }
         }
         String queryUrl = query.toString();
@@ -88,12 +80,15 @@ public class VNPayService {
             String value = fields.get(name);
             if (value == null || value.isEmpty()) continue;
             if (hashData.length() > 0) hashData.append('&');
-            hashData.append(name).append('=')
-                    .append(URLEncoder.encode(value, StandardCharsets.US_ASCII.toString()));
+            hashData.append(encode(name)).append('=').append(encode(value));
         }
         String expected = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
         return java.security.MessageDigest.isEqual(
                 expected.getBytes(StandardCharsets.US_ASCII),
                 secureHash.getBytes(StandardCharsets.US_ASCII));
+    }
+
+    private static String encode(String value) throws UnsupportedEncodingException {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
     }
 }

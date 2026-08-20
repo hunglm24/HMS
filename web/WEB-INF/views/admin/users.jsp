@@ -194,7 +194,7 @@
                         <option value="INACTIVE">INACTIVE</option>
                         <option value="BLOCKED">BLOCKED</option>
                     </select>
-                </div>
+                </div id="passwordField">
                 <div><label class="form-label" for="password">Password for new user</label><input class="form-control" id="password" name="password" type="password" minlength="8"></div>
             </div>
             <div class="form-actions">
@@ -224,6 +224,7 @@
         document.getElementById('userStatus').value = status;
         document.getElementById('password').value = '';
         document.getElementById('password').removeAttribute('required');
+
     }
     function resetUserForm() {
         document.getElementById('userFormTitle').textContent = 'Create user';
@@ -234,6 +235,7 @@
         document.getElementById('userStatus').value = 'ACTIVE';
         document.getElementById('password').setAttribute('required', 'required');
         document.getElementById('password').value = '';
+        document.getElementById('passwordField').hidden = 'false';
     }
     function fillPassword(id) {
         document.getElementById('passwordUserId').value = id;
