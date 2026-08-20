@@ -41,9 +41,9 @@
             <p class="hero-kicker">Hệ thống quản lý khách sạn</p>
             <h1>Đặt phòng nhanh, trải nghiệm khách sạn gọn gàng.</h1>
             <p>Tìm phòng, xem hạng phòng và quản lý booking cá nhân trong một giao diện đơn giản.</p>
-            <form class="booking-strip" method="get" action="${pageContext.request.contextPath}/search">
-                <label>Check-in<input type="date" name="checkIn"></label>
-                <label>Check-out<input type="date" name="checkOut"></label>
+            <form class="booking-strip" method="get" action="${pageContext.request.contextPath}/search" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
+                <label>Check-in<input type="date" name="checkIn" required></label>
+                <label>Check-out<input type="date" name="checkOut" required></label>
                 <label>Khách<select name="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
                 <label>Loại phòng<select name="roomTypeId">
                     <option value="">Tất cả</option>

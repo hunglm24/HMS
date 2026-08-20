@@ -16,7 +16,7 @@
     <section class="section-head">
         <div><p class="section-kicker">Booking</p><h1>Tìm phòng trống</h1><p>Lọc theo ngày ở, số khách và hạng phòng.</p></div>
     </section>
-    <form class="toolbar-card" method="get" action="${pageContext.request.contextPath}/search">
+    <form class="toolbar-card" method="get" action="${pageContext.request.contextPath}/search" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; align-items: end;">
             <label>Check-in<input type="date" id="checkIn" name="checkIn" value="${param.checkIn}" required></label>
             <label>Check-out<input type="date" id="checkOut" name="checkOut" value="${param.checkOut}" required></label>
@@ -67,6 +67,21 @@
                 <p>Không tìm thấy phòng trống phù hợp với yêu cầu của bạn.</p>
             </c:when>
         </c:choose>
+        <c:if test="${totalPages > 1}">
+            <div style="display: flex; justify-content: center; gap: 8px; margin-top: 24px; width: 100%; grid-column: 1 / -1;">
+                <c:if test="${currentPage > 1}">
+                    <a href="${pageContext.request.contextPath}/search?checkIn=${param.checkIn}&checkOut=${param.checkOut}&guests=${param.guests}&numRooms=${param.numRooms}&roomTypeId=${param.roomTypeId}&minPrice=${param.minPrice}&maxPrice=${param.maxPrice}&sort=${param.sort}&page=${currentPage - 1}" class="btn btn-secondary">&laquo; Trước</a>
+                </c:if>
+                
+                <c:forEach begin="1" end="${totalPages}" var="p">
+                    <a href="${pageContext.request.contextPath}/search?checkIn=${param.checkIn}&checkOut=${param.checkOut}&guests=${param.guests}&numRooms=${param.numRooms}&roomTypeId=${param.roomTypeId}&minPrice=${param.minPrice}&maxPrice=${param.maxPrice}&sort=${param.sort}&page=${p}" class="btn ${p == currentPage ? 'btn-primary' : 'btn-secondary'}">${p}</a>
+                </c:forEach>
+                
+                <c:if test="${currentPage < totalPages}">
+                    <a href="${pageContext.request.contextPath}/search?checkIn=${param.checkIn}&checkOut=${param.checkOut}&guests=${param.guests}&numRooms=${param.numRooms}&roomTypeId=${param.roomTypeId}&minPrice=${param.minPrice}&maxPrice=${param.maxPrice}&sort=${param.sort}&page=${currentPage + 1}" class="btn btn-secondary">Sau &raquo;</a>
+                </c:if>
+            </div>
+        </c:if>
     </section>
 </main>
 <script>

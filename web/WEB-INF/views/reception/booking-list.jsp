@@ -81,7 +81,7 @@
         <td>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <c:if test="${b.status == 'PENDING_PAYMENT'}">
-                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;">
+                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
                         <input type="hidden" name="action" value="CONFIRM">
                         <input type="hidden" name="id" value="${b.bookingId}">
                         <button class="btn btn-secondary" type="submit">Duyệt</button>
@@ -104,11 +104,27 @@
 </c:forEach>
 </tbody></table></div>
 
+<c:if test="${totalPages > 1}">
+    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 24px;">
+        <c:if test="${currentPage > 1}">
+            <a href="${pageContext.request.contextPath}/reception/bookings?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${currentPage - 1}" class="btn btn-secondary">&laquo; Trước</a>
+        </c:if>
+        
+        <c:forEach begin="1" end="${totalPages}" var="p">
+            <a href="${pageContext.request.contextPath}/reception/bookings?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${p}" class="btn ${p == currentPage ? 'btn-primary' : 'btn-secondary'}">${p}</a>
+        </c:forEach>
+        
+        <c:if test="${currentPage < totalPages}">
+            <a href="${pageContext.request.contextPath}/reception/bookings?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${currentPage + 1}" class="btn btn-secondary">Sau &raquo;</a>
+        </c:if>
+    </div>
+</c:if>
+
 <!-- Reject Modal -->
 <div id="rejectModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:white; padding:24px; border-radius:8px; width:400px; max-width:90%;">
         <h3 style="margin-top:0;">Từ chối Đặt phòng</h3>
-        <form method="post" action="${pageContext.request.contextPath}/reception/bookings">
+        <form method="post" action="${pageContext.request.contextPath}/reception/bookings" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
             <input type="hidden" name="action" value="REJECT">
             <input type="hidden" id="rejectBookingId" name="id" value="">
             <div class="form-group" style="margin-bottom: 16px;">

@@ -33,7 +33,7 @@ public class RoomTypeDetailServlet extends HttpServlet {
                             java.time.LocalDate checkIn = java.time.LocalDate.parse(checkInStr);
                             java.time.LocalDate checkOut = java.time.LocalDate.parse(checkOutStr);
                             java.util.List<model.RoomType> availableRooms = roomTypeDao.findAvailableRoomTypes(
-                                    checkIn, checkOut, 1, 1, null, null, null, id);
+                                    checkIn, checkOut, 1, 1, null, null, null, id, 1, 0);
                             isAvailable = !availableRooms.isEmpty() && availableRooms.get(0).getAvailableQuantity() > 0;
                             rt.setAvailableQuantity(availableRooms.isEmpty() ? 0 : availableRooms.get(0).getAvailableQuantity());
                         } catch (Exception e) {
