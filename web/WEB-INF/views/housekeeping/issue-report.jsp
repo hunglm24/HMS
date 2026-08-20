@@ -31,7 +31,7 @@
                 <select name="roomId" id="roomId" required>
                     <option value="">-- Chọn phòng --</option>
                     <c:forEach var="room" items="${rooms}">
-                        <option value="${room.id}">P.${room.roomNumber} - ${room.roomTypeName}</option>
+                        <option value="${room.id}" ${selectedRoomId eq room.id ? 'selected' : ''}>P.${room.roomNumber} - ${room.roomTypeName}</option>
                     </c:forEach>
                 </select>
             </label>
@@ -57,7 +57,8 @@
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 
 <script>
-document.getElementById('roomId').addEventListener('change', function() {
+var roomSelect = document.getElementById('roomId');
+roomSelect.addEventListener('change', function() {
     var roomId = this.value;
     var container = document.getElementById('equipmentListContainer');
     if (!roomId) {
@@ -76,6 +77,10 @@ document.getElementById('roomId').addEventListener('change', function() {
             container.innerHTML = '<span style="color: var(--color-error-600);">Lỗi tải thiết bị</span>';
         });
 });
+
+if (roomSelect.value) {
+    roomSelect.dispatchEvent(new Event('change'));
+}
 </script>
 </body>
 </html>

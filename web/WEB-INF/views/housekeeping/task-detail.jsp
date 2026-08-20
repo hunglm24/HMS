@@ -35,6 +35,12 @@
         <span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= task.getStatusLabel() %></span>
     </section>
 
+    <% if (!history) { %>
+    <div class="hk-detail-actions">
+        <a class="hk-primary" href="<%= contextPath %>/housekeeping/issues/report?roomId=<%= task.getRoomId() %>">Báo cáo sự cố phòng này</a>
+    </div>
+    <% } %>
+
     <% if (inspection && history) { %>
     <section class="hk-card hk-work-form"><div class="hk-section-heading"><div><h2>Kết quả kiểm tra thiết bị</h2>
         <p>Dữ liệu được lưu tại thời điểm hoàn tất inspection.</p></div></div>

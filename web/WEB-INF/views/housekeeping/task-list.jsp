@@ -105,6 +105,9 @@
             <td data-label="Trạng thái"><span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= task.getStatusLabel() %></span></td>
             <td class="hk-row-action"><% if (mine || history) { %>
                 <a href="<%= contextPath %>/housekeeping/tasks/detail?id=<%= task.getTaskId() %>">Xem chi tiết</a>
+                <% if (mine) { %>
+                <a href="<%= contextPath %>/housekeeping/issues/report?roomId=<%= task.getRoomId() %>">Báo cáo sự cố</a>
+                <% } %>
             <% } else if ("CLEANING".equals(task.getTaskType())) { %>
                 <form method="post" action="<%= contextPath %>/housekeeping/tasks/claim-cleaning">
                     <input type="hidden" name="taskId" value="<%= task.getTaskId() %>">

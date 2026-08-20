@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
+import model.Room;
 
 @WebServlet(name = "IssueReportServlet", urlPatterns = {"/housekeeping/issues/report"})
 public class IssueReportServlet extends HttpServlet {
@@ -46,7 +48,13 @@ public class IssueReportServlet extends HttpServlet {
             return;
         }
 
-        request.setAttribute("rooms", roomService.getAllRooms());
+        List<Room> rooms = roomService.getAllRooms();
+        request.setAttribute("rooms", rooms);
+
+        Long selectedRoomId = parsePositiveLong(request.getParameter("roomId"));
+        if (selectedRoomId != null && rooms.stream().anyMatch(room -> room.getId() == selectedRoomId)) {
+            request.setAttribute("selectedRoomId", selectedRoomId);
+        }
         request.getRequestDispatcher("/WEB-INF/views/housekeeping/issue-report.jsp").forward(request, response);
     }
 
@@ -88,7 +96,18 @@ public class IssueReportServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/housekeeping/issues");
         } catch (Exception ex) {
             session.setAttribute("errorMessage", ex.getMessage());
-            response.sendRedirect(request.getContextPath() + "/housekeeping/issues/report");
+            Long roomId = parsePositiveLong(request.getParameter("roomId"));
+            response.sendRedirect(request.getContextPath() + "/housekeeping/issues/report"
+                    + (roomId == null ? "" : "?roomId=" + roomId));
+        }
+    }
+
+    private Long parsePositiveLong(String value) {
+        try {
+            long parsed = Long.parseLong(value);
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException ex) {
+            return null;
         }
     }
 }
