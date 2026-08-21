@@ -54,10 +54,10 @@
             </div>
         </section>
 
-        <section class="room-card-grid">
+        <section class="news-card-grid">
             <c:forEach var="n" items="${newsList}">
                 <article class="room-showcase-card">
-                    <img src="${not empty n.thumbnailUrl ? n.thumbnailUrl : 'https://via.placeholder.com/900x500?text=News'}" alt="${n.title}">
+                    <img src="${not empty n.thumbnailUrl ? n.thumbnailUrl : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80'}" alt="${n.title}">
                     <div class="room-showcase-card__body">
                         <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${n.title}</h3>
                         <div class="room-meta" style="margin-top: 8px;">

@@ -34,9 +34,9 @@
     String currentSort = (String) request.getAttribute("currentSort");
     String currentDir = (String) request.getAttribute("currentDir");
     String contextPath = request.getContextPath();
-    String servletPath = request.getServletPath();
-    String baseUrl = contextPath + servletPath;
-    boolean isManager = servletPath != null && servletPath.startsWith("/manager/");
+    Boolean isMgrAttr = (Boolean) request.getAttribute("isManager");
+    boolean isManager = Boolean.TRUE.equals(isMgrAttr);
+    String baseUrl = contextPath + (isManager ? "/manager/issues" : "/housekeeping/issues");
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -78,7 +78,7 @@
 
     <form method="get" action="<%= baseUrl %>" class="hk-filters">
         <label class="hk-search">Tìm kiếm
-            <input type="search" name="search" maxlength="50" value="<c:out value='${search}'/>" placeholder="Số phòng, thiết bị...">
+            <input type="search" name="search" maxlength="50" value="<c:out value='${search}'/>" placeholder="Số phòng, thiết bị..">
         </label>
         <label>Tầng
             <input type="number" name="floor" min="0" max="999" value="<c:out value='${floor}'/>" placeholder="Tất cả">
@@ -149,7 +149,21 @@
                     </tr>
                 </c:forEach>
                 <c:if test="${empty tasks}">
-                    <tr><td colspan="7" class="text-center">Không có sự cố nào.</td></tr>
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px 16px; color: #64748b;">
+                            <div style="font-size: 32px; margin-bottom: 8px;">🛠️</div>
+                            <c:choose>
+                                <c:when test="${not empty search or not empty floor or not empty taskType or not empty status}">
+                                    <strong style="color: #1e293b; font-size: 15px; display: block; margin-bottom: 4px;">Không tìm thấy sự cố phù hợp</strong>
+                                    <span>Không có sự cố thiết bị nào khớp với tiêu chí tìm kiếm hoặc bộ lọc đang chọn.</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <strong style="color: #1e293b; font-size: 15px; display: block; margin-bottom: 4px;">Không có sự cố thiết bị nào</strong>
+                                    <span>Hiện tại toàn bộ thiết bị trong các phòng đều đang hoạt động bình thường.</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
+                    </tr>
                 </c:if>
             </tbody>
         </table>

@@ -60,9 +60,16 @@
     boolean internal = currentUser != null && !"CUSTOMER".equalsIgnoreCase(role);
 
     java.util.List<model.RoomType> featuredRoomTypes = java.util.Collections.emptyList();
+    java.util.List<model.News> latestNews = java.util.Collections.emptyList();
     if (!internal) {
         dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
         featuredRoomTypes = roomTypeDao.findActive();
+        try {
+            dao.NewsDao newsDao = new dao.NewsDao();
+            latestNews = newsDao.getLatestNews(3);
+        } catch (Exception ex) {
+            latestNews = java.util.Collections.emptyList();
+        }
     }
 %>
 <!DOCTYPE html>
@@ -125,6 +132,30 @@
         <% } %>
     </section>
 
+    <% if (!latestNews.isEmpty()) { %>
+    <section class="section-head" style="margin-top: 40px;">
+        <div><p class="section-kicker">Tin tức</p><h2>Khuyến mãi &amp; Sự kiện</h2></div>
+        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/news">Xem tất cả</a>
+    </section>
+    <section class="news-card-grid">
+        <% for (model.News n : latestNews) { 
+            String newsThumb = (n.getThumbnailUrl() != null && !n.getThumbnailUrl().isBlank()) 
+                ? n.getThumbnailUrl() 
+                : "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
+        %>
+        <article class="room-showcase-card">
+            <img src="<%= escapeHtml(newsThumb) %>" alt="<%= escapeHtml(n.getTitle()) %>">
+            <div class="room-showcase-card__body">
+                <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= escapeHtml(n.getTitle()) %></h3>
+                <div class="room-meta" style="margin-top: 8px; color: #666; font-size: 14px;">
+                    <span><%= n.getPublishedAt() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(n.getPublishedAt()) : "" %></span>
+                </div>
+                <a class="btn" href="${pageContext.request.contextPath}/news/detail?id=<%= n.getId() %>" style="margin-top: 16px;">Xem chi tiết</a>
+            </div>
+        </article>
+        <% } %>
+    </section>
+    <% } %>
 </main>
 <% } else { %>
 <main class="page-container">

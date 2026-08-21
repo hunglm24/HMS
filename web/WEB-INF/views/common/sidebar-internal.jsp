@@ -53,6 +53,7 @@
             <a class="<%= activePath(uri, "/manager/invoices") ? "active" : "" %>" href="<%= cp %>/manager/invoices"><span>IV</span>Hóa đơn</a>
             <a class="<%= activePath(uri, "/manager/pricing") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá, mã giảm giá</a>
             <a class="<%= activePath(uri, "/manager/policies") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>
+            <a class="<%= activePath(uri, "/manager/news") ? "active" : "" %>" href="<%= cp %>/manager/news"><span>NW</span>Tin tức</a>
             <a class="<%= activePath(uri, "/manager/staff") ? "active" : "" %>" href="<%= cp %>/manager/staff"><span>ST</span>Nhân sự</a>
         <% } %>
 
