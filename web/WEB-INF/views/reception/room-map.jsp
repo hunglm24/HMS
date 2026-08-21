@@ -58,10 +58,9 @@
                 </select>
                 <select name="floor">
                     <option value="">Tất cả tầng</option>
-                    <option value="1" ${param.floor == '1' ? 'selected' : ''}>Tầng 1</option>
-                    <option value="2" ${param.floor == '2' ? 'selected' : ''}>Tầng 2</option>
-                    <option value="3" ${param.floor == '3' ? 'selected' : ''}>Tầng 3</option>
-                    <option value="4" ${param.floor == '4' ? 'selected' : ''}>Tầng 4</option>
+                    <c:forEach var="f" items="${floorOptions}">
+                        <option value="${f}" ${param.floor == f ? 'selected' : ''}>Tầng ${f}</option>
+                    </c:forEach>
                 </select>
                 <button type="submit">Lọc</button>
             </form>

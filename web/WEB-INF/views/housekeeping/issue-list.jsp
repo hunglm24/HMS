@@ -43,9 +43,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Sự cố thiết bị | HMS</title>
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260820-7">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260820-7">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260820-7">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260821-1">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260821-1">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260821-1">
     <style>
         .btn-verify-action { background: #2563eb; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
         .btn-verify-action:hover { background: #1d4ed8; }
@@ -81,7 +81,12 @@
             <input type="search" name="search" maxlength="50" value="<c:out value='${search}'/>" placeholder="Số phòng, thiết bị..">
         </label>
         <label>Tầng
-            <input type="number" name="floor" min="0" max="999" value="<c:out value='${floor}'/>" placeholder="Tất cả">
+            <select name="floor">
+                <option value="" ${empty floor ? 'selected' : ''}>Tất cả tầng</option>
+                <c:forEach var="f" items="${floorOptions}">
+                    <option value="${f}" ${floor == f ? 'selected' : ''}>Tầng ${f}</option>
+                </c:forEach>
+            </select>
         </label>
         <label>Loại công việc
             <select name="taskType">

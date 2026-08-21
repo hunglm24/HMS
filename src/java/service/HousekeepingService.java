@@ -25,7 +25,7 @@ public class HousekeepingService {
     private static final String NOTE_START = "[INSPECTION_NOTE]";
     private static final Map<String, String> SORTS = Map.of(
             "room", "rm.room_number", "roomType", "rt.name", "floor", "rm.floor_number",
-            "taskType", "ht.task_type", "status", "ht.status", "created", "ht.created_at", "assigned_to", "COALESCE(a.full_name, '')");
+            "taskType", "ht.task_type", "status", "ht.status", "created", "ht.created_at", "time", "ht.created_at", "assigned_to", "COALESCE(a.full_name, '')");
     private static final Map<String, String> CLEANING_CHECKLIST;
     static {
         Map<String, String> items = new LinkedHashMap<>();
@@ -324,11 +324,10 @@ public void completeCleaning(long taskId, long staffId) throws SQLException {
             }
             combinedNote = sb.toString();
         } else {
-            combinedNote = note != null ? note.trim() : "";
-            if (combinedNote.isBlank()) combinedNote = "Kiểm tra phòng sau checkout";
+            combinedNote = (note != null && !note.isBlank()) ? note.trim() : null;
         }
         
-        dao.createManualTask(roomId, taskType, assignedTo, priority, trim(combinedNote, 2000));
+        dao.createManualTask(roomId, taskType, assignedTo, priority, combinedNote != null ? trim(combinedNote, 2000) : null);
     }
 
     public void createManualTask(long roomId, String taskType, Long assignedTo, String priority, String note) throws SQLException {

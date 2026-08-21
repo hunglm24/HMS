@@ -45,9 +45,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%= pageTitle %> | HMS</title>
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260820-7">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260820-7">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260820-7">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260821-1">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260821-1">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260821-1">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -68,7 +68,16 @@
                    placeholder="Số phòng hoặc loại phòng">
         </label>
         <label>Tầng
-            <input type="number" name="floor" min="0" max="999" value="<%= result.floor() == null ? "" : result.floor() %>" placeholder="Tất cả">
+            <select name="floor">
+                <option value="" <%= result.floor() == null ? "selected" : "" %>>Tất cả tầng</option>
+                <% 
+                    java.util.List<Integer> floorOpts = (java.util.List<Integer>) request.getAttribute("floorOptions");
+                    if (floorOpts == null || floorOpts.isEmpty()) floorOpts = java.util.List.of(1, 2, 3);
+                    for (Integer f : floorOpts) { 
+                %>
+                    <option value="<%= f %>" <%= result.floor() != null && result.floor().equals(f) ? "selected" : "" %>>Tầng <%= f %></option>
+                <% } %>
+            </select>
         </label>
         <label>Loại công việc
             <select name="taskType"><option value="">Tất cả loại công việc</option>
@@ -119,6 +128,7 @@
                     <th class="<%= sortClass(result,"roomType") %>"><a href="<%= sortUrl(result,"roomType", baseUrl) %>">Loại phòng</a></th>
                     <th class="<%= sortClass(result,"floor") %>"><a href="<%= sortUrl(result,"floor", baseUrl) %>">Tầng</a></th>
                     <th class="<%= sortClass(result,"taskType") %>"><a href="<%= sortUrl(result,"taskType", baseUrl) %>">Công việc</a></th>
+                    <th class="<%= sortClass(result,"time") %>"><a href="<%= sortUrl(result,"time", baseUrl) %>">Thời gian</a></th>
                     <% if (isManager) { %>
                     <th class="<%= sortClass(result,"assigned_to") %>"><a href="<%= sortUrl(result,"assigned_to", baseUrl) %>">Người phụ trách</a></th>
                     <% } %>
@@ -137,6 +147,11 @@
                         <% if (task.getNote() != null && !task.getNote().isBlank()) { %>
                         <br><small style="color: #64748b; font-size: 12px;"><%= HousekeepingTask.esc(task.getNote().length() > 60 ? task.getNote().substring(0, 57) + "..." : task.getNote()) %></small>
                         <% } %>
+                    </td>
+                    <td data-label="Thời gian">
+                        <span title="Tạo lúc: <%= task.getFormattedCreatedAt() %><%= task.getCompletedAt() != null ? " | Hoàn tất: " + task.getFormattedCompletedAt() : "" %>">
+                            <%= task.getFormattedDate() %>
+                        </span>
                     </td>
                     <% if (isManager) { %>
                     <td data-label="Người phụ trách">

@@ -78,6 +78,8 @@ public class IssueListServlet extends HttpServlet {
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("search", keyword);
             request.setAttribute("floor", floorParam);
+            request.setAttribute("floorOptions", new dao.RoomDao().getDistinctFloors());
+            request.setAttribute("maxFloor", new dao.RoomDao().getMaxFloor());
             request.setAttribute("taskType", taskType);
             request.setAttribute("status", status);
             request.setAttribute("currentSort", currentSort);

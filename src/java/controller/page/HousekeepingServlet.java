@@ -97,6 +97,9 @@ public class HousekeepingServlet extends HttpServlet {
             taskId = parseLong(request.getParameter("taskId"));
             if (path.endsWith("/save-progress")) {
                 String[] completedItems = request.getParameterValues("completedItems");
+                if (completedItems == null) {
+                    completedItems = request.getParameterValues("completedItem");
+                }
                 List<String> completedList = completedItems != null ? List.of(completedItems) : List.of();
                 service.saveCleaningProgress(taskId, user.getUserId(), completedList);
                 response.setContentType("application/json");
@@ -142,6 +145,8 @@ public class HousekeepingServlet extends HttpServlet {
                 request.getParameter("direction"), parseInt(request.getParameter("page"), 1));
         request.setAttribute("result", result);
         request.setAttribute("isManager", manager);
+        request.setAttribute("floorOptions", new dao.RoomDao().getDistinctFloors());
+        request.setAttribute("maxFloor", new dao.RoomDao().getMaxFloor());
         request.getRequestDispatcher("/WEB-INF/views/housekeeping/task-list.jsp").forward(request, response);
     }
 

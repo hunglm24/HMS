@@ -292,4 +292,34 @@ public class RoomDao {
         long value = rs.getLong(column);
         return rs.wasNull() ? null : value;
     }
+
+    public int getMaxFloor() {
+        String sql = "SELECT COALESCE(MAX(floor_number), 3) FROM rooms WHERE status != 'INACTIVE'";
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                int max = rs.getInt(1);
+                return max > 0 ? max : 3;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 3;
+    }
+
+    public List<Integer> getDistinctFloors() {
+        List<Integer> floors = new ArrayList<>();
+        String sql = "SELECT DISTINCT floor_number FROM rooms WHERE floor_number IS NOT NULL AND floor_number > 0 ORDER BY floor_number ASC";
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                floors.add(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return floors.isEmpty() ? List.of(1, 2, 3) : floors;
+    }
 }

@@ -18,7 +18,7 @@
             <input id="roomNumber" name="roomNumber" type="text" required maxlength="20">
 
             <label for="roomFloor">Tầng</label>
-            <input id="roomFloor" name="floorNumber" type="number" min="0" max="7" step="1">
+            <input id="roomFloor" name="floorNumber" type="number" min="1" max="${empty maxFloor ? 3 : maxFloor}" step="1" placeholder="1-${empty maxFloor ? 3 : maxFloor}">
 
             <label for="roomTypeSelect">Loại phòng *</label>
             <select id="roomTypeSelect" name="roomTypeId" required>

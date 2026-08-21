@@ -47,7 +47,12 @@
                         <input type="search" name="keyword" value="${pageData.keyword}" placeholder="Tìm phòng...">
                     </div>
                     <div class="room-management-filters__select">
-                        <input type="number" name="floor" value="${pageData.floor}" min="0" placeholder="Tầng: Tất cả">
+                        <select name="floor">
+                            <option value="" ${empty pageData.floor ? 'selected' : ''}>Tầng: Tất cả</option>
+                            <c:forEach var="f" items="${floorOptions}">
+                                <option value="${f}" ${pageData.floor eq f ? 'selected' : ''}>Tầng ${f}</option>
+                            </c:forEach>
+                        </select>
                     </div>
                     <div class="room-management-filters__select">
                         <select name="roomTypeId">

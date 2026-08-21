@@ -49,6 +49,8 @@ public class RoomManagementServlet extends HttpServlet {
             RoomManagementPageData pageData = buildPageData(req);
             req.setAttribute("pageData", pageData);
             req.setAttribute("roomTypeOptions", roomService.getRoomTypeOptions());
+            req.setAttribute("floorOptions", roomService.getDistinctFloors());
+            req.setAttribute("maxFloor", roomService.getMaxFloor());
             try {
                 housekeepingService.syncDatabaseState();
                 req.setAttribute("housekeepers", housekeepingService.getHousekeepers());
