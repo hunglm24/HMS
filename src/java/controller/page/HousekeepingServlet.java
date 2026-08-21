@@ -182,8 +182,8 @@ public class HousekeepingServlet extends HttpServlet {
         return values == null ? List.of() : List.of(values);
     }
 
-    private List<HousekeepingTask.EquipmentCheck> parseChecks(HttpServletRequest request,
-                                                               List<HousekeepingTask.EquipmentCheck> equipment) {
+            private List<HousekeepingTask.EquipmentCheck> parseChecks(HttpServletRequest request,
+                                                              List<HousekeepingTask.EquipmentCheck> equipment) {
         List<HousekeepingTask.EquipmentCheck> checks = new ArrayList<>();
         for (HousekeepingTask.EquipmentCheck source : equipment) {
             String suffix = String.valueOf(source.getRoomEquipmentId());
@@ -195,6 +195,8 @@ public class HousekeepingServlet extends HttpServlet {
             BigDecimal fee = BigDecimal.ZERO;
             HousekeepingTask.EquipmentCheck check = new HousekeepingTask.EquipmentCheck();
             check.setRoomEquipmentId(source.getRoomEquipmentId());
+            check.setEquipmentName(source.getEquipmentName());
+            check.setQuantity(source.getQuantity() > 0 ? source.getQuantity() : 1);
             check.setConditionStatus(condition);
             check.setDamageFee(fee);
             check.setNote(note);
@@ -202,8 +204,7 @@ public class HousekeepingServlet extends HttpServlet {
         }
         return checks;
     }
-
-    private User currentStaff(HttpServletRequest request, HttpServletResponse response) throws IOException {
+private User currentStaff(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
         User user = session == null ? null : (User) session.getAttribute("currentUser");
         if (user == null) {

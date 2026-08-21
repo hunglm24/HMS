@@ -33,6 +33,11 @@
     String pageTitle = isManager || history ? "Lịch sử dọn phòng" : "Task dọn phòng của tôi";
     String pageSubtitle = isManager ? "Theo dõi tiến độ và lịch sử công việc kiểm tra, dọn dẹp phòng." : history ? "Theo dõi lịch sử kiểm tra và dọn phòng đã hoàn tất." : "Danh sách công việc kiểm tra và dọn phòng được phân công.";
     String baseUrl = isManager ? contextPath + "/manager/housekeeping" : contextPath + "/housekeeping/tasks";
+    
+    boolean hasFilter = (result.keyword() != null && !result.keyword().isBlank()) 
+                     || result.floor() != null 
+                     || (result.taskType() != null && !result.taskType().isBlank())
+                     || (result.status() != null && !result.status().isBlank());
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -92,8 +97,19 @@
     </form>
 
     <% if (result.tasks().isEmpty()) { %>
-    <section class="hk-empty"><span aria-hidden="true">🧹</span><h2>Không có dữ liệu phù hợp</h2>
-        <p>Hãy thử thay đổi từ khóa hoặc bộ lọc đang chọn.</p></section>
+    <section class="hk-empty">
+        <span aria-hidden="true">🧹</span>
+        <% if (hasFilter) { %>
+            <h2>Không tìm thấy kết quả phù hợp</h2>
+            <p>Không có công việc nào khớp với bộ lọc hoặc từ khóa tìm kiếm của bạn.</p>
+        <% } else if (mine) { %>
+            <h2>Hiện tại bạn không có công việc nào</h2>
+            <p>Bạn đã hoàn thành hết các nhiệm vụ hoặc chưa có công việc mới được phân công.</p>
+        <% } else { %>
+            <h2>Chưa có công việc nào trong danh sách</h2>
+            <p>Hiện tại chưa có công việc dọn dẹp hoặc kiểm tra phòng nào được ghi nhận.</p>
+        <% } %>
+    </section>
     <% } else { %>
     <div class="hk-table-wrap" data-pagination-root data-pagination-key="task-list-table" data-pagination-size="5">
         <table class="hk-table">

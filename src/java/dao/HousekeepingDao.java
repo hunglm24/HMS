@@ -79,7 +79,7 @@ public class HousekeepingDao {
         }
     }
 
-    public List<HousekeepingTask> findHistory(long viewerId, boolean manager, String keyword,
+        public List<HousekeepingTask> findHistory(long viewerId, boolean manager, String keyword,
                                                Integer floor, String taskType, String status,
                                                String sortColumn, String direction,
                                                int offset, int limit) throws SQLException {
@@ -90,6 +90,8 @@ public class HousekeepingDao {
             if (taskType != null && !taskType.isBlank()) {
                 sql.append(" AND ht.task_type = ?");
                 params.add(taskType);
+            } else {
+                sql.append(" AND ht.task_type IN ('CHECKOUT_INSPECTION', 'CLEANING')");
             }
             if (status != null && !status.isBlank()) {
                 sql.append(" AND ht.status = ?");
@@ -137,6 +139,8 @@ public class HousekeepingDao {
             if (taskType != null && !taskType.isBlank()) {
                 sql.append(" AND ht.task_type = ?");
                 params.add(taskType);
+            } else {
+                sql.append(" AND ht.task_type IN ('CHECKOUT_INSPECTION', 'CLEANING')");
             }
             if (status != null && !status.isBlank()) {
                 sql.append(" AND ht.status = ?");
@@ -165,15 +169,40 @@ public class HousekeepingDao {
             }
         }
     }
-
     private void appendRoomFilters(StringBuilder sql, List<Object> params,
                                    String keyword, Integer floor) {
-        if (keyword != null) {
-            sql.append(" AND (LOWER(rm.room_number) LIKE ? OR LOWER(rt.name) LIKE ?)");
-            String pattern = "%" + keyword.toLowerCase() + "%";
-            params.add(pattern); params.add(pattern);
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append("""
+                 AND (
+                    LOWER(rm.room_number) LIKE ? 
+                    OR LOWER(rt.name) LIKE ? 
+                    OR LOWER(COALESCE(ht.note, '')) LIKE ?
+                    OR EXISTS (
+                        SELECT 1 FROM room_equipment sub_re 
+                        JOIN equipment sub_e ON sub_e.id = sub_re.equipment_id 
+                        WHERE sub_re.id = ht.room_equipment_id
+                          AND LOWER(sub_e.name) LIKE ?
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM equipment_maintenance_logs sub_eml
+                        JOIN room_equipment sub_re2 ON sub_re2.id = sub_eml.room_equipment_id
+                        JOIN equipment sub_e2 ON sub_e2.id = sub_re2.equipment_id
+                        WHERE sub_eml.housekeeping_task_id = ht.id
+                          AND LOWER(sub_e2.name) LIKE ?
+                    )
+                 )
+                """);
+            String pattern = "%" + keyword.toLowerCase().trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
         }
-        if (floor != null) { sql.append(" AND rm.floor_number = ?"); params.add(floor); }
+        if (floor != null) {
+            sql.append(" AND rm.floor_number = ?");
+            params.add(floor);
+        }
     }
 
     private int bind(PreparedStatement statement, List<Object> params) throws SQLException {
@@ -377,13 +406,10 @@ public class HousekeepingDao {
                 }
                 completeTask(connection, taskId);
 
-                boolean hasCleaningRequest = (inspectionNote != null && !inspectionNote.isBlank());
-                if (isCheckout || hasCleaningRequest) {
-                    String finalCleaningNote = hasCleaningRequest 
-                            ? inspectionNote 
-                            : "[CLEANING_TASKS]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[/CLEANING_TASKS]";
+                                boolean hasCleaningRequest = (inspectionNote != null && !inspectionNote.isBlank());
+                if (hasCleaningRequest) {
                     Long linkedBookingRoom = isCheckout ? Long.valueOf(bookingRoomId) : null;
-                    createCleaningTask(connection, roomId, linkedBookingRoom, staffId, finalCleaningNote);
+                    createCleaningTask(connection, roomId, linkedBookingRoom, staffId, inspectionNote);
                     try (PreparedStatement updateRoom = connection.prepareStatement(
                             "UPDATE rooms SET status = CASE WHEN ? THEN 'NOT_READY' ELSE 'CLEANING' END WHERE id = ?")) {
                         updateRoom.setBoolean(1, damaged);
@@ -391,8 +417,13 @@ public class HousekeepingDao {
                         updateRoom.executeUpdate();
                     }
                 } else {
-                    try (PreparedStatement updateRoom = connection.prepareStatement(
-                            "UPDATE rooms SET status = CASE WHEN ? THEN 'MAINTENANCE' ELSE 'AVAILABLE' END WHERE id = ?")) {
+                    try (PreparedStatement updateRoom = connection.prepareStatement("""
+                            UPDATE rooms SET status = CASE 
+                                WHEN ? THEN 'NOT_READY'
+                                WHEN status = 'OCCUPIED' THEN 'OCCUPIED'
+                                ELSE 'AVAILABLE' 
+                            END WHERE id = ?
+                            """)) {
                         updateRoom.setBoolean(1, damaged);
                         updateRoom.setLong(2, roomId);
                         updateRoom.executeUpdate();
@@ -666,8 +697,10 @@ public class HousekeepingDao {
         try (PreparedStatement insert = connection.prepareStatement(sql)) {
             insert.setLong(1, roomId); insert.setLong(2, check.getRoomEquipmentId());
             insert.setString(3, taskType);
-            insert.setString(4, "Xử lý sự cố #" + damageReportId + ": "
-                    + (check.getNote() == null ? check.getConditionStatus() : check.getNote()));
+                        String taskNote = (check.getNote() != null && !check.getNote().isBlank()) 
+                    ? check.getNote().trim() 
+                    : (check.getEquipmentName() != null ? check.getEquipmentName() + " - " + check.getCurrentStatusLabel() : "Sự cố thiết bị");
+            insert.setString(4, taskNote);
             insert.setLong(5, check.getRoomEquipmentId()); insert.setString(6, taskType);
             insert.executeUpdate();
         }
@@ -915,6 +948,46 @@ public class HousekeepingDao {
                 }
                 return result;
             }
+        }
+    }
+
+    public static class HousekeepingStats {
+        private int pendingCount;
+        private int inProgressCount;
+        private int completedTodayCount;
+        private int totalCompletedCount;
+
+        public int getPendingCount() { return pendingCount; }
+        public void setPendingCount(int pendingCount) { this.pendingCount = pendingCount; }
+        public int getInProgressCount() { return inProgressCount; }
+        public void setInProgressCount(int inProgressCount) { this.inProgressCount = inProgressCount; }
+        public int getCompletedTodayCount() { return completedTodayCount; }
+        public void setCompletedTodayCount(int completedTodayCount) { this.completedTodayCount = completedTodayCount; }
+        public int getTotalCompletedCount() { return totalCompletedCount; }
+        public void setTotalCompletedCount(int totalCompletedCount) { this.totalCompletedCount = totalCompletedCount; }
+    }
+
+    public HousekeepingStats getHousekeepingStats() throws SQLException {
+        String sql = """
+                SELECT 
+                    COUNT(CASE WHEN status = 'PENDING' THEN 1 END) AS pending_count,
+                    COUNT(CASE WHEN status = 'IN_PROGRESS' THEN 1 END) AS in_progress_count,
+                    COUNT(CASE WHEN status = 'COMPLETED' AND CAST(completed_at AS DATE) = CURRENT_DATE THEN 1 END) AS completed_today,
+                    COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) AS total_completed
+                FROM housekeeping_tasks
+                WHERE task_type IN ('CHECKOUT_INSPECTION', 'CLEANING')
+                """;
+        try (Connection connection = requireConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            HousekeepingStats stats = new HousekeepingStats();
+            if (rs.next()) {
+                stats.setPendingCount(rs.getInt("pending_count"));
+                stats.setInProgressCount(rs.getInt("in_progress_count"));
+                stats.setCompletedTodayCount(rs.getInt("completed_today"));
+                stats.setTotalCompletedCount(rs.getInt("total_completed"));
+            }
+            return stats;
         }
     }
 

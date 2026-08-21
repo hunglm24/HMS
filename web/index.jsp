@@ -148,10 +148,14 @@
         <div><p class="section-kicker">Tin tức</p><h2>Khuyến mãi &amp; Sự kiện</h2></div>
         <a class="btn btn-secondary" href="${pageContext.request.contextPath}/news">Xem tất cả</a>
     </section>
-    <section class="room-card-grid">
-        <% for (model.News n : latestNews) { %>
+    <section class="news-card-grid">
+        <% for (model.News n : latestNews) { 
+            String newsThumb = (n.getThumbnailUrl() != null && !n.getThumbnailUrl().isBlank()) 
+                ? n.getThumbnailUrl() 
+                : "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
+        %>
         <article class="room-showcase-card">
-            <img src="<%= n.getThumbnailUrl() != null && !n.getThumbnailUrl().isEmpty() ? n.getThumbnailUrl() : "https://via.placeholder.com/900x500?text=News" %>" alt="News Image">
+            <img src="<%= escapeHtml(newsThumb) %>" alt="<%= escapeHtml(n.getTitle()) %>">
             <div class="room-showcase-card__body">
                 <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= escapeHtml(n.getTitle()) %></h3>
                 <div class="room-meta" style="margin-top: 8px; color: #666; font-size: 14px;">

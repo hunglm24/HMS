@@ -1,6 +1,7 @@
 package controller.page.manager;
 
 import dao.NewsDao;
+import model.Account;
 import model.News;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 
 @WebServlet(name = "NewsManagementServlet", urlPatterns = {"/manager/news", "/manager/news/create", "/manager/news/edit", "/manager/news/delete"})
 public class NewsManagementServlet extends HttpServlet {
@@ -29,12 +31,12 @@ public class NewsManagementServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
-            response.sendRedirect(request.getContextPath() + "/login"); // Adjust if login route is different
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        model.Account currentUser = (model.Account) session.getAttribute("currentUser");
+        Account currentUser = (Account) session.getAttribute("currentUser");
         if (!"HOTEL_MANAGER".equalsIgnoreCase(currentUser.getRoleName())) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied: Only Hotel Managers can manage news.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối: Chỉ Quản lý khách sạn mới có quyền.");
             return;
         }
 
@@ -50,9 +52,20 @@ public class NewsManagementServlet extends HttpServlet {
             if (idStr != null) {
                 try {
                     long id = Long.parseLong(idStr);
-                    newsDao.getNewsById(id).ifPresent(news -> request.setAttribute("news", news));
+                    Optional<News> newsOpt = newsDao.getNewsById(id);
+                    if (newsOpt.isPresent()) {
+                        request.setAttribute("news", newsOpt.get());
+                    } else {
+                        session.setAttribute("toastMessage", "Không tìm thấy bài viết.");
+                        session.setAttribute("toastType", "toast-error");
+                        response.sendRedirect(request.getContextPath() + "/manager/news");
+                        return;
+                    }
                 } catch (NumberFormatException e) {
-                    // ignore
+                    session.setAttribute("toastMessage", "ID bài viết không hợp lệ.");
+                    session.setAttribute("toastType", "toast-error");
+                    response.sendRedirect(request.getContextPath() + "/manager/news");
+                    return;
                 }
             }
             request.getRequestDispatcher("/WEB-INF/views/manager/news-form.jsp").forward(request, response);
@@ -66,6 +79,7 @@ public class NewsManagementServlet extends HttpServlet {
         if (pageStr != null && !pageStr.isEmpty()) {
             try {
                 page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
             } catch (NumberFormatException e) {
                 page = 1;
             }
@@ -73,7 +87,9 @@ public class NewsManagementServlet extends HttpServlet {
         
         String search = request.getParameter("search");
         String status = request.getParameter("status");
-        if (status == null) status = "ALL";
+        if (status == null || status.trim().isEmpty()) {
+            status = "ALL";
+        }
 
         int offset = (page - 1) * limit;
 
@@ -84,7 +100,7 @@ public class NewsManagementServlet extends HttpServlet {
         request.setAttribute("newsList", newsList);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
-        request.setAttribute("search", search);
+        request.setAttribute("search", search != null ? search : "");
         request.setAttribute("status", status);
 
         request.getRequestDispatcher("/WEB-INF/views/manager/news.jsp").forward(request, response);
@@ -99,9 +115,9 @@ public class NewsManagementServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        model.Account currentUser = (model.Account) session.getAttribute("currentUser");
+        Account currentUser = (Account) session.getAttribute("currentUser");
         if (!"HOTEL_MANAGER".equalsIgnoreCase(currentUser.getRoleName())) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied: Only Hotel Managers can manage news.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối: Chỉ Quản lý khách sạn mới có quyền.");
             return;
         }
         Long accountId = currentUser.getId();
@@ -113,9 +129,17 @@ public class NewsManagementServlet extends HttpServlet {
             if (idStr != null) {
                 try {
                     long id = Long.parseLong(idStr);
-                    newsDao.deleteNews(id);
+                    boolean deleted = newsDao.deleteNews(id);
+                    if (deleted) {
+                        session.setAttribute("toastMessage", "Đã xóa bài viết thành công.");
+                        session.setAttribute("toastType", "toast-success");
+                    } else {
+                        session.setAttribute("toastMessage", "Xóa bài viết thất bại.");
+                        session.setAttribute("toastType", "toast-error");
+                    }
                 } catch (NumberFormatException e) {
-                    // ignore
+                    session.setAttribute("toastMessage", "ID không hợp lệ.");
+                    session.setAttribute("toastType", "toast-error");
                 }
             }
             response.sendRedirect(request.getContextPath() + "/manager/news");
@@ -129,39 +153,73 @@ public class NewsManagementServlet extends HttpServlet {
         String thumbnailUrl = request.getParameter("thumbnailUrl");
         String status = request.getParameter("status"); // DRAFT, PUBLISHED, HIDDEN
 
-        News news = new News();
-        news.setTitle(title);
-        news.setContent(content);
-        news.setThumbnailUrl(thumbnailUrl);
-        news.setStatus(status);
-        news.setCreatedBy(accountId);
-
-        if ("PUBLISHED".equals(status)) {
-            news.setPublishedAt(new Timestamp(System.currentTimeMillis()));
+        if (title == null || title.trim().isEmpty()) {
+            request.setAttribute("error", "Vui lòng nhập tiêu đề bài viết.");
+            News news = new News();
+            news.setTitle(title);
+            news.setContent(content);
+            news.setThumbnailUrl(thumbnailUrl);
+            news.setStatus(status);
+            request.setAttribute("news", news);
+            request.getRequestDispatcher("/WEB-INF/views/manager/news-form.jsp").forward(request, response);
+            return;
         }
 
+        News news = new News();
+        news.setTitle(title.trim());
+        news.setContent(content != null ? content : "");
+        news.setThumbnailUrl(thumbnailUrl != null ? thumbnailUrl.trim() : null);
+        news.setStatus(status != null ? status : "DRAFT");
+        news.setCreatedBy(accountId);
+
         boolean success = false;
-        if (idStr != null && !idStr.isEmpty()) {
+        if (idStr != null && !idStr.trim().isEmpty()) {
             // Update
             try {
                 long id = Long.parseLong(idStr);
                 news.setId(id);
-                // Keep old publishedAt if it was already published and status is still PUBLISHED
-                // This is simplified, ideally we check DB first.
+
+                Optional<News> existingNewsOpt = newsDao.getNewsById(id);
+                if (existingNewsOpt.isPresent()) {
+                    News existingNews = existingNewsOpt.get();
+                    if ("PUBLISHED".equals(status)) {
+                        if (existingNews.getPublishedAt() != null) {
+                            news.setPublishedAt(existingNews.getPublishedAt());
+                        } else {
+                            news.setPublishedAt(new Timestamp(System.currentTimeMillis()));
+                        }
+                    } else {
+                        news.setPublishedAt(existingNews.getPublishedAt());
+                    }
+                } else if ("PUBLISHED".equals(status)) {
+                    news.setPublishedAt(new Timestamp(System.currentTimeMillis()));
+                }
+
                 success = newsDao.updateNews(news);
+                if (success) {
+                    session.setAttribute("toastMessage", "Cập nhật bài viết thành công!");
+                    session.setAttribute("toastType", "toast-success");
+                }
             } catch (NumberFormatException e) {
                 // error
             }
         } else {
             // Create
+            if ("PUBLISHED".equals(status)) {
+                news.setPublishedAt(new Timestamp(System.currentTimeMillis()));
+            }
             news = newsDao.insertNews(news);
             success = news.getId() != null && news.getId() > 0;
+            if (success) {
+                session.setAttribute("toastMessage", "Thêm bài viết mới thành công!");
+                session.setAttribute("toastType", "toast-success");
+            }
         }
 
         if (success) {
             response.sendRedirect(request.getContextPath() + "/manager/news");
         } else {
-            request.setAttribute("error", "Failed to save news.");
+            request.setAttribute("error", "Lưu bài viết thất bại. Vui lòng kiểm tra lại dữ liệu.");
             request.setAttribute("news", news);
             request.getRequestDispatcher("/WEB-INF/views/manager/news-form.jsp").forward(request, response);
         }

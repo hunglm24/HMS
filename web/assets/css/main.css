@@ -420,9 +420,27 @@ main {
 .kpi-grid,
 .feature-grid,
 .room-card-grid,
+.news-card-grid,
 .dashboard-grid,
 .action-grid {
     gap: 20px;
+}
+
+.news-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 980px) {
+    .news-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .news-card-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .card,

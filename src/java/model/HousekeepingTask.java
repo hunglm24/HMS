@@ -13,6 +13,7 @@ public class HousekeepingTask {
     private String priority;
     private String status;
     private String note;
+
     private Date createdAt;
     private Date startedAt;
     private Date completedAt;
@@ -41,6 +42,7 @@ public class HousekeepingTask {
     public void setStatus(String status) { this.status = status; }
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
     public Date getStartedAt() { return startedAt; }
@@ -129,6 +131,13 @@ public class HousekeepingTask {
         public void setDamageFee(BigDecimal damageFee) { this.damageFee = damageFee; }
         public String getNote() { return note; }
         public void setNote(String note) { this.note = note; }
+        private boolean maintainable = true;
+
+        public boolean isMaintainable() { return maintainable; }
+        public boolean getMaintainable() { return maintainable; }
+        public boolean getIsMaintainable() { return maintainable; }
+        public void setMaintainable(boolean maintainable) { this.maintainable = maintainable; }
+        public void setIsMaintainable(boolean maintainable) { this.maintainable = maintainable; }
     }
 
     public static class WorkItem {

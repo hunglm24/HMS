@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <% if (task.getNote() != null && !task.getNote().isBlank()) { %>
+        <% if (task.getNote() != null && !task.getNote().isBlank() && !"Kiểm tra phòng sau checkout".equalsIgnoreCase(task.getNote().trim()) && !"Kiểm tra phòng".equalsIgnoreCase(task.getNote().trim())) { %>
         <div class="hk-manager-note-box" style="margin: 0 0 20px 0; padding: 16px 20px; background: #fffbe6; border: 1.5px solid #ffe58f; border-left: 5px solid #faad14; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                 <span style="font-size: 18px;">📌</span>
@@ -96,7 +96,7 @@
             <p>Kiểm tra lần lượt từng thiết bị trước khi xác nhận hoàn tất.</p></div>
             <span><%= equipment == null ? 0 : equipment.size() %> thiết bị</span></div>
 
-        <% if (task.getNote() != null && !task.getNote().isBlank()) { %>
+        <% if (task.getNote() != null && !task.getNote().isBlank() && !"Kiểm tra phòng sau checkout".equalsIgnoreCase(task.getNote().trim()) && !"Kiểm tra phòng".equalsIgnoreCase(task.getNote().trim())) { %>
         <div class="hk-manager-note-box" style="margin: 0 0 20px 0; padding: 16px 20px; background: #fffbe6; border: 1.5px solid #ffe58f; border-left: 5px solid #faad14; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                 <span style="font-size: 18px;">📌</span>

@@ -70,10 +70,10 @@
             <c:if test="${not empty relatedNews}">
                 <div class="related-section">
                     <h2 style="margin-bottom: 24px; font-size: 1.8rem;">Tin tức liên quan</h2>
-                    <div class="room-card-grid">
+                    <div class="news-card-grid">
                         <c:forEach var="rn" items="${relatedNews}">
                             <article class="room-showcase-card">
-                                <img src="${not empty rn.thumbnailUrl ? rn.thumbnailUrl : 'https://via.placeholder.com/900x500?text=News'}" alt="${rn.title}">
+                                <img src="${not empty rn.thumbnailUrl ? rn.thumbnailUrl : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80'}" alt="${rn.title}">
                                 <div class="room-showcase-card__body">
                                     <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${rn.title}</h3>
                                     <div class="room-meta" style="margin-top: 8px;">
