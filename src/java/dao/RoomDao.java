@@ -16,6 +16,10 @@ import java.util.Optional;
 public class RoomDao {
 
     public List<Room> findAvailablePhysicalRooms(java.time.LocalDate checkIn, java.time.LocalDate checkOut, Long roomTypeId) {
+        return findAvailablePhysicalRooms(checkIn, checkOut, roomTypeId, null);
+    }
+
+    public List<Room> findAvailablePhysicalRooms(java.time.LocalDate checkIn, java.time.LocalDate checkOut, Long roomTypeId, Long excludeBookingId) {
         List<Room> rooms = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT r.*, rt.name AS room_type_name, rt.base_price AS base_price
@@ -30,8 +34,12 @@ public class RoomDao {
                   WHERE br.room_id = r.id
                     AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
                     AND b.check_in_date < ? AND b.check_out_date > ?
+                    %s
               )
             """);
+
+        String excludeClause = excludeBookingId != null && excludeBookingId > 0 ? " AND b.id <> ?" : "";
+        sql = new StringBuilder(String.format(sql.toString(), excludeClause));
 
         if (roomTypeId != null && roomTypeId > 0) {
             sql.append(" AND r.room_type_id = ?");
@@ -44,9 +52,14 @@ public class RoomDao {
             
             ps.setDate(1, java.sql.Date.valueOf(checkOut));
             ps.setDate(2, java.sql.Date.valueOf(checkIn));
-            
+
+            int paramIndex = 3;
+            if (excludeBookingId != null && excludeBookingId > 0) {
+                ps.setLong(paramIndex++, excludeBookingId);
+            }
+
             if (roomTypeId != null && roomTypeId > 0) {
-                ps.setLong(3, roomTypeId);
+                ps.setLong(paramIndex, roomTypeId);
             }
             
             try (ResultSet rs = ps.executeQuery()) {
