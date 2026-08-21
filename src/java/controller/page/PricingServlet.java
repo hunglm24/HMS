@@ -1,8 +1,6 @@
 package controller.page;
 
 import dao.PromotionDao;
-import dao.RoomTypeDao;
-import dao.SeasonalPriceRuleDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,13 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Account;
 import model.Promotion;
-import model.SeasonalPriceRule;
 import util.MoneyUtil;
 import util.ValidationUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -26,14 +22,10 @@ import java.util.Set;
 @WebServlet(urlPatterns = {
         "/manager/pricing",
         "/manager/pricing/promotion/save",
-        "/manager/pricing/promotion/delete",
-        "/manager/pricing/rule/save",
-        "/manager/pricing/rule/delete"
+        "/manager/pricing/promotion/delete"
 })
 public class PricingServlet extends HttpServlet {
     private final PromotionDao promotionDao = new PromotionDao();
-    private final SeasonalPriceRuleDao priceRuleDao = new SeasonalPriceRuleDao();
-    private final RoomTypeDao roomTypeDao = new RoomTypeDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -54,12 +46,6 @@ public class PricingServlet extends HttpServlet {
             } else if ("/manager/pricing/promotion/delete".equals(path)) {
                 promotionDao.delete(ValidationUtil.requirePositiveLong(request.getParameter("id"), "Mã giảm giá"));
                 flash(request, "Đã xóa mã giảm giá.", "success");
-            } else if ("/manager/pricing/rule/save".equals(path)) {
-                savePriceRule(request);
-                flash(request, "Đã lưu bảng giá mùa/ngày lễ.", "success");
-            } else if ("/manager/pricing/rule/delete".equals(path)) {
-                priceRuleDao.delete(ValidationUtil.requirePositiveLong(request.getParameter("id"), "Bảng giá"));
-                flash(request, "Đã xóa bảng giá.", "success");
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
@@ -75,9 +61,7 @@ public class PricingServlet extends HttpServlet {
 
     private void preparePage(HttpServletRequest request) throws ServletException {
         try {
-            request.setAttribute("roomTypes", roomTypeDao.findActive());
             request.setAttribute("promotions", promotionDao.findAll());
-            request.setAttribute("priceRules", priceRuleDao.findAll());
         } catch (SQLException ex) {
             throw new ServletException("Cannot load manager pricing page", ex);
         }
@@ -100,6 +84,9 @@ public class PricingServlet extends HttpServlet {
         if ("PERCENT".equals(promotion.getDiscountType())) {
             ValidationUtil.requireTrue(promotion.getDiscountValue().compareTo(BigDecimal.valueOf(100)) <= 0,
                     "Mức giảm theo phần trăm không được vượt quá 100%.");
+        } else {
+            ValidationUtil.requireTrue(promotion.getDiscountValue().signum() >= 0,
+                    "Mức giảm theo số tiền không được âm.");
         }
         promotion.setMaxDiscountAmount(null);
         promotion.setMinBookingAmount(parseOptionalMoney(request.getParameter("minBookingAmount"), "Đơn tối thiểu"));
@@ -114,37 +101,11 @@ public class PricingServlet extends HttpServlet {
         promotionDao.save(promotion);
     }
 
-    private void savePriceRule(HttpServletRequest request) throws SQLException {
-        SeasonalPriceRule rule = new SeasonalPriceRule();
-        Long id = ValidationUtil.optionalPositiveLong(request.getParameter("id"), "Bảng giá");
-        if (id != null && id > 0) {
-            rule.setId(id);
-        }
-        rule.setRoomTypeId(ValidationUtil.requirePositiveLong(request.getParameter("roomTypeId"), "Loại phòng"));
-        rule.setRuleName(ValidationUtil.requireText(request.getParameter("ruleName"), "Tên bảng giá", 2, 150));
-        rule.setRuleType(ValidationUtil.requireStatus(request.getParameter("ruleType"), "Loại bảng giá", Set.of("SEASON", "HOLIDAY")));
-        rule.setStartDate(Date.valueOf(parseDate(request.getParameter("startDate"), "Ngày bắt đầu")));
-        rule.setEndDate(Date.valueOf(parseDate(request.getParameter("endDate"), "Ngày kết thúc")));
-        ValidationUtil.requireTrue(!rule.getEndDate().before(rule.getStartDate()), "Ngày kết thúc không được trước ngày bắt đầu.");
-        rule.setPricePerNight(null);
-        rule.setSurchargePercent(null);
-        rule.setStatus(ValidationUtil.requireStatus(request.getParameter("status"), "Trạng thái", Set.of("ACTIVE", "INACTIVE")));
-        priceRuleDao.save(rule);
-    }
-
     private BigDecimal parseOptionalMoney(String value, String fieldName) {
         if (ValidationUtil.isBlank(value)) {
             return null;
         }
         return MoneyUtil.parseVndMoney(value, fieldName);
-    }
-
-    private LocalDate parseDate(String value, String fieldName) {
-        try {
-            return LocalDate.parse(ValidationUtil.requireText(value, fieldName, 10, 10));
-        } catch (RuntimeException ex) {
-            throw new IllegalArgumentException(fieldName + " không hợp lệ.");
-        }
     }
 
     private LocalDateTime parseDateTime(String value, String fieldName) {

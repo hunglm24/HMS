@@ -59,7 +59,6 @@
         <% if (isAdmin) { %>
             <a class="<%= activePath(uri, "/admin/users") ? "active" : "" %>" href="<%= cp %>/admin/users"><span>US</span>Người dùng</a>
             <a class="<%= activePath(uri, "/admin/roles") ? "active" : "" %>" href="<%= cp %>/admin/roles"><span>RL</span>Vai trò và quyền</a>
-            <a class="<%= activePath(uri, "/admin/invoices") ? "active" : "" %>" href="<%= cp %>/admin/invoices"><span>IV</span>Hóa đơn</a>
             <a class="<%= activePath(uri, "/admin/system-config") ? "active" : "" %>" href="<%= cp %>/admin/system-config"><span>CF</span>Cấu hình</a>
             <a class="<%= activePath(uri, "/admin/logs") ? "active" : "" %>" href="<%= cp %>/admin/logs"><span>LG</span>Nhật ký</a>
         <% } %>

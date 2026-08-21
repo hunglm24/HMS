@@ -59,15 +59,10 @@
     String role = indexBeanString(currentUser, "getRoleName");
     boolean internal = currentUser != null && !"CUSTOMER".equalsIgnoreCase(role);
 
-    java.util.List<model.News> latestNews = java.util.Collections.emptyList();
-    java.util.List<model.RoomType> publicRoomTypes = java.util.Collections.emptyList();
     java.util.List<model.RoomType> featuredRoomTypes = java.util.Collections.emptyList();
     if (!internal) {
-        dao.NewsDao newsDao = new dao.NewsDao();
         dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
-        latestNews = newsDao.getLatestNews(3);
-        publicRoomTypes = roomTypeDao.findActive();
-        featuredRoomTypes = roomTypeDao.findActive(2);
+        featuredRoomTypes = roomTypeDao.findActive();
     }
 %>
 <!DOCTYPE html>
@@ -84,32 +79,19 @@
 <main class="public-page">
     <section class="hero-section">
         <div class="hero-content">
-            <p class="hero-kicker">Hệ thống quản lý khách sạn</p>
-            <h1>Đặt phòng nhanh, trải nghiệm khách sạn gọn gàng.</h1>
-            <p>Tìm phòng, xem hạng phòng và quản lý booking cá nhân trong một giao diện đơn giản.</p>
-            <form class="booking-strip" method="get" action="${pageContext.request.contextPath}/search" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
-                <label>Check-in<input type="date" name="checkIn" required></label>
-                <label>Check-out<input type="date" name="checkOut" required></label>
-                <label>Khách<select name="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
-                <label>Loại phòng<select name="roomTypeId">
-                    <option value="">Tất cả</option>
-                    <% for (model.RoomType rt : publicRoomTypes) { %>
-                        <option value="<%= rt.getId() %>"><%= escapeHtml(rt.getName()) %></option>
-                    <% } %>
-                </select></label>
-                <button type="submit">Tìm phòng</button>
-            </form>
+            <h1>TÌM PHÒNG</h1>
+            <p>Khám phá danh sách phòng hiện có và chọn hạng phòng phù hợp cho kỳ nghỉ của bạn.</p>
+            <a class="btn btn-primary" href="${pageContext.request.contextPath}/search">Tìm phòng</a>
         </div>
     </section>
 
     <section class="section-head">
-        <div><p class="section-kicker">Nổi bật</p><h2>Phòng nổi bật</h2></div>
-        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/search">Xem tất cả</a>
+        <div><h2>Danh sách phòng</h2></div>
     </section>
 
     <section class="room-card-grid">
         <% if (featuredRoomTypes.isEmpty()) { %>
-            <p>Hiện chưa có loại phòng nổi bật nào.</p>
+            <p>Hiện chưa có loại phòng nào.</p>
         <% } else { %>
             <% for (model.RoomType roomType : featuredRoomTypes) {
                 String imageUrl = resolveImageSrc(
@@ -143,26 +125,6 @@
         <% } %>
     </section>
 
-    <% if (!latestNews.isEmpty()) { %>
-    <section class="section-head" style="margin-top: 40px;">
-        <div><p class="section-kicker">Tin tức</p><h2>Khuyến mãi &amp; Sự kiện</h2></div>
-        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/news">Xem tất cả</a>
-    </section>
-    <section class="room-card-grid">
-        <% for (model.News n : latestNews) { %>
-        <article class="room-showcase-card">
-            <img src="<%= n.getThumbnailUrl() != null && !n.getThumbnailUrl().isEmpty() ? n.getThumbnailUrl() : "https://via.placeholder.com/900x500?text=News" %>" alt="News Image">
-            <div class="room-showcase-card__body">
-                <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= escapeHtml(n.getTitle()) %></h3>
-                <div class="room-meta" style="margin-top: 8px; color: #666; font-size: 14px;">
-                    <span><%= n.getPublishedAt() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(n.getPublishedAt()) : "" %></span>
-                </div>
-                <a class="btn" href="${pageContext.request.contextPath}/news/detail?id=<%= n.getId() %>" style="margin-top: 16px;">Xem chi tiết</a>
-            </div>
-        </article>
-        <% } %>
-    </section>
-    <% } %>
 </main>
 <% } else { %>
 <main class="page-container">
