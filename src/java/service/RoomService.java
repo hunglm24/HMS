@@ -112,12 +112,12 @@ public class RoomService {
         // Enforce the shared rules for both create and update flows.
         ValidationUtil.requireTrue(room != null, "Thong tin phong khong hop le.");
 
-        String roomNumber = ValidationUtil.requireText(room.getRoomNumber(), "So phong", 1, 20);
+        String roomNumber = ValidationUtil.requireDigitsText(room.getRoomNumber(), "So phong", 1, 20);
         ValidationUtil.requireTrue(room.getRoomTypeId() > 0, "Vui long chon loai phong.");
 
         Integer floorNumber = room.getFloorNumber();
-        ValidationUtil.requireTrue(floorNumber == null || (floorNumber >= 0 && floorNumber <= 7),
-                "Tang chi duoc trong khoang 0 den 7.");
+        ValidationUtil.requireTrue(floorNumber == null || (floorNumber >= 1 && floorNumber <= 4),
+                "Tang chi duoc trong khoang 1 den 4.");
 
         String description = ValidationUtil.optionalText(room.getDescription(), 500);
         String status = ValidationUtil.optionalStatus(room.getStatus(), STATUSES);
@@ -158,7 +158,7 @@ public class RoomService {
     // Prevent duplicate room numbers within the current dataset.
     public void ensureRoomNumberUnique(String roomNumber, Long excludeId) {
         // Compare room numbers case-insensitively and skip the current row on edit.
-        String normalizedRoomNumber = ValidationUtil.requireText(roomNumber, "So phong", 1, 20);
+        String normalizedRoomNumber = ValidationUtil.requireDigitsText(roomNumber, "So phong", 1, 20);
 
         // Stop as soon as another room already uses the same number.
         boolean duplicated = roomDao.findAll().stream()
