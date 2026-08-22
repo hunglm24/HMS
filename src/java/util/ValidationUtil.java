@@ -44,6 +44,17 @@ public final class ValidationUtil {
         return text;
     }
 
+    // Require a non-empty text value that contains only digits.
+    public static String requireDigitsText(String value, String fieldName, int minLength, int maxLength) {
+        String text = requireText(value, fieldName, minLength, maxLength);
+        for (int i = 0; i < text.length(); i++) {
+            if (!Character.isDigit(text.charAt(i))) {
+                throw new IllegalArgumentException(fieldName + " phai la so nguyen hop le.");
+            }
+        }
+        return text;
+    }
+
     // Allow empty text, but enforce a maximum length when provided.
     public static String optionalText(String value, int maxLength) {
         String text = normalizeText(value);
