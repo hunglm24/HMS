@@ -1,0 +1,289 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6f8fc"/>
+      <stop offset="100%" stop-color="#e8eef7"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8fbff"/>
+    </linearGradient>
+    <style>
+      .title { font: 800 30px Arial, sans-serif; fill: #10203a; }
+      .subtitle { font: 400 16px Arial, sans-serif; fill: #5b6b82; }
+      .section { font: 700 18px Arial, sans-serif; fill: #22324a; }
+      .label { font: 700 13px Arial, sans-serif; fill: #31445f; }
+      .text { font: 400 13px Arial, sans-serif; fill: #5a6a7f; }
+      .roomNum { font: 800 16px Arial, sans-serif; fill: #10203a; }
+      .roomType { font: 700 11px Arial, sans-serif; fill: #5b6b82; letter-spacing: 0.8px; }
+      .roomMeta { font: 400 12px Arial, sans-serif; fill: #5b6b82; }
+      .floorLabel { font: 800 20px Arial, sans-serif; fill: #ffffff; }
+      .floorSub { font: 400 12px Arial, sans-serif; fill: rgba(255,255,255,0.88); }
+      .legendText { font: 600 13px Arial, sans-serif; fill: #42546d; }
+      .small { font: 400 12px Arial, sans-serif; fill: #6b7a90; }
+      .panel { fill: #ffffff; stroke: #d7e0ee; stroke-width: 2; rx: 22; ry: 22; }
+      .softPanel { fill: url(#cardGrad); stroke: #d7e0ee; stroke-width: 2; rx: 18; ry: 18; }
+      .roomBase { stroke: #cfd9e8; stroke-width: 2; rx: 14; ry: 14; }
+      .roomAvail { fill: #eef4ff; }
+      .roomOcc { fill: #fff2e8; }
+      .roomClean { fill: #eefdf5; }
+      .roomMaint { fill: #f5f7fb; }
+      .floorBar1 { fill: #2663eb; rx: 18; ry: 18; }
+      .floorBar2 { fill: #0f9d58; rx: 18; ry: 18; }
+      .floorBar3 { fill: #a855f7; rx: 18; ry: 18; }
+      .floorBar4 { fill: #f59e0b; rx: 18; ry: 18; }
+      .chip { fill: #eef4ff; stroke: #c9d8f7; stroke-width: 1.5; rx: 999; ry: 999; }
+      .chipText { font: 700 12px Arial, sans-serif; fill: #2b5fd9; }
+      .statusAvail { fill: #16a34a; }
+      .statusOcc { fill: #ef4444; }
+      .statusClean { fill: #f59e0b; }
+      .statusMaint { fill: #8b5cf6; }
+      .mutedLine { stroke: #d8e1ef; stroke-width: 2; }
+      .dropdownField { fill: #ffffff; stroke: #cfd9e8; stroke-width: 2; rx: 12; ry: 12; }
+      .dropdownHint { font: 700 11px Arial, sans-serif; fill: #7c8ba0; letter-spacing: 0.5px; }
+      .dropdownValue { font: 700 13px Arial, sans-serif; fill: #21314a; }
+      .btnPrimary { fill: #2563eb; rx: 12; ry: 12; }
+      .btnSecondary { fill: #ffffff; stroke: #cfd9e8; stroke-width: 2; rx: 12; ry: 12; }
+      .btnText { font: 700 13px Arial, sans-serif; fill: #ffffff; }
+      .btnTextDark { font: 700 13px Arial, sans-serif; fill: #2563eb; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="980" fill="url(#bgGrad)"/>
+  <circle cx="1470" cy="110" r="118" fill="#dce8ff" opacity="0.32"/>
+  <circle cx="128" cy="876" r="148" fill="#d8f5e8" opacity="0.24"/>
+
+  <text x="64" y="68" class="title">Sơ đồ phòng theo tầng</text>
+  <text x="64" y="95" class="subtitle">Bố cục gọn hơn, lọc nhanh theo tầng, loại phòng và trạng thái.</text>
+
+  <rect x="64" y="124" width="1472" height="812" class="panel"/>
+
+  <!-- Left column: legend -->
+  <rect x="92" y="154" width="330" height="752" class="softPanel"/>
+  <text x="120" y="196" class="section">Chú thích</text>
+  <text x="120" y="222" class="text">Mỗi màu chấm là một trạng thái phòng. Từng tầng được nhóm thành một dải riêng.</text>
+
+  <rect x="120" y="250" width="274" height="76" class="softPanel"/>
+  <rect x="138" y="268" width="40" height="40" rx="12" class="roomBase roomAvail"/>
+  <circle cx="158" cy="288" r="7" class="statusAvail"/>
+  <text x="196" y="279" class="legendText">Phòng trống</text>
+  <text x="196" y="300" class="small">Sẵn sàng nhận khách</text>
+
+  <rect x="120" y="338" width="274" height="76" class="softPanel"/>
+  <rect x="138" y="356" width="40" height="40" rx="12" class="roomBase roomOcc"/>
+  <circle cx="158" cy="376" r="7" class="statusOcc"/>
+  <text x="196" y="367" class="legendText">Đang ở</text>
+  <text x="196" y="388" class="small">Có khách sử dụng</text>
+
+  <rect x="120" y="426" width="274" height="76" class="softPanel"/>
+  <rect x="138" y="444" width="40" height="40" rx="12" class="roomBase roomClean"/>
+  <circle cx="158" cy="464" r="7" class="statusClean"/>
+  <text x="196" y="455" class="legendText">Đang dọn</text>
+  <text x="196" y="476" class="small">Chưa sẵn sàng bán</text>
+
+  <rect x="120" y="514" width="274" height="76" class="softPanel"/>
+  <rect x="138" y="532" width="40" height="40" rx="12" class="roomBase roomMaint"/>
+  <circle cx="158" cy="552" r="7" class="statusMaint"/>
+  <text x="196" y="543" class="legendText">Bảo trì</text>
+  <text x="196" y="564" class="small">Tạm khóa sử dụng</text>
+
+  <text x="120" y="632" class="section">Quy ước tầng</text>
+  <text x="120" y="658" class="text">Tầng 1: Standard</text>
+  <text x="120" y="681" class="text">Tầng 2: Twin / Deluxe</text>
+  <text x="120" y="704" class="text">Tầng 3: Suite / Family</text>
+  <text x="120" y="727" class="text">Tầng 4: Premium / VIP</text>
+
+  <text x="120" y="782" class="section">Gợi ý</text>
+  <text x="120" y="808" class="text">Bộ lọc ở khung bên phải có thể đổi theo tầng, loại phòng và trạng thái.</text>
+  <text x="120" y="831" class="text">Các phòng sẽ xếp theo hàng ngang để tránh chồng nhau.</text>
+
+  <!-- Right column -->
+  <rect x="446" y="154" width="1078" height="752" class="softPanel"/>
+  <text x="476" y="196" class="section">Khu vực sơ đồ</text>
+  <text x="476" y="222" class="text">Mỗi hàng là một tầng. Dropdown giúp lọc nhanh theo điều kiện cần xem.</text>
+
+  <rect x="1190" y="172" width="130" height="34" class="chip"/>
+  <text x="1255" y="194" text-anchor="middle" class="chipText">Đang xem: 4 tầng</text>
+  <rect x="1330" y="172" width="160" height="34" class="chip"/>
+  <text x="1410" y="194" text-anchor="middle" class="chipText">Tổng: 16 phòng</text>
+
+  <!-- Filter row -->
+  <rect x="476" y="246" width="1018" height="74" class="softPanel"/>
+  <text x="500" y="272" class="label">Bộ lọc nhanh</text>
+
+  <text x="500" y="296" class="dropdownHint">Tầng</text>
+  <rect x="500" y="302" width="208" height="28" class="dropdownField"/>
+  <text x="516" y="321" class="dropdownValue">Tất cả tầng</text>
+  <polygon points="688,311 698,311 693,318" fill="#7c8ba0"/>
+
+  <text x="728" y="296" class="dropdownHint">Loại phòng</text>
+  <rect x="728" y="302" width="240" height="28" class="dropdownField"/>
+  <text x="744" y="321" class="dropdownValue">Tất cả loại</text>
+  <polygon points="946,311 956,311 951,318" fill="#7c8ba0"/>
+
+  <text x="988" y="296" class="dropdownHint">Trạng thái</text>
+  <rect x="988" y="302" width="252" height="28" class="dropdownField"/>
+  <text x="1004" y="321" class="dropdownValue">Tất cả trạng thái</text>
+  <polygon points="1220,311 1230,311 1225,318" fill="#7c8ba0"/>
+
+  <rect x="1260" y="302" width="102" height="28" class="btnPrimary"/>
+  <text x="1311" y="321" text-anchor="middle" class="btnText">Áp dụng</text>
+  <rect x="1374" y="302" width="88" height="28" class="btnSecondary"/>
+  <text x="1418" y="321" text-anchor="middle" class="btnTextDark">Xóa</text>
+
+  <!-- Floor rows -->
+  <g>
+    <rect x="476" y="342" width="1018" height="122" class="softPanel"/>
+    <rect x="496" y="360" width="146" height="86" class="floorBar1"/>
+    <text x="569" y="392" text-anchor="middle" class="floorLabel">TẦNG 1</text>
+    <text x="569" y="413" text-anchor="middle" class="floorSub">Standard</text>
+    <text x="569" y="432" text-anchor="middle" class="floorSub">4 phòng</text>
+
+    <rect x="666" y="360" width="150" height="86" class="roomBase roomAvail"/>
+    <text x="682" y="388" class="roomNum">101</text>
+    <text x="682" y="409" class="roomType">STANDARD</text>
+    <text x="682" y="433" class="roomMeta">Trống</text>
+    <circle cx="796" cy="384" r="7" class="statusAvail"/>
+
+    <rect x="834" y="360" width="150" height="86" class="roomBase roomOcc"/>
+    <text x="850" y="388" class="roomNum">102</text>
+    <text x="850" y="409" class="roomType">STANDARD</text>
+    <text x="850" y="433" class="roomMeta">Đang ở</text>
+    <circle cx="964" cy="384" r="7" class="statusOcc"/>
+
+    <rect x="1002" y="360" width="150" height="86" class="roomBase roomAvail"/>
+    <text x="1018" y="388" class="roomNum">103</text>
+    <text x="1018" y="409" class="roomType">STANDARD</text>
+    <text x="1018" y="433" class="roomMeta">Trống</text>
+    <circle cx="1132" cy="384" r="7" class="statusAvail"/>
+
+    <rect x="1170" y="360" width="150" height="86" class="roomBase roomAvail"/>
+    <text x="1186" y="388" class="roomNum">104</text>
+    <text x="1186" y="409" class="roomType">STANDARD</text>
+    <text x="1186" y="433" class="roomMeta">Trống</text>
+    <circle cx="1300" cy="384" r="7" class="statusAvail"/>
+
+    <rect x="1338" y="360" width="136" height="86" class="roomBase roomMaint"/>
+    <text x="1354" y="388" class="roomNum">105</text>
+    <text x="1354" y="409" class="roomType">STD</text>
+    <text x="1354" y="433" class="roomMeta">Bảo trì</text>
+    <circle cx="1456" cy="384" r="7" class="statusMaint"/>
+  </g>
+
+  <g>
+    <rect x="476" y="478" width="1018" height="122" class="softPanel"/>
+    <rect x="496" y="496" width="146" height="86" class="floorBar2"/>
+    <text x="569" y="528" text-anchor="middle" class="floorLabel">TẦNG 2</text>
+    <text x="569" y="549" text-anchor="middle" class="floorSub">Twin / Deluxe</text>
+    <text x="569" y="568" text-anchor="middle" class="floorSub">4 phòng</text>
+
+    <rect x="666" y="496" width="150" height="86" class="roomBase roomClean"/>
+    <text x="682" y="524" class="roomNum">201</text>
+    <text x="682" y="545" class="roomType">TWIN</text>
+    <text x="682" y="569" class="roomMeta">Trống</text>
+    <circle cx="796" cy="520" r="7" class="statusAvail"/>
+
+    <rect x="834" y="496" width="150" height="86" class="roomBase roomOcc"/>
+    <text x="850" y="524" class="roomNum">202</text>
+    <text x="850" y="545" class="roomType">DELUXE</text>
+    <text x="850" y="569" class="roomMeta">Đang ở</text>
+    <circle cx="964" cy="520" r="7" class="statusOcc"/>
+
+    <rect x="1002" y="496" width="150" height="86" class="roomBase roomClean"/>
+    <text x="1018" y="524" class="roomNum">203</text>
+    <text x="1018" y="545" class="roomType">DELUXE</text>
+    <text x="1018" y="569" class="roomMeta">Trống</text>
+    <circle cx="1132" cy="520" r="7" class="statusAvail"/>
+
+    <rect x="1170" y="496" width="150" height="86" class="roomBase roomClean"/>
+    <text x="1186" y="524" class="roomNum">204</text>
+    <text x="1186" y="545" class="roomType">TWIN</text>
+    <text x="1186" y="569" class="roomMeta">Trống</text>
+    <circle cx="1300" cy="520" r="7" class="statusAvail"/>
+
+    <rect x="1338" y="496" width="136" height="86" class="roomBase roomMaint"/>
+    <text x="1354" y="524" class="roomNum">205</text>
+    <text x="1354" y="545" class="roomType">VIP</text>
+    <text x="1354" y="569" class="roomMeta">Dọn</text>
+    <circle cx="1456" cy="520" r="7" class="statusClean"/>
+  </g>
+
+  <g>
+    <rect x="476" y="614" width="1018" height="122" class="softPanel"/>
+    <rect x="496" y="632" width="146" height="86" class="floorBar3"/>
+    <text x="569" y="664" text-anchor="middle" class="floorLabel">TẦNG 3</text>
+    <text x="569" y="685" text-anchor="middle" class="floorSub">Suite / Family</text>
+    <text x="569" y="704" text-anchor="middle" class="floorSub">4 phòng</text>
+
+    <rect x="666" y="632" width="150" height="86" class="roomBase roomAvail"/>
+    <text x="682" y="660" class="roomNum">301</text>
+    <text x="682" y="681" class="roomType">SUITE</text>
+    <text x="682" y="705" class="roomMeta">Trống</text>
+    <circle cx="796" cy="656" r="7" class="statusAvail"/>
+
+    <rect x="834" y="632" width="150" height="86" class="roomBase roomOcc"/>
+    <text x="850" y="660" class="roomNum">302</text>
+    <text x="850" y="681" class="roomType">SUITE</text>
+    <text x="850" y="705" class="roomMeta">Đang ở</text>
+    <circle cx="964" cy="656" r="7" class="statusOcc"/>
+
+    <rect x="1002" y="632" width="150" height="86" class="roomBase roomAvail"/>
+    <text x="1018" y="660" class="roomNum">303</text>
+    <text x="1018" y="681" class="roomType">FAMILY</text>
+    <text x="1018" y="705" class="roomMeta">Trống</text>
+    <circle cx="1132" cy="656" r="7" class="statusAvail"/>
+
+    <rect x="1170" y="632" width="150" height="86" class="roomBase roomAvail"/>
+    <text x="1186" y="660" class="roomNum">304</text>
+    <text x="1186" y="681" class="roomType">FAMILY</text>
+    <text x="1186" y="705" class="roomMeta">Trống</text>
+    <circle cx="1300" cy="656" r="7" class="statusAvail"/>
+
+    <rect x="1338" y="632" width="136" height="86" class="roomBase roomAvail"/>
+    <text x="1354" y="660" class="roomNum">305</text>
+    <text x="1354" y="681" class="roomType">FAMILY</text>
+    <text x="1354" y="705" class="roomMeta">Trống</text>
+    <circle cx="1456" cy="656" r="7" class="statusAvail"/>
+  </g>
+
+  <g>
+    <rect x="476" y="750" width="1018" height="122" class="softPanel"/>
+    <rect x="496" y="768" width="146" height="86" class="floorBar4"/>
+    <text x="569" y="800" text-anchor="middle" class="floorLabel">TẦNG 4</text>
+    <text x="569" y="821" text-anchor="middle" class="floorSub">Premium / VIP</text>
+    <text x="569" y="840" text-anchor="middle" class="floorSub">4 phòng</text>
+
+    <rect x="666" y="768" width="150" height="86" class="roomBase roomMaint"/>
+    <text x="682" y="796" class="roomNum">401</text>
+    <text x="682" y="817" class="roomType">PREMIUM</text>
+    <text x="682" y="841" class="roomMeta">Bảo trì</text>
+    <circle cx="796" cy="792" r="7" class="statusMaint"/>
+
+    <rect x="834" y="768" width="150" height="86" class="roomBase roomAvail"/>
+    <text x="850" y="796" class="roomNum">402</text>
+    <text x="850" y="817" class="roomType">VIP</text>
+    <text x="850" y="841" class="roomMeta">Trống</text>
+    <circle cx="964" cy="792" r="7" class="statusAvail"/>
+
+    <rect x="1002" y="768" width="150" height="86" class="roomBase roomOcc"/>
+    <text x="1018" y="796" class="roomNum">403</text>
+    <text x="1018" y="817" class="roomType">VIP</text>
+    <text x="1018" y="841" class="roomMeta">Đang ở</text>
+    <circle cx="1132" cy="792" r="7" class="statusOcc"/>
+
+    <rect x="1170" y="768" width="150" height="86" class="roomBase roomAvail"/>
+    <text x="1186" y="796" class="roomNum">404</text>
+    <text x="1186" y="817" class="roomType">PENTHOUSE</text>
+    <text x="1186" y="841" class="roomMeta">Trống</text>
+    <circle cx="1300" cy="792" r="7" class="statusAvail"/>
+
+    <rect x="1338" y="768" width="136" height="86" class="roomBase roomAvail"/>
+    <text x="1354" y="796" class="roomNum">405</text>
+    <text x="1354" y="817" class="roomType">VIP</text>
+    <text x="1354" y="841" class="roomMeta">Trống</text>
+    <circle cx="1456" cy="792" r="7" class="statusAvail"/>
+  </g>
+
+  <line x1="92" y1="924" x2="1510" y2="924" class="mutedLine"/>
+  <text x="92" y="954" class="small">SVG wireframe: sơ đồ phòng theo tầng, có bộ lọc theo tầng, loại phòng và trạng thái.</text>
+</svg>

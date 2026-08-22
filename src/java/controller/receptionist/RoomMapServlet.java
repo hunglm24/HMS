@@ -1,6 +1,7 @@
 package controller.receptionist;
 
 import dao.RoomDao;
+import dao.RoomTypeDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,11 +21,13 @@ public class RoomMapServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private RoomDao roomDao;
+    private RoomTypeDao roomTypeDao;
 
     @Override
     public void init() throws ServletException {
         // Create the DAO once when the servlet is initialized.
         roomDao = new RoomDao();
+        roomTypeDao = new RoomTypeDao();
     }
 
     @Override
@@ -137,6 +140,7 @@ public class RoomMapServlet extends HttpServlet {
         request.setAttribute("maintenanceCount", maintenance);
         
         request.setAttribute("totalCount", totalActiveRooms);
+        request.setAttribute("roomTypeOptions", roomTypeDao.findActive());
         request.setAttribute("floorOptions", roomDao.getDistinctFloors());
         request.setAttribute("maxFloor", roomDao.getMaxFloor());
         request.setAttribute("currentSearch", request.getParameter("search"));
