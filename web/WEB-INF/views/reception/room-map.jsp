@@ -33,6 +33,7 @@
                     <div class="stat-badge stat-available">Trống: ${availableCount}</div>
                     <div class="stat-badge stat-occupied">Đang có khách: ${occupiedCount}</div>
                     <div class="stat-badge stat-reserved" style="background:#ffc107; color:#000;">Đã đặt trước: ${reservedCount}</div>
+                    <div class="stat-badge stat-inspection" style="background:#8b5cf6; color:#fff;">Đang kiểm tra: ${inspectionCount}</div>
                     <div class="stat-badge stat-cleaning">Đang dọn: ${cleaningCount}</div>
                     <div class="stat-badge stat-maintenance">Bảo trì: ${maintenanceCount}</div>
                     <div class="stat-badge">Tổng: ${totalCount}</div>
@@ -53,6 +54,7 @@
                     <option value="">Tất cả trạng thái</option>
                     <option value="AVAILABLE" ${param.status == 'AVAILABLE' ? 'selected' : ''}>Trống</option>
                     <option value="OCCUPIED" ${param.status == 'OCCUPIED' ? 'selected' : ''}>Đang có khách</option>
+                    <option value="INSPECTION" ${param.status == 'INSPECTION' ? 'selected' : ''}>Đang kiểm tra</option>
                     <option value="CLEANING" ${param.status == 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
                     <option value="MAINTENANCE" ${param.status == 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
                 </select>

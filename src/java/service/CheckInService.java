@@ -13,8 +13,8 @@ import java.util.Set;
 public class CheckInService {
     public static final int PAGE_SIZE = 8;
     private static final Set<String> BOOKING_STATUSES = Set.of(
-            "Pending", "Confirmed", "CheckedIn", "Cancelled");
-    private static final Set<String> SCOPES = Set.of("today", "upcoming", "overdue", "all", "checkout_today", "checkout_upcoming", "checkout_overdue");
+            "Pending", "Confirmed", "CheckedIn", "CheckoutPending", "CheckedOut", "Cancelled");
+    private static final Set<String> SCOPES = Set.of("today", "upcoming", "overdue", "all", "checkout_today", "checkout_upcoming", "checkout_overdue", "checkout_pending");
     private static final Map<String, String> SORT_COLUMNS = Map.of(
             "created", "b.created_at",
             "checkIn", "b.check_in_date",
