@@ -8,8 +8,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Role;
+import model.User;
 import service.AuditLogService;
-import util.PasswordUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Locale;
 
 @WebServlet(urlPatterns = {
-        "/admin/users", "/admin/users/save", "/admin/users/status",
-        "/admin/users/password", "/admin/users/delete"
+        "/admin/users", "/admin/users/edit", "/admin/users/save", "/admin/users/status",
+        "/admin/users/delete"
 })
 public class UserManagementServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -37,11 +37,11 @@ public class UserManagementServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if (!"/admin/users".equals(request.getServletPath())) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
+        switch (request.getServletPath()) {
+            case "/admin/users" -> loadList(request, response);
+            case "/admin/users/edit" -> loadEditForm(request, response);
+            default -> response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
-        loadList(request, response);
     }
 
     @Override
@@ -51,7 +51,6 @@ public class UserManagementServlet extends HttpServlet {
             switch (request.getServletPath()) {
                 case "/admin/users/save" -> saveUser(request, response);
                 case "/admin/users/status" -> updateStatus(request, response);
-                case "/admin/users/password" -> resetPassword(request, response);
                 case "/admin/users/delete" -> deleteUser(request, response);
                 default -> response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -97,6 +96,24 @@ public class UserManagementServlet extends HttpServlet {
         }
     }
 
+    private void loadEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            long id = parseLong(request.getParameter("id"), "Invalid user");
+            User user = userDao.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            request.setAttribute("editUser", user);
+            request.setAttribute("roles", roleDao.findAll());
+            request.getRequestDispatcher("/WEB-INF/views/admin/user-edit.jsp").forward(request, response);
+        } catch (IllegalArgumentException ex) {
+            flash(request, ex.getMessage(), "error");
+            response.sendRedirect(request.getContextPath() + "/admin/users");
+        } catch (SQLException ex) {
+            getServletContext().log("Cannot load admin user edit form", ex);
+            throw new ServletException("Cannot load user edit form", ex);
+        }
+    }
+
     private void saveUser(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
         String idValue = request.getParameter("id");
@@ -107,15 +124,19 @@ public class UserManagementServlet extends HttpServlet {
         String status = required(request, "status");
 
         if (idValue == null || idValue.isBlank()) {
-            String password = required(request, "password");
-            if (password.length() < 8) {
-                throw new IllegalArgumentException("Password must be at least 8 characters.");
-            }
-            long id = userDao.createAccount(fullName, email, phone, roleId, status, PasswordUtil.hash(password));
-            auditLogService.log(request, "CREATE_USER", "ACCOUNT", id, "Created account " + email);
-            flash(request, "User account created.", "success");
+            throw new IllegalArgumentException("Create user is disabled.");
         } else {
             long id = parseLong(idValue, "Invalid user");
+            User existing = userDao.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            Role selectedRole = roleDao.findById(roleId);
+            if (selectedRole == null) {
+                throw new IllegalArgumentException("Invalid role");
+            }
+            if ("ADMIN".equalsIgnoreCase(selectedRole.getName())
+                    && !"ADMIN".equalsIgnoreCase(existing.getRoleName())) {
+                throw new IllegalArgumentException("ADMIN role cannot be assigned.");
+            }
             userDao.updateAccount(id, fullName, email, phone, roleId, status);
             auditLogService.log(request, "UPDATE_USER", "ACCOUNT", id, "Updated account " + email);
             flash(request, "User account updated.", "success");
@@ -130,19 +151,6 @@ public class UserManagementServlet extends HttpServlet {
         userDao.updateStatus(id, status);
         auditLogService.log(request, "UPDATE_USER_STATUS", "ACCOUNT", id, "Status changed to " + status);
         flash(request, "User status updated.", "success");
-        response.sendRedirect(request.getContextPath() + "/admin/users");
-    }
-
-    private void resetPassword(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException {
-        long id = parseLong(request.getParameter("id"), "Invalid user");
-        String password = required(request, "password");
-        if (password.length() < 8) {
-            throw new IllegalArgumentException("Password must be at least 8 characters.");
-        }
-        userDao.updatePassword(id, PasswordUtil.hash(password));
-        auditLogService.log(request, "RESET_USER_PASSWORD", "ACCOUNT", id, "Password reset by admin");
-        flash(request, "Password reset.", "success");
         response.sendRedirect(request.getContextPath() + "/admin/users");
     }
 

@@ -36,7 +36,12 @@
         <div>
             <p class="hk-eyebrow"><%= isManager ? "Quản lý khách sạn" : "Vận hành phòng" %> · Mã công việc #<%= task.getTaskId() %></p>
             <h1>Phòng <%= HousekeepingTask.esc(task.getRoomNumber()) %></h1>
-            <p><%= HousekeepingTask.esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %> · Người phụ trách: <strong><%= task.getAssignedStaffName() != null ? HousekeepingTask.esc(task.getAssignedStaffName()) : "Chưa phân công" %></strong></p>
+            <p>
+                <%= HousekeepingTask.esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %> · Người phụ trách: <strong><%= task.getAssignedStaffName() != null ? HousekeepingTask.esc(task.getAssignedStaffName()) : "Chưa phân công" %></strong>
+                <% if (task.getCreatedAt() != null) { %>
+                · Thời gian: <strong><%= task.getFormattedCreatedAt() %></strong>
+                <% } %>
+            </p>
         </div>
         <span class="hk-badge task-<%= task.getStatus().toLowerCase() %>"><%= task.getStatusLabel() %></span>
     </section>
@@ -50,7 +55,7 @@
             </div>
         </div>
 
-        <% if (task.getNote() != null && !task.getNote().isBlank()) { %>
+        <% if (task.getNote() != null && !task.getNote().isBlank() && !"Kiểm tra phòng sau checkout".equalsIgnoreCase(task.getNote().trim()) && !"Kiểm tra phòng".equalsIgnoreCase(task.getNote().trim())) { %>
         <div class="hk-manager-note-box" style="margin: 0 0 20px 0; padding: 16px 20px; background: #fffbe6; border: 1.5px solid #ffe58f; border-left: 5px solid #faad14; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                 <span style="font-size: 18px;">📌</span>
@@ -96,7 +101,7 @@
             <p>Kiểm tra lần lượt từng thiết bị trước khi xác nhận hoàn tất.</p></div>
             <span><%= equipment == null ? 0 : equipment.size() %> thiết bị</span></div>
 
-        <% if (task.getNote() != null && !task.getNote().isBlank()) { %>
+        <% if (task.getNote() != null && !task.getNote().isBlank() && !"Kiểm tra phòng sau checkout".equalsIgnoreCase(task.getNote().trim()) && !"Kiểm tra phòng".equalsIgnoreCase(task.getNote().trim())) { %>
         <div class="hk-manager-note-box" style="margin: 0 0 20px 0; padding: 16px 20px; background: #fffbe6; border: 1.5px solid #ffe58f; border-left: 5px solid #faad14; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                 <span style="font-size: 18px;">📌</span>
@@ -162,7 +167,7 @@
         <div class="hk-section-heading">
             <div>
                 <h2>Những việc cần làm</h2>
-                <p><%= history || isManager ? "Danh sách các đầu việc và tiến độ dọn phòng." : "Đánh dấu lần lượt các đầu việc sau khi hoàn tất để tự động lưu tiến độ." %></p>
+                <p><%= history || isManager ? "Danh sách các đầu việc và tiến độ dọn phòng." : (pending ? "Danh sách các đầu việc cần thực hiện. Bấm 'Bắt đầu dọn phòng' để tiến hành ghi nhận." : "Đánh dấu lần lượt các đầu việc sau khi hoàn tất để tự động lưu tiến độ.") %></p>
             </div>
             <% if (!history && !pending && !isManager) { %>
                 <span id="save-status" class="hk-save-status">✓ Tiến độ tự động lưu</span>
@@ -205,13 +210,22 @@
                 <% } %>
             </div>
         <% } else if (pending) { %>
-            <ol class="hk-work-list">
-                <% if (workItems != null && !workItems.isEmpty()) for (HousekeepingTask.WorkItem item : workItems) { %>
-                    <li><span aria-hidden="true">✓</span><strong><%= HousekeepingTask.esc(item.getName()) %></strong></li>
-                <% } else { %>
-                    <li><span aria-hidden="true">✓</span><strong>Dọn vệ sinh tổng quát và kiểm tra lại phòng</strong></li>
+            <div class="hk-checklist-group">
+                <% if (workItems != null && !workItems.isEmpty()) { 
+                    for (HousekeepingTask.WorkItem item : workItems) { 
+                %>
+                    <div class="hk-checklist-item" style="cursor: default;">
+                        <input type="checkbox" disabled style="width: 18px; height: 18px; margin: 0; cursor: default;">
+                        <span class="hk-check-text"><%= HousekeepingTask.esc(item.getName()) %></span>
+                    </div>
+                <%  } 
+                   } else { %>
+                    <div class="hk-checklist-item" style="cursor: default;">
+                        <input type="checkbox" disabled style="width: 18px; height: 18px; margin: 0; cursor: default;">
+                        <span class="hk-check-text">Dọn vệ sinh tổng quát và kiểm tra lại phòng</span>
+                    </div>
                 <% } %>
-            </ol>
+            </div>
         <% } else { %>
             <div class="hk-checklist-group" id="cleaning-checklist">
                 <% if (workItems != null && !workItems.isEmpty()) { 
@@ -251,8 +265,8 @@
         </form>
         <% } else { %>
             <div class="hk-history-meta" style="margin-top: 20px;">
-                <span>Bắt đầu: <strong><%= task.getStartedAt() == null ? "--" : task.getStartedAt() %></strong></span>
-                <span>Hoàn thành: <strong><%= task.getCompletedAt() == null ? "--" : task.getCompletedAt() %></strong></span>
+                <span>Bắt đầu: <strong><%= task.getFormattedStartedAt() %></strong></span>
+                <span>Hoàn thành: <strong><%= task.getFormattedCompletedAt() %></strong></span>
             </div>
             <div class="hk-form-actions" style="margin-top: 20px;">
                 <a href="<%= backUrl %>">Quay lại danh sách</a>

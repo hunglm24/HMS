@@ -9,7 +9,9 @@ public final class MoneyUtil {
 
     // Parse a VND-formatted money string into a positive BigDecimal.
     public static BigDecimal parseVndMoney(String raw, String fieldLabel) {
-        String normalized = ValidationUtil.normalizeText(raw).replaceAll("[^0-9]", "");
+        String text = ValidationUtil.normalizeText(raw);
+        ValidationUtil.requireTrue(!text.contains("-"), fieldLabel + " khong duoc am.");
+        String normalized = text.replaceAll("[^0-9]", "");
         ValidationUtil.requireTrue(!normalized.isEmpty(), fieldLabel + " bat buoc.");
         BigDecimal value = new BigDecimal(normalized);
         ValidationUtil.requireTrue(value.signum() > 0, fieldLabel + " phai lon hon 0.");

@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(urlPatterns = {"/manager/invoices", "/admin/invoices"})
+@WebServlet(urlPatterns = {"/manager/invoices"})
 public class InvoiceListServlet extends HttpServlet {
 
     private final InvoiceDao invoiceDao = new InvoiceDao();

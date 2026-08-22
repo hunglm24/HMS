@@ -25,7 +25,7 @@ public class HousekeepingService {
     private static final String NOTE_START = "[INSPECTION_NOTE]";
     private static final Map<String, String> SORTS = Map.of(
             "room", "rm.room_number", "roomType", "rt.name", "floor", "rm.floor_number",
-            "taskType", "ht.task_type", "status", "ht.status", "created", "ht.created_at", "assigned_to", "COALESCE(a.full_name, '')");
+            "taskType", "ht.task_type", "status", "ht.status", "created", "ht.created_at", "time", "ht.created_at", "assigned_to", "COALESCE(a.full_name, '')");
     private static final Map<String, String> CLEANING_CHECKLIST;
     static {
         Map<String, String> items = new LinkedHashMap<>();
@@ -105,7 +105,7 @@ public class HousekeepingService {
             if (check.getConditionStatus() == null || !CONDITIONS.contains(check.getConditionStatus())) {
                 throw new IllegalArgumentException("Trạng thái thiết bị không hợp lệ");
             }
-            if (check.getQuantity() <= 0) throw new IllegalArgumentException("Số lượng thiết bị không hợp lệ");
+            if (check.getQuantity() <= 0) { check.setQuantity(1); }
             BigDecimal fee = check.getDamageFee();
             if (fee == null || fee.signum() < 0 || fee.compareTo(MAX_DAMAGE_FEE) > 0)
                 throw new IllegalArgumentException("Phí bồi thường phải từ 0 đến 15.000.000 VND");
@@ -232,7 +232,7 @@ public class HousekeepingService {
         return note.trim();
     }
 
-    private String buildCleaningNote(List<String> selectedItems, String customTasks, String message) {
+        private String buildCleaningNote(List<String> selectedItems, String customTasks, String message) {
         List<String> labels = new ArrayList<>();
         if (selectedItems != null) {
             for (String key : selectedItems) {
@@ -251,7 +251,12 @@ public class HousekeepingService {
                 }
             }
         }
-        if (labels.isEmpty()) labels.add("Dọn vệ sinh tổng quát và kiểm tra lại phòng");
+        if (labels.isEmpty() && (message == null || message.isBlank())) {
+            return null; // Không có yêu cầu dọn phòng nào được chọn
+        }
+        if (labels.isEmpty()) {
+            return message;
+        }
         StringBuilder result = new StringBuilder(TASKS_START).append('\n');
         for (String label : labels) result.append("[ ] ").append(label).append('\n');
         result.append(TASKS_END);
@@ -260,8 +265,7 @@ public class HousekeepingService {
         }
         return result.toString();
     }
-
-    public void completeCleaning(long taskId, long staffId) throws SQLException {
+public void completeCleaning(long taskId, long staffId) throws SQLException {
         Optional<HousekeepingTask> taskOpt = dao.findById(taskId, staffId, true);
         if (taskOpt.isPresent()) {
             HousekeepingTask task = taskOpt.get();
@@ -320,11 +324,10 @@ public class HousekeepingService {
             }
             combinedNote = sb.toString();
         } else {
-            combinedNote = note != null ? note.trim() : "";
-            if (combinedNote.isBlank()) combinedNote = "Kiểm tra phòng sau checkout";
+            combinedNote = (note != null && !note.isBlank()) ? note.trim() : null;
         }
         
-        dao.createManualTask(roomId, taskType, assignedTo, priority, trim(combinedNote, 2000));
+        dao.createManualTask(roomId, taskType, assignedTo, priority, combinedNote != null ? trim(combinedNote, 2000) : null);
     }
 
     public void createManualTask(long roomId, String taskType, Long assignedTo, String priority, String note) throws SQLException {

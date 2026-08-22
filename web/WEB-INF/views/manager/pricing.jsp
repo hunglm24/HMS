@@ -2,13 +2,17 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <c:set var="cp" value="${pageContext.request.contextPath}" />
+<c:set var="toastMessage" value="${sessionScope.toastMessage}" />
+<c:set var="toastType" value="${sessionScope.toastType}" />
+<c:remove var="toastMessage" scope="session" />
+<c:remove var="toastType" scope="session" />
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Quản lý giá và mã giảm giá | HMS</title>
-    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260819-2">
+    <title>Tạo mã giảm giá | HMS</title>
+    <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260821-1">
     <style>
         .manager-content { min-width: 0; background: #f6f8fb; }
         .manager-section { background: #fff; border: 1px solid #d9e0ea; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
@@ -28,6 +32,9 @@
         .hint { color: #667085; font-size: .85rem; }
         .status-active { color: #067647; font-weight: 800; }
         .status-inactive { color: #b42318; font-weight: 800; }
+        .toast-success, .toast-error { margin-bottom: 14px; padding: 10px 12px; border-radius: 8px; border: 1px solid; }
+        .toast-success { background: #f0fdf4; border-color: #86efac; color: #166534; }
+        .toast-error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
         @media (max-width: 1100px) {
             .manager-form, .inline-form { grid-template-columns: 1fr 1fr; }
             .manager-form .span-4, .manager-form .span-2 { grid-column: 1 / -1; }
@@ -44,27 +51,30 @@
     <section class="section-head">
         <div>
             <p class="section-kicker">Manager</p>
-            <h1>Giá và mã giảm giá</h1>
-            <p>Thiết lập giai đoạn giá theo mùa/ngày lễ và tạo mã giảm giá cho khách nhập khi đặt phòng.</p>
+            <h1>Tạo mã giảm giá</h1>
+            <p>Quản lý mã giảm giá cho khách nhập khi đặt phòng.</p>
         </div>
     </section>
 
     <section class="manager-section">
+        <c:if test="${not empty toastMessage}">
+            <div class="${toastType}"><c:out value="${toastMessage}" /></div>
+        </c:if>
         <div class="section-title">
             <h2>Mã giảm giá</h2>
-            <p>Manager tạo mã. Khách biết mã có thể nhập ở giỏ phòng để được giảm theo mức đã cấu hình.</p>
+            <p>Mức giảm theo phần trăm không vượt quá 100%. Mức giảm theo số tiền không được âm.</p>
         </div>
         <form class="manager-form" method="post" action="${cp}/manager/pricing/promotion/save">
             <label>Mã giảm giá<input name="code" maxlength="50" placeholder="VD: SUMMER20" required></label>
             <label>Tên mã<input name="name" maxlength="150" placeholder="Giảm giá mùa hè" required></label>
             <label>Loại giảm
-                <select name="discountType">
+                <select name="discountType" data-discount-type>
                     <option value="PERCENT">Phần trăm (%)</option>
                     <option value="FIXED_AMOUNT">Số tiền cố định</option>
                 </select>
             </label>
-            <label>Mức giảm<input name="discountValue" inputmode="numeric" placeholder="20 hoặc 200000" required></label>
-            <label>Đơn tối thiểu<input name="minBookingAmount" inputmode="numeric" placeholder="VD: 1000000"></label>
+            <label>Mức giảm<input name="discountValue" type="number" min="0" max="100" step="1" placeholder="20 hoặc 200000" data-discount-value required></label>
+            <label>Đơn tối thiểu<input name="minBookingAmount" type="number" min="0" step="1" placeholder="VD: 1000000"></label>
             <label>Bắt đầu<input type="datetime-local" name="startDate" required></label>
             <label>Kết thúc<input type="datetime-local" name="endDate" required></label>
             <label>Số lượt dùng<input type="number" min="0" name="usageLimit" placeholder="Bỏ trống nếu không giới hạn"></label>
@@ -94,15 +104,14 @@
                             <input type="hidden" name="id" value="${promo.id}">
                             <input name="code" value="${promo.code}" required>
                             <input name="name" value="${promo.name}" required>
-                            <select name="discountType"><option value="PERCENT" ${promo.discountType eq 'PERCENT' ? 'selected' : ''}>%</option><option value="FIXED_AMOUNT" ${promo.discountType eq 'FIXED_AMOUNT' ? 'selected' : ''}>VND</option></select>
-                            <input name="discountValue" value="${promo.discountValue}" required>
-                            <input name="minBookingAmount" value="${promo.minBookingAmount}" placeholder="Tối thiểu">
+                            <select name="discountType" data-discount-type><option value="PERCENT" ${promo.discountType eq 'PERCENT' ? 'selected' : ''}>%</option><option value="FIXED_AMOUNT" ${promo.discountType eq 'FIXED_AMOUNT' ? 'selected' : ''}>VND</option></select>
+                            <input name="discountValue" type="number" min="0" step="1" value="${promo.discountValue}" data-discount-value required>
+                            <input name="minBookingAmount" type="number" min="0" step="1" value="${promo.minBookingAmount}" placeholder="Tối thiểu">
                             <input type="datetime-local" name="startDate" value="${promoStart}" required>
                             <input type="datetime-local" name="endDate" value="${promoEnd}" required>
                             <input type="number" min="0" name="usageLimit" value="${promo.usageLimit}" placeholder="Lượt dùng">
                             <select name="status"><option value="ACTIVE" ${promo.status eq 'ACTIVE' ? 'selected' : ''}>Hoạt động</option><option value="INACTIVE" ${promo.status eq 'INACTIVE' ? 'selected' : ''}>Tạm dừng</option></select>
                             <input name="description" value="${promo.description}" placeholder="Mô tả">
-                            <button class="btn btn-secondary" type="submit">Lưu</button>
                         </form>
                         <form method="post" action="${cp}/manager/pricing/promotion/delete" style="margin-top:8px">
                             <input type="hidden" name="id" value="${promo.id}">
@@ -115,73 +124,22 @@
             </tbody>
         </table>
     </section>
-
-    <section class="manager-section">
-        <div class="section-title">
-            <h2>Bảng giá theo mùa/ngày lễ</h2>
-            <p>Loại phòng được lấy trực tiếp từ database. Dùng phần này để khai báo giai đoạn mùa/ngày lễ cho từng loại phòng.</p>
-        </div>
-        <form class="manager-form" method="post" action="${cp}/manager/pricing/rule/save">
-            <label>Loại phòng
-                <select name="roomTypeId" required>
-                    <c:if test="${empty roomTypes}">
-                        <option value="">Không có loại phòng active trong DB</option>
-                    </c:if>
-                    <c:forEach var="roomType" items="${roomTypes}">
-                        <option value="${roomType.id}"><c:out value="${roomType.name}" /></option>
-                    </c:forEach>
-                </select>
-            </label>
-            <label>Tên bảng giá<input name="ruleName" placeholder="Tết, hè, lễ 2/9..." required></label>
-            <label>Loại
-                <select name="ruleType"><option value="SEASON">Mùa</option><option value="HOLIDAY">Ngày lễ</option></select>
-            </label>
-            <label>Trạng thái
-                <select name="status"><option value="ACTIVE">Hoạt động</option><option value="INACTIVE">Tạm dừng</option></select>
-            </label>
-            <label>Bắt đầu<input type="date" name="startDate" required></label>
-            <label>Kết thúc<input type="date" name="endDate" required></label>
-            <button class="btn span-4" type="submit">Thêm bảng giá</button>
-        </form>
-
-        <table class="manager-table">
-            <thead><tr><th>Loại phòng</th><th>Bảng giá</th><th>Thời gian</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead>
-            <tbody>
-            <c:forEach var="rule" items="${priceRules}">
-                <tr>
-                    <td><c:out value="${rule.roomTypeName}" /></td>
-                    <td><strong><c:out value="${rule.ruleName}" /></strong><br><span class="hint"><c:out value="${rule.ruleType}" /></span></td>
-                    <td><c:out value="${rule.startDate}" /> đến <c:out value="${rule.endDate}" /></td>
-                    <td><span class="${rule.status eq 'ACTIVE' ? 'status-active' : 'status-inactive'}"><c:out value="${rule.status}" /></span></td>
-                    <td>
-                        <form class="inline-form" method="post" action="${cp}/manager/pricing/rule/save">
-                            <input type="hidden" name="id" value="${rule.id}">
-                            <select name="roomTypeId">
-                                <c:if test="${empty roomTypes}">
-                                    <option value="">Không có loại phòng active trong DB</option>
-                                </c:if>
-                                <c:forEach var="roomType" items="${roomTypes}">
-                                    <option value="${roomType.id}" ${roomType.id eq rule.roomTypeId ? 'selected' : ''}><c:out value="${roomType.name}" /></option>
-                                </c:forEach>
-                            </select>
-                            <input name="ruleName" value="${rule.ruleName}" required>
-                            <select name="ruleType"><option value="SEASON" ${rule.ruleType eq 'SEASON' ? 'selected' : ''}>Mùa</option><option value="HOLIDAY" ${rule.ruleType eq 'HOLIDAY' ? 'selected' : ''}>Ngày lễ</option></select>
-                            <input type="date" name="startDate" value="${rule.startDate}" required>
-                            <input type="date" name="endDate" value="${rule.endDate}" required>
-                            <select name="status"><option value="ACTIVE" ${rule.status eq 'ACTIVE' ? 'selected' : ''}>Hoạt động</option><option value="INACTIVE" ${rule.status eq 'INACTIVE' ? 'selected' : ''}>Tạm dừng</option></select>
-                            <button class="btn btn-secondary" type="submit">Lưu</button>
-                        </form>
-                        <form method="post" action="${cp}/manager/pricing/rule/delete" style="margin-top:8px">
-                            <input type="hidden" name="id" value="${rule.id}">
-                            <button class="btn btn-secondary" type="submit" onclick="return confirm('Xóa bảng giá này?')">Xóa</button>
-                        </form>
-                    </td>
-                </tr>
-            </c:forEach>
-            <c:if test="${empty priceRules}"><tr><td colspan="5">Chưa có bảng giá mùa/ngày lễ.</td></tr></c:if>
-            </tbody>
-        </table>
-    </section>
 </main>
+<script>
+    document.querySelectorAll('form').forEach((form) => {
+        const type = form.querySelector('[data-discount-type]');
+        const value = form.querySelector('[data-discount-value]');
+        if (!type || !value) return;
+        const sync = () => {
+            if (type.value === 'PERCENT') {
+                value.max = '100';
+            } else {
+                value.removeAttribute('max');
+            }
+        };
+        type.addEventListener('change', sync);
+        sync();
+    });
+</script>
 </body>
 </html>

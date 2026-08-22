@@ -141,6 +141,8 @@ public class RoomMapServlet extends HttpServlet {
         
         request.setAttribute("totalCount", totalActiveRooms);
         request.setAttribute("roomTypeOptions", roomTypeDao.findActive());
+        request.setAttribute("floorOptions", roomDao.getDistinctFloors());
+        request.setAttribute("maxFloor", roomDao.getMaxFloor());
         request.setAttribute("currentSearch", request.getParameter("search"));
         request.setAttribute("currentStatus", (status == null || status.isEmpty()) ? "ALL" : status);
         request.setAttribute("currentFloor", request.getParameter("floor"));

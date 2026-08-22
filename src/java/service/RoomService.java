@@ -192,4 +192,12 @@ public class RoomService {
                 || roomTypeName.contains(keyword)
                 || description.contains(keyword);
     }
+
+    public int getMaxFloor() {
+        return roomDao.getMaxFloor();
+    }
+
+    public List<Integer> getDistinctFloors() {
+        return roomDao.getDistinctFloors();
+    }
 }

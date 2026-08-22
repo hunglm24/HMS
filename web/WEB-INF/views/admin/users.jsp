@@ -10,14 +10,12 @@
         return String.valueOf(value).replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
-    private String js(Object value) {
-        if (value == null) return "";
-        return String.valueOf(value).replace("\\", "\\\\").replace("'", "\\'")
-                .replace("\r", "").replace("\n", "\\n");
-    }
     private String enc(Object value) {
         if (value == null) return "";
         return URLEncoder.encode(String.valueOf(value), StandardCharsets.UTF_8);
+    }
+    private boolean selectableRole(Role role) {
+        return role != null && !"ADMIN".equalsIgnoreCase(role.getName());
     }
 %>
 <%
@@ -58,7 +56,7 @@
         .badge-active { background:#dcfce7; color:#166534; }
         .badge-inactive { background:#f3f4f6; color:#374151; }
         .badge-blocked { background:#fee2e2; color:#991b1b; }
-        .row-actions { display:grid; grid-template-columns:repeat(4, 78px); gap:6px; align-items:center; }
+        .row-actions { display:grid; grid-template-columns:repeat(3, 78px); gap:6px; align-items:center; }
         .inline-form { display:inline; margin:0; }
         .small-button { width:78px; min-height:34px; padding:6px 8px; font-size:12px; border-radius:8px; }
         .admin-panel { margin-top:20px; padding:18px; background:#fff; border:1px solid var(--color-border); border-radius:8px; }
@@ -104,7 +102,9 @@
                 <select class="form-control" id="role" name="role">
                     <option value="">All roles</option>
                     <% if (roles != null) for (Role role : roles) { %>
-                        <option value="<%= h(role.getName()) %>" <%= role.getName().equals(selectedRole) ? "selected" : "" %>><%= h(role.getName()) %></option>
+                        <% if (selectableRole(role)) { %>
+                            <option value="<%= h(role.getName()) %>" <%= role.getName().equals(selectedRole) ? "selected" : "" %>><%= h(role.getName()) %></option>
+                        <% } %>
                     <% } %>
                 </select>
             </div>
@@ -136,14 +136,12 @@
                 <td><%= h(user.getCreatedAt()) %></td>
                 <td>
                     <div class="row-actions">
-                        <button class="button button-secondary small-button" type="button"
-                                onclick="fillUser('<%= user.getUserId() %>','<%= h(js(user.getFullName())) %>','<%= h(js(user.getEmail())) %>','<%= h(js(user.getPhone())) %>','<%= user.getRoleId() %>','<%= h(js(user.getStatus())) %>')">Edit</button>
+                        <a class="button button-secondary small-button" href="${pageContext.request.contextPath}/admin/users/edit?id=<%= user.getUserId() %>">Edit</a>
                         <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/users/status">
                             <input type="hidden" name="id" value="<%= user.getUserId() %>">
                             <input type="hidden" name="status" value="<%= "BLOCKED".equals(user.getStatus()) ? "ACTIVE" : "BLOCKED" %>">
                             <button class="button button-secondary small-button" type="submit"><%= "BLOCKED".equals(user.getStatus()) ? "Unblock" : "Block" %></button>
                         </form>
-                        <button class="button button-secondary small-button" type="button" onclick="fillPassword('<%= user.getUserId() %>')">Password</button>
                         <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/users/delete" onsubmit="return confirm('Delete this account?');">
                             <input type="hidden" name="id" value="<%= user.getUserId() %>">
                             <button class="button button-secondary small-button" type="submit">Delete</button>
@@ -171,77 +169,6 @@
         </div>
     </div>
 
-    <section class="admin-panel">
-        <h2 id="userFormTitle">Create user</h2>
-        <form method="post" action="${pageContext.request.contextPath}/admin/users/save">
-            <input type="hidden" id="userId" name="id">
-            <div class="form-grid">
-                <div><label class="form-label" for="fullName">Full name</label><input class="form-control" id="fullName" name="fullName" required></div>
-                <div><label class="form-label" for="email">Email</label><input class="form-control" id="email" name="email" type="email" required></div>
-                <div><label class="form-label" for="phone">Phone</label><input class="form-control" id="phone" name="phone"></div>
-                <div>
-                    <label class="form-label" for="roleId">Role</label>
-                    <select class="form-control" id="roleId" name="roleId" required>
-                        <% if (roles != null) for (Role role : roles) { %>
-                            <option value="<%= role.getId() %>"><%= h(role.getName()) %></option>
-                        <% } %>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label" for="userStatus">Status</label>
-                    <select class="form-control" id="userStatus" name="status">
-                        <option value="ACTIVE">ACTIVE</option>
-                        <option value="INACTIVE">INACTIVE</option>
-                        <option value="BLOCKED">BLOCKED</option>
-                    </select>
-                </div id="passwordField">
-                <div><label class="form-label" for="password">Password for new user</label><input class="form-control" id="password" name="password" type="password" minlength="8"></div>
-            </div>
-            <div class="form-actions">
-                <button class="button button-secondary" type="button" onclick="resetUserForm()">New</button>
-                <button class="button button-primary" type="submit">Save user</button>
-            </div>
-        </form>
-    </section>
-
-    <section class="admin-panel">
-        <h2>Reset password</h2>
-        <form class="filters" method="post" action="${pageContext.request.contextPath}/admin/users/password">
-            <input type="hidden" id="passwordUserId" name="id">
-            <input class="form-control" id="newPassword" name="password" type="password" minlength="8" placeholder="New password" required>
-            <button class="button button-primary" type="submit">Reset password</button>
-        </form>
-    </section>
 </main>
-<script>
-    function fillUser(id, fullName, email, phone, roleId, status) {
-        document.getElementById('userFormTitle').textContent = 'Edit user #' + id;
-        document.getElementById('userId').value = id;
-        document.getElementById('fullName').value = fullName;
-        document.getElementById('email').value = email;
-        document.getElementById('phone').value = phone;
-        document.getElementById('roleId').value = roleId;
-        document.getElementById('userStatus').value = status;
-        document.getElementById('password').value = '';
-        document.getElementById('password').removeAttribute('required');
-
-    }
-    function resetUserForm() {
-        document.getElementById('userFormTitle').textContent = 'Create user';
-        document.getElementById('userId').value = '';
-        document.getElementById('fullName').value = '';
-        document.getElementById('email').value = '';
-        document.getElementById('phone').value = '';
-        document.getElementById('userStatus').value = 'ACTIVE';
-        document.getElementById('password').setAttribute('required', 'required');
-        document.getElementById('password').value = '';
-        document.getElementById('passwordField').hidden = 'false';
-    }
-    function fillPassword(id) {
-        document.getElementById('passwordUserId').value = id;
-        document.getElementById('newPassword').focus();
-    }
-    resetUserForm();
-</script>
 </body>
 </html>

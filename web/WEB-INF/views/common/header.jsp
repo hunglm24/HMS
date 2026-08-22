@@ -22,7 +22,7 @@
             case "ADMIN": return "Quản trị hệ thống";
             case "CUSTOMER": return "Khách hàng";
             case "RECEPTIONIST": return "Lễ tân";
-            case "HOUSEKEEPING": return "Buồng phòng";
+            case "HOUSEKEEPING": return "Nhân viên vệ sinh";
             case "HOTEL_MANAGER": return "Quản lý khách sạn";
             default: return roleName;
         }
@@ -55,6 +55,7 @@
         <nav id="main-navigation" class="main-nav" aria-label="Điều hướng chính">
             <% if (!signedIn || customer) { %>
                 <a href="<%= contextPath %>/search">Tìm phòng</a>
+                <a href="<%= contextPath %>/news">Tin tức</a>
                 <% if (signedIn) { %>
                     <a href="<%= contextPath %>/my-bookings">Đặt phòng của tôi</a>
                     <%

@@ -50,10 +50,11 @@
                             <label for="floor">Tầng</label>
                             <select id="floor" name="floor">
                                 <option value="">Tất cả tầng</option>
-                                <option value="1" ${param.floor == '1' ? 'selected' : ''}>Tầng 1</option>
-                                <option value="2" ${param.floor == '2' ? 'selected' : ''}>Tầng 2</option>
-                                <option value="3" ${param.floor == '3' ? 'selected' : ''}>Tầng 3</option>
-                                <option value="4" ${param.floor == '4' ? 'selected' : ''}>Tầng 4</option>
+                                <c:forEach var="floorNum" begin="1" end="${maxFloor}">
+                                    <option value="${floorNum}" ${param.floor == floorNum ? 'selected' : ''}>
+                                        Tầng <c:out value="${floorNum}" />
+                                    </option>
+                                </c:forEach>
                             </select>
                         </div>
                         <div class="room-map-field">
