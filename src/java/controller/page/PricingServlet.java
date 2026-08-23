@@ -21,7 +21,10 @@ import java.util.Set;
 
 @WebServlet(urlPatterns = {
         "/manager/pricing",
+        "/manager/pricing/promotion/create",
+        "/manager/pricing/promotion/edit",
         "/manager/pricing/promotion/save",
+        "/manager/pricing/promotion/toggle-status",
         "/manager/pricing/promotion/delete"
 })
 public class PricingServlet extends HttpServlet {
@@ -30,6 +33,20 @@ public class PricingServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if ("/manager/pricing/promotion/create".equals(request.getServletPath())) {
+            request.getRequestDispatcher("/WEB-INF/views/manager/promotion-create.jsp").forward(request, response);
+            return;
+        }
+        if ("/manager/pricing/promotion/edit".equals(request.getServletPath())) {
+            try {
+                prepareEditPage(request);
+                request.getRequestDispatcher("/WEB-INF/views/manager/promotion-create.jsp").forward(request, response);
+            } catch (IllegalArgumentException ex) {
+                flash(request, ex.getMessage(), "error");
+                response.sendRedirect(request.getContextPath() + "/manager/pricing");
+            }
+            return;
+        }
         preparePage(request);
         request.getRequestDispatcher("/WEB-INF/views/manager/pricing.jsp").forward(request, response);
     }
@@ -43,6 +60,9 @@ public class PricingServlet extends HttpServlet {
             if ("/manager/pricing/promotion/save".equals(path)) {
                 savePromotion(request);
                 flash(request, "Đã lưu mã giảm giá.", "success");
+            } else if ("/manager/pricing/promotion/toggle-status".equals(path)) {
+                togglePromotionStatus(request);
+                flash(request, "Đã cập nhật trạng thái mã giảm giá.", "success");
             } else if ("/manager/pricing/promotion/delete".equals(path)) {
                 promotionDao.delete(ValidationUtil.requirePositiveLong(request.getParameter("id"), "Mã giảm giá"));
                 flash(request, "Đã xóa mã giảm giá.", "success");
@@ -53,9 +73,31 @@ public class PricingServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/manager/pricing");
         } catch (IllegalArgumentException ex) {
             flash(request, ex.getMessage(), "error");
-            response.sendRedirect(request.getContextPath() + "/manager/pricing");
+            String id = request.getParameter("id");
+            String redirectPath;
+            if ("/manager/pricing/promotion/save".equals(path)) {
+                redirectPath = ValidationUtil.isBlank(id)
+                        ? "/manager/pricing/promotion/create"
+                        : "/manager/pricing/promotion/edit?id=" + id;
+            } else {
+                redirectPath = "/manager/pricing";
+            }
+            response.sendRedirect(request.getContextPath() + redirectPath);
         } catch (SQLException ex) {
             throw new ServletException("Cannot update manager pricing data", ex);
+        }
+    }
+
+    private void prepareEditPage(HttpServletRequest request) throws ServletException {
+        try {
+            long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Mã giảm giá");
+            Promotion promotion = promotionDao.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy mã giảm giá."));
+            request.setAttribute("promotion", promotion);
+        } catch (IllegalArgumentException ex) {
+            throw ex;
+        } catch (SQLException ex) {
+            throw new ServletException("Cannot load promotion edit page", ex);
         }
     }
 
@@ -99,6 +141,12 @@ public class PricingServlet extends HttpServlet {
         Account user = (Account) request.getSession().getAttribute("currentUser");
         promotion.setCreatedBy(user == null ? 1L : user.getId());
         promotionDao.save(promotion);
+    }
+
+    private void togglePromotionStatus(HttpServletRequest request) throws SQLException {
+        long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Mã giảm giá");
+        String status = ValidationUtil.requireStatus(request.getParameter("status"), "Trạng thái", Set.of("ACTIVE", "INACTIVE"));
+        promotionDao.updateStatus(id, status);
     }
 
     private BigDecimal parseOptionalMoney(String value, String fieldName) {

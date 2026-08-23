@@ -74,6 +74,15 @@ public class PromotionDao {
         }
     }
 
+    public void updateStatus(long id, String status) throws SQLException {
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE promotions SET status = ? WHERE id = ?")) {
+            ps.setString(1, status);
+            ps.setLong(2, id);
+            ps.executeUpdate();
+        }
+    }
+
     public void incrementUsedCount(Connection conn, long promotionId) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement("UPDATE promotions SET used_count = used_count + 1 WHERE id = ?")) {
             ps.setLong(1, promotionId);
