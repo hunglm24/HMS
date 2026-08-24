@@ -106,7 +106,6 @@
 
     <section class="section-head">
         <div><p class="section-kicker">Gợi ý cho bạn</p><h2>Phòng nổi bật</h2></div>
-        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/search">Xem tất cả phòng trống</a>
     </section>
 
     <section class="room-card-grid">
