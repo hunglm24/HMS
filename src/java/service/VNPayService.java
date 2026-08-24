@@ -23,7 +23,7 @@ public class VNPayService {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String vnp_OrderInfo = orderInfo;
-        String orderType = "170000"; // Hotel code
+        String orderType = "other";
         String vnp_TxnRef = transactionRef;
         String vnp_IpAddr = ipAddress;
         String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
@@ -89,6 +89,8 @@ public class VNPayService {
     }
 
     private static String encode(String value) throws UnsupportedEncodingException {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+        // VNPay's JSP 2.1.0 reference implementation signs the URL-encoded
+        // values using US-ASCII.
+        return URLEncoder.encode(value, StandardCharsets.US_ASCII.toString());
     }
 }
