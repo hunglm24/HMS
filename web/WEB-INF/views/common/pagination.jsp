@@ -6,21 +6,21 @@
     <nav class="hk-pagination" aria-label="Pagination">
         <c:choose>
             <c:when test="${currentPage gt 1 and not empty paginationPrevUrl}">
-                <a class="hk-pagination__link" href="${paginationPrevUrl}">Previous</a>
+                <a class="hk-pagination__link" href="${paginationPrevUrl}">Trước</a>
             </c:when>
             <c:otherwise>
-                <span class="hk-pagination__link is-disabled">Previous</span>
+                <span class="hk-pagination__link is-disabled">Trước</span>
             </c:otherwise>
         </c:choose>
 
-        <strong class="hk-pagination__page">Page ${currentPage} / ${totalPages}</strong>
+        <strong class="hk-pagination__page">Trang ${currentPage} / ${totalPages}</strong>
 
         <c:choose>
             <c:when test="${currentPage lt totalPages and not empty paginationNextUrl}">
-                <a class="hk-pagination__link" href="${paginationNextUrl}">Next</a>
+                <a class="hk-pagination__link" href="${paginationNextUrl}">Sau</a>
             </c:when>
             <c:otherwise>
-                <span class="hk-pagination__link is-disabled">Next</span>
+                <span class="hk-pagination__link is-disabled">Sau</span>
             </c:otherwise>
         </c:choose>
     </nav>

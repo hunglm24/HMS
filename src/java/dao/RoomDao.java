@@ -227,6 +227,34 @@ public class RoomDao {
         return false;
     }
 
+    public boolean insert(Connection conn, Room room) throws SQLException {
+        String sql = "INSERT INTO rooms (room_type_id, room_number, floor_number, status, description) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, room.getRoomTypeId());
+            ps.setString(2, room.getRoomNumber());
+            if (room.getFloorNumber() != null) {
+                ps.setInt(3, room.getFloorNumber());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            ps.setString(4, room.getStatus());
+            ps.setString(5, room.getDescription());
+
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        room.setId(rs.getLong(1));
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean update(Room room) {
         String sql = "UPDATE rooms SET room_type_id = ?, room_number = ?, floor_number = ?, status = ?, description = ? "
                 + "WHERE id = ?";
@@ -252,6 +280,25 @@ public class RoomDao {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public boolean update(Connection conn, Room room) throws SQLException {
+        String sql = "UPDATE rooms SET room_type_id = ?, room_number = ?, floor_number = ?, status = ?, description = ? "
+                + "WHERE id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, room.getRoomTypeId());
+            ps.setString(2, room.getRoomNumber());
+            if (room.getFloorNumber() != null) {
+                ps.setInt(3, room.getFloorNumber());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            ps.setString(4, room.getStatus());
+            ps.setString(5, room.getDescription());
+            ps.setLong(6, room.getId());
+            return ps.executeUpdate() > 0;
+        }
     }
 
     public boolean updateStatus(Connection conn, long roomId, String status) throws SQLException {

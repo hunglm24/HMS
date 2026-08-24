@@ -4,8 +4,10 @@ import dao.RoomDao;
 import dao.RoomTypeDao;
 import model.Room;
 import model.RoomType;
+import util.DBConnectionUtil;
 import util.ValidationUtil;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -63,6 +65,12 @@ public class RoomService {
 
     // Validate and persist a room.
     public boolean saveRoom(Room room) throws SQLException {
+        try (Connection conn = DBConnectionUtil.getConnection()) {
+            return saveRoom(conn, room);
+        }
+    }
+
+    public boolean saveRoom(Connection conn, Room room) throws SQLException {
         // Validate and resolve dependencies before touching the database.
         validateRoom(room);
         ensureRoomTypeAssignable(room);
@@ -74,9 +82,9 @@ public class RoomService {
         }
         ensureRoomNumberUnique(room.getRoomNumber(), roomId == null || roomId <= 0 ? null : roomId);
         if (roomId != null && roomId > 0) {
-            return roomDao.update(room);
+            return roomDao.update(conn, room);
         }
-        return roomDao.insert(room);
+        return roomDao.insert(conn, room);
     }
 
     // Soft-disable a room by switching its status.

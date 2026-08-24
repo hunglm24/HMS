@@ -29,6 +29,34 @@ public class RoomTypeDao {
         return roomTypes;
     }
 
+    // Load all room types with the total number of physical rooms for popularity sorting.
+    public List<RoomType> findAllWithRoomCounts() {
+        List<RoomType> roomTypes = new ArrayList<>();
+        String sql = """
+                SELECT rt.*,
+                       (
+                           SELECT COUNT(*)
+                           FROM rooms r
+                           WHERE r.room_type_id = rt.id
+                       ) AS total_quantity
+                FROM room_types rt
+                ORDER BY rt.id ASC
+                """;
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                RoomType roomType = mapRow(rs);
+                roomType.setTotalQuantity(rs.getInt("total_quantity"));
+                roomTypes.add(roomType);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return roomTypes;
+    }
+
     public List<RoomType> findActive() {
         List<RoomType> roomTypes = new ArrayList<>();
         String sql = "SELECT * FROM room_types WHERE status = 'ACTIVE' ORDER BY id ASC";
