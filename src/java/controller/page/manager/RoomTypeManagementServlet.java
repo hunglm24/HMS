@@ -341,6 +341,8 @@ public class RoomTypeManagementServlet extends HttpServlet {
         RoomManagementPageData pageData = new RoomManagementPageData();
         String keyword = req.getParameter("keyword");
         String roomTypeStatus = req.getParameter("roomTypeStatus");
+        String roomTypeSort = ValidationUtil.isBlank(req.getParameter("sort")) ? "popular" : req.getParameter("sort");
+        String roomTypeDirection = normalizeSortDirection(req.getParameter("direction"));
         if (ValidationUtil.isBlank(roomTypeStatus)) {
             roomTypeStatus = ACTIVE_STATUS;
         }
@@ -350,8 +352,8 @@ public class RoomTypeManagementServlet extends HttpServlet {
         pageData.setKeyword(keyword);
         pageData.setRoomTypeStatus(roomTypeStatus);
         List<RoomType> allRoomTypes = ALL_STATUS.equalsIgnoreCase(roomTypeStatus)
-                ? roomTypeService.findRoomTypes(keyword, null)
-                : roomTypeService.findRoomTypes(keyword, roomTypeStatus);
+                ? roomTypeService.findRoomTypes(keyword, null, roomTypeSort, roomTypeDirection)
+                : roomTypeService.findRoomTypes(keyword, roomTypeStatus, roomTypeSort, roomTypeDirection);
 
         int currentPage = parsePage(pageRaw);
         RoomType selectedRoomType = resolveSelectedRoomType(allRoomTypes, selectedRoomTypeIdRaw);
@@ -379,6 +381,9 @@ public class RoomTypeManagementServlet extends HttpServlet {
         pageData.setRoomTypes(pagedRoomTypes);
         req.setAttribute("pageData", pageData);
         req.setAttribute("roomTypes", pagedRoomTypes);
+        req.setAttribute("roomTypeSort", roomTypeSort);
+        req.setAttribute("roomTypeDirection", roomTypeDirection);
+        req.setAttribute("roomTypeNextDirection", "ASC".equals(roomTypeDirection) ? "DESC" : "ASC");
         req.setAttribute("selectedRoomType", selectedRoomType);
         req.setAttribute("selectedRoomTypeId", selectedRoomType == null ? null : selectedRoomType.getId());
         req.setAttribute(
@@ -387,8 +392,8 @@ public class RoomTypeManagementServlet extends HttpServlet {
         );
         req.setAttribute("paginationCurrentPage", currentPage);
         req.setAttribute("paginationTotalPages", totalPages);
-        req.setAttribute("paginationPrevUrl", buildRoomTypesPageUrl(req, keyword, roomTypeStatus, currentPage - 1));
-        req.setAttribute("paginationNextUrl", buildRoomTypesPageUrl(req, keyword, roomTypeStatus, currentPage + 1));
+        req.setAttribute("paginationPrevUrl", buildRoomTypesPageUrl(req, keyword, roomTypeStatus, roomTypeSort, roomTypeDirection, currentPage - 1));
+        req.setAttribute("paginationNextUrl", buildRoomTypesPageUrl(req, keyword, roomTypeStatus, roomTypeSort, roomTypeDirection, currentPage + 1));
     }
 
     private int parsePage(String pageRaw) {
@@ -415,7 +420,8 @@ public class RoomTypeManagementServlet extends HttpServlet {
         return -1;
     }
 
-    private String buildRoomTypesPageUrl(HttpServletRequest req, String keyword, String roomTypeStatus, int page) {
+    private String buildRoomTypesPageUrl(HttpServletRequest req, String keyword, String roomTypeStatus,
+                                         String roomTypeSort, String roomTypeDirection, int page) {
         StringBuilder url = new StringBuilder(req.getContextPath()).append("/manager/room-types?");
         boolean hasParam = false;
         if (!ValidationUtil.isBlank(keyword)) {
@@ -432,8 +438,26 @@ public class RoomTypeManagementServlet extends HttpServlet {
         if (hasParam) {
             url.append('&');
         }
+        if (!ValidationUtil.isBlank(roomTypeSort)) {
+            url.append("sort=").append(urlEncode(roomTypeSort));
+            hasParam = true;
+        }
+        if (hasParam) {
+            url.append('&');
+        }
+        if (!ValidationUtil.isBlank(roomTypeDirection)) {
+            url.append("direction=").append(urlEncode(roomTypeDirection));
+            hasParam = true;
+        }
+        if (hasParam) {
+            url.append('&');
+        }
         url.append("page=").append(Math.max(page, 1));
         return url.toString();
+    }
+
+    private String normalizeSortDirection(String directionRaw) {
+        return "ASC".equalsIgnoreCase(directionRaw) ? "ASC" : "DESC";
     }
 
     private String urlEncode(String value) {

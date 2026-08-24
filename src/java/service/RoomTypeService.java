@@ -10,7 +10,9 @@ import util.ValidationUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,21 +35,47 @@ public class RoomTypeService {
 
     // Return room types for the management list.
     public List<RoomType> findRoomTypes(String keyword, String status) {
+        return findRoomTypes(keyword, status, "popular", "DESC");
+    }
+
+    // Return room types for the management list with popularity sorting.
+    public List<RoomType> findRoomTypes(String keyword, String status, String sort, String direction) {
         String normalizedKeyword = ValidationUtil.normalizeLower(keyword);
         final String filterKeyword = normalizedKeyword.length() > 100
                 ? normalizedKeyword.substring(0, 100) : normalizedKeyword;
         String normalizedStatus = ValidationUtil.optionalStatus(status, STATUSES);
+        String normalizedSort = ValidationUtil.normalizeLower(sort);
+        String normalizedDirection = "ASC".equalsIgnoreCase(direction) ? "ASC" : "DESC";
 
-        List<RoomType> roomTypes = roomTypeDao.findAll();
+        List<RoomType> roomTypes = roomTypeDao.findAllWithRoomCounts();
         if (roomTypes == null) {
             return Collections.emptyList();
         }
 
-        return roomTypes.stream()
+        List<RoomType> filteredRoomTypes = roomTypes.stream()
                 .filter(roomType -> matchesKeyword(roomType, filterKeyword))
                 .filter(roomType -> normalizedStatus == null
                         || normalizedStatus.equalsIgnoreCase(roomType.getStatus()))
                 .toList();
+
+        List<RoomType> sortedRoomTypes = new ArrayList<>(filteredRoomTypes);
+        if ("popular".equals(normalizedSort) || normalizedSort.isBlank()) {
+            Comparator<RoomType> popularityComparator = Comparator.comparingInt(RoomType::getTotalQuantity)
+                    .thenComparing(roomType -> roomType.getName() == null ? "" : roomType.getName(),
+                            String.CASE_INSENSITIVE_ORDER)
+                    .thenComparing(roomType -> roomType.getId() == null ? Long.MAX_VALUE : roomType.getId());
+
+            if ("DESC".equals(normalizedDirection)) {
+                popularityComparator = Comparator.comparingInt(RoomType::getTotalQuantity).reversed()
+                        .thenComparing(roomType -> roomType.getName() == null ? "" : roomType.getName(),
+                                String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(roomType -> roomType.getId() == null ? Long.MAX_VALUE : roomType.getId());
+            }
+
+            sortedRoomTypes.sort(popularityComparator);
+        }
+
+        return sortedRoomTypes;
     }
 
     // Validate and create a new room type.

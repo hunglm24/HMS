@@ -141,15 +141,15 @@
             var value = normalizeText(nameInput.value);
 
             if (!value) {
-                setFieldError(nameInput, 'Room type name is required.');
+                setFieldError(nameInput, 'Vui lòng nhập tên loại phòng.');
                 return false;
             }
             if (value.length < 3) {
-                setFieldError(nameInput, 'Room type name must be at least 3 characters.');
+                setFieldError(nameInput, 'Tên loại phòng phải có ít nhất 3 ký tự.');
                 return false;
             }
             if (value.length > 100) {
-                setFieldError(nameInput, 'Room type name must not exceed 100 characters.');
+                setFieldError(nameInput, 'Tên loại phòng không được vượt quá 100 ký tự.');
                 return false;
             }
 
@@ -161,7 +161,7 @@
             var value = normalizeText(descriptionInput.value);
 
             if (value.length > 500) {
-                setFieldError(descriptionInput, 'Description must not exceed 500 characters.');
+                setFieldError(descriptionInput, 'Mô tả không được vượt quá 500 ký tự.');
                 return false;
             }
 
@@ -174,11 +174,11 @@
             var value = Number(raw);
 
             if (!raw) {
-                setFieldError(capacityInput, 'Capacity is required.');
+                setFieldError(capacityInput, 'Vui lòng nhập sức chứa.');
                 return false;
             }
             if (!Number.isInteger(value) || value < 1) {
-                setFieldError(capacityInput, 'Capacity must be a positive whole number.');
+                setFieldError(capacityInput, 'Sức chứa phải là số nguyên dương.');
                 return false;
             }
 
@@ -190,7 +190,7 @@
             var value = parseDigits(basePriceInput.value);
 
             if (!Number.isFinite(value) || value <= 0) {
-                setFieldError(basePriceInput, 'Base price is required and must be greater than 0.');
+                setFieldError(basePriceInput, 'Vui lòng nhập giá cơ bản lớn hơn 0.');
                 return false;
             }
 
@@ -213,7 +213,7 @@
 
             var value = Number(raw);
             if (Number.isNaN(value) || value <= 0) {
-                setFieldError(sizeInput, 'Room size must be a positive number.');
+                setFieldError(sizeInput, 'Diện tích phòng phải là số dương.');
                 return false;
             }
 
@@ -225,7 +225,7 @@
             var checked = getSelectedStatusRadio();
 
             if (!checked) {
-                setFieldError(statusRadios[0], 'Status is required.');
+                setFieldError(statusRadios[0], 'Vui lòng chọn trạng thái.');
                 return false;
             }
 
@@ -251,14 +251,14 @@
             var extension = (file.name || '').split('.').pop().toLowerCase();
 
             if (file.size > maxFileSize) {
-                setFieldError(coverInput, 'Cover image must be 5 MB or smaller.');
+                setFieldError(coverInput, 'Ảnh đại diện phải nhỏ hơn hoặc bằng 5 MB.');
                 coverInput.value = '';
                 resetCoverPreview();
                 return false;
             }
 
             if (allowedExtensions.indexOf(extension) === -1 || (file.type && allowedMimeTypes.indexOf(file.type) === -1)) {
-                setFieldError(coverInput, 'Cover image must be JPG, JPEG, PNG, or WEBP.');
+                setFieldError(coverInput, 'Ảnh đại diện phải là JPG, JPEG, PNG hoặc WEBP.');
                 coverInput.value = '';
                 resetCoverPreview();
                 return false;

@@ -81,22 +81,28 @@
             }
 
             controls.hidden = false;
-
-            controls.appendChild(createButton('‹ Trước', currentPage - 1, currentPage === 1, false));
+            controls.appendChild(createButton('Trước', currentPage - 1, currentPage === 1, false));
 
             const info = document.createElement('strong');
             info.className = 'room-management-pagination__info';
             info.textContent = `Trang ${currentPage} / ${totalPages}`;
             controls.appendChild(info);
 
-            controls.appendChild(createButton('Sau ›', currentPage + 1, currentPage === totalPages, false));
+            controls.appendChild(createButton('Sau', currentPage + 1, currentPage === totalPages, false));
         }
 
-        controls.addEventListener('click', (event) => {
-            const button = event.target.closest('button[data-page]');
-            if (!button || button.disabled) return;
-            applyPage(Number.parseInt(button.dataset.page, 10));
-        });
+        controls.__paginationApplyPage = applyPage;
+        if (!controls.__paginationBound) {
+            controls.addEventListener('click', (event) => {
+                const button = event.target.closest('button[data-page]');
+                const apply = controls.__paginationApplyPage;
+                if (!button || button.disabled || typeof apply !== 'function') {
+                    return;
+                }
+                apply(Number.parseInt(button.dataset.page, 10));
+            });
+            controls.__paginationBound = true;
+        }
 
         applyPage(currentPage);
     }
@@ -120,4 +126,7 @@
     } else {
         init();
     }
+
+    window.RoomPagination = window.RoomPagination || {};
+    window.RoomPagination.refresh = init;
 })();
