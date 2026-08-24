@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpSession;
 import model.User;
 
 import java.io.IOException;
+import java.util.Set;
 
 @WebFilter(urlPatterns = {"/reception/*", "/housekeeping/*", "/technician/*", "/manager/*", "/admin/*"})
 public class AuthorizationFilter implements Filter {
@@ -29,8 +30,9 @@ public class AuthorizationFilter implements Filter {
         User user = (User) session.getAttribute("currentUser");
         String role = user.getRoleName();
         String path = request.getServletPath();
+        Set<String> permissionCodes = permissionCodes(session);
 
-        if (!isAllowed(path, role)) {
+        if (!isAllowed(path, role, permissionCodes)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
                     "Bạn không có quyền truy cập chức năng này.");
             return;
@@ -39,8 +41,17 @@ public class AuthorizationFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    private boolean isAllowed(String path, String role) {
+    @SuppressWarnings("unchecked")
+    private Set<String> permissionCodes(HttpSession session) {
+        Object value = session.getAttribute("permissionCodes");
+        return value instanceof Set ? (Set<String>) value : Set.of();
+    }
+
+    private boolean isAllowed(String path, String role, Set<String> permissionCodes) {
         if (role == null) return false;
+        if (path.startsWith("/admin/users")) return "ADMIN".equalsIgnoreCase(role) || permissionCodes.contains("ADMIN_USERS");
+        if (path.startsWith("/admin/roles")) return "ADMIN".equalsIgnoreCase(role) || permissionCodes.contains("ADMIN_ROLES");
+        if (path.startsWith("/admin/logs")) return "ADMIN".equalsIgnoreCase(role) || permissionCodes.contains("ADMIN_LOGS");
         if (path.startsWith("/admin/")) return "ADMIN".equalsIgnoreCase(role);
         if (path.startsWith("/manager/")) return "HOTEL_MANAGER".equalsIgnoreCase(role);
         if (path.startsWith("/reception/")) return "RECEPTIONIST".equalsIgnoreCase(role);

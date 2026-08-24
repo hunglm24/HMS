@@ -1,36 +1,86 @@
 package config;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.Random;
 
+/** VNPay utilities adapted from the supplied vnpay_jsp 2.1.0 demo. */
 public class VNPayConfig {
-    public static final String vnp_PayUrl = env("HMS_VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
-    public static final String vnp_TmnCode = env("HMS_VNPAY_TMN_CODE", "TESTCODE");
-    public static final String vnp_HashSecret = env("HMS_VNPAY_HASH_SECRET", "TESTSECRET");
-    public static final String vnp_apiUrl = env("HMS_VNPAY_API_URL", "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
+    private static final Properties LOCAL_PROPERTIES = loadLocalProperties();
+    public static final String vnp_PayUrl = env("HMS_VNPAY_PAY_URL",
+            "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
+    public static final String vnp_ReturnUrl = env("HMS_VNPAY_RETURN_URL",
+            "http://localhost:8080/HMS/payment-return");
+    public static final String vnp_TmnCode = env("HMS_VNPAY_TMN_CODE", "");
+    public static final String vnp_HashSecret = env("HMS_VNPAY_HASH_SECRET", "");
+    public static final String vnp_apiUrl = env("HMS_VNPAY_API_URL",
+            "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
+
+    private static final boolean PAYMENT_TEST_MODE = Boolean.parseBoolean(
+            env("HMS_PAYMENT_TEST_MODE", "false"));
+
+    public static String md5(String message) {
+        return digest("MD5", message);
+    }
+
+    public static String sha256(String message) {
+        return digest("SHA-256", message);
+    }
+
+    private static String digest(String algorithm, String message) {
+        try {
+            MessageDigest md = MessageDigest.getInstance(algorithm);
+            return toHex(md.digest(message.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception ex) {
+            return "";
+        }
+    }
+
+    public static String hashAllFields(Map<String, String> fields) {
+        List<String> fieldNames = new ArrayList<>(fields.keySet());
+        Collections.sort(fieldNames);
+        StringBuilder data = new StringBuilder();
+        for (String fieldName : fieldNames) {
+            String fieldValue = fields.get(fieldName);
+            if (fieldValue == null || fieldValue.isEmpty()) continue;
+            if (data.length() > 0) data.append('&');
+            data.append(fieldName).append('=').append(fieldValue);
+        }
+        return hmacSHA512(vnp_HashSecret, data.toString());
+    }
 
     public static String hmacSHA512(final String key, final String data) {
         try {
-            if (key == null || data == null) {
-                throw new NullPointerException();
-            }
-            final Mac hmac512 = Mac.getInstance("HmacSHA512");
-            // Always use an explicit charset so the same key produces the same
-            // signature on every operating system/JVM.
-            byte[] hmacKeyBytes = key.getBytes(StandardCharsets.UTF_8);
-            final SecretKeySpec secretKey = new SecretKeySpec(hmacKeyBytes, "HmacSHA512");
+            if (key == null || data == null) throw new NullPointerException();
+            Mac hmac512 = Mac.getInstance("HmacSHA512");
+            SecretKeySpec secretKey = new SecretKeySpec(
+                    key.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
             hmac512.init(secretKey);
-            byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
-            byte[] result = hmac512.doFinal(dataBytes);
-            StringBuilder sb = new StringBuilder(2 * result.length);
-            for (byte b : result) {
-                sb.append(String.format("%02x", b & 0xff));
-            }
-            return sb.toString();
+            return toHex(hmac512.doFinal(data.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception ex) {
             return "";
+        }
+    }
+
+    public static String getIpAddress(HttpServletRequest request) {
+        try {
+            String ipAddress = request.getHeader("X-FORWARDED-FOR");
+            if (ipAddress == null || ipAddress.isBlank()) {
+                ipAddress = request.getRemoteAddr();
+            } else {
+                ipAddress = ipAddress.split(",", 2)[0].trim();
+            }
+            return ipAddress;
+        } catch (Exception ex) {
+            return "Invalid IP:" + ex.getMessage();
         }
     }
 
@@ -45,12 +95,36 @@ public class VNPayConfig {
     }
 
     public static boolean isConfigured() {
-        return !"TESTCODE".equals(vnp_TmnCode) && !"TESTSECRET".equals(vnp_HashSecret)
-                && !vnp_TmnCode.isBlank() && !vnp_HashSecret.isBlank();
+        return !vnp_TmnCode.isBlank() && !vnp_HashSecret.isBlank();
+    }
+
+    public static boolean isPaymentTestMode() {
+        return PAYMENT_TEST_MODE;
+    }
+
+    private static String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte value : bytes) sb.append(String.format("%02x", value & 0xff));
+        return sb.toString();
     }
 
     private static String env(String name, String fallback) {
+        String localValue = LOCAL_PROPERTIES.getProperty(name);
+        if (localValue != null && !localValue.isBlank()) {
+            return localValue.trim();
+        }
         String value = System.getenv(name);
         return value == null || value.isBlank() ? fallback : value.trim();
+    }
+
+    private static Properties loadLocalProperties() {
+        Properties properties = new Properties();
+        try (java.io.InputStream input = VNPayConfig.class.getResourceAsStream(
+                "/config/vnpay-local.properties")) {
+            if (input != null) properties.load(input);
+        } catch (java.io.IOException ignored) {
+            // Environment variables remain the fallback configuration source.
+        }
+        return properties;
     }
 }

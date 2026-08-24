@@ -13,13 +13,34 @@
         return String.valueOf(value).replace("\\", "\\\\").replace("'", "\\'")
                 .replace("\r", "").replace("\n", "\\n");
     }
+    private boolean hasPermission(Object permissions, String code) {
+        return permissions instanceof java.util.Set && ((java.util.Set<?>) permissions).contains(code);
+    }
+    private String beanString(Object bean, String getterName) {
+        if (bean == null) return "";
+        try {
+            Object value = bean.getClass().getMethod(getterName).invoke(bean);
+            return value == null ? "" : String.valueOf(value);
+        } catch (ReflectiveOperationException ex) {
+            return "";
+        }
+    }
 %>
 <%
     List<Role> roles = (List<Role>) request.getAttribute("roles");
     List<Permission> permissions = (List<Permission>) request.getAttribute("permissions");
     long selectedRoleId = request.getAttribute("selectedRoleId") == null ? 0L : (Long) request.getAttribute("selectedRoleId");
+    Role selectedRole = null;
+    if (roles != null) for (Role role : roles) {
+        if (role.getId() == selectedRoleId) { selectedRole = role; break; }
+    }
     String toastMessage = (String) session.getAttribute("toastMessage");
     String toastType = (String) session.getAttribute("toastType");
+    String currentRole = beanString(session.getAttribute("currentUser"), "getRoleName");
+    Object permissionCodes = session.getAttribute("permissionCodes");
+    boolean admin = "ADMIN".equalsIgnoreCase(currentRole);
+    boolean canAdminUsers = admin || hasPermission(permissionCodes, "ADMIN_USERS");
+    boolean canAdminLogs = admin || hasPermission(permissionCodes, "ADMIN_LOGS");
     session.removeAttribute("toastMessage");
     session.removeAttribute("toastType");
 %>
@@ -61,13 +82,14 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main class="page-container">
     <nav class="admin-tabs">
-        <a href="${pageContext.request.contextPath}/admin/users">Users</a>
+        <a href="${pageContext.request.contextPath}/">Dashboard</a>
+        <% if (canAdminUsers) { %><a href="${pageContext.request.contextPath}/admin/users">Users</a><% } %>
         <a class="active" href="${pageContext.request.contextPath}/admin/roles">Roles & Permissions</a>
-        <a href="${pageContext.request.contextPath}/admin/logs">System Logs</a>
+        <% if (canAdminLogs) { %><a href="${pageContext.request.contextPath}/admin/logs">System Logs</a><% } %>
     </nav>
 
-    <h1>Assign Role / Permission</h1>
-    <p>Create roles and assign the permissions used by the administration module.</p>
+    <h1>Vai trò và quyền</h1>
+    <p>Quản lý role nội bộ và chỉ mở bảng quyền khi cần chỉnh sửa quyền của role đó.</p>
 
     <% if (toastMessage != null) { %>
         <div class="message <%= h(toastType) %>"><%= h(toastMessage) %></div>
@@ -85,14 +107,13 @@
                 <% if (roles != null) for (Role role : roles) { %>
                     <tr>
                         <td>
-                            <a class="role-link <%= role.getId() == selectedRoleId ? "active" : "" %>"
-                               href="${pageContext.request.contextPath}/admin/roles?roleId=<%= role.getId() %>"><%= h(role.getName()) %></a>
+                            <strong class="role-link <%= role.getId() == selectedRoleId ? "active" : "" %>"><%= h(role.getName()) %></strong>
                             <br><small><%= h(role.getDescription()) %></small>
                         </td>
                         <td>
                             <div class="role-actions">
-                                <button class="button button-secondary small-button" type="button"
-                                        onclick="fillRole('<%= role.getId() %>','<%= h(js(role.getName())) %>','<%= h(js(role.getDescription())) %>')">Edit</button>
+                                <a class="button button-secondary small-button"
+                                   href="${pageContext.request.contextPath}/admin/roles?roleId=<%= role.getId() %>">Edit</a>
                                 <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/roles/delete" onsubmit="return confirm('Delete this role?');">
                                     <input type="hidden" name="id" value="<%= role.getId() %>">
                                     <button class="button button-secondary small-button" type="submit">Delete</button>
@@ -104,15 +125,15 @@
                 </tbody>
             </table>
 
-            <h2 id="roleFormTitle">Create role</h2>
+            <h2 id="roleFormTitle"><%= selectedRole == null ? "Create role" : "Edit role #" + selectedRole.getId() %></h2>
             <form method="post" action="${pageContext.request.contextPath}/admin/roles/save">
-                <input type="hidden" id="roleId" name="id">
+                <input type="hidden" id="roleId" name="id" value="<%= selectedRole == null ? "" : selectedRole.getId() %>">
                 <label class="form-label" for="roleName">Role name</label>
-                <input class="form-control" id="roleName" name="name" required>
+                <input class="form-control" id="roleName" name="name" value="<%= h(selectedRole == null ? "" : selectedRole.getName()) %>" required>
                 <label class="form-label" for="description">Description</label>
-                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                <textarea class="form-control" id="description" name="description" rows="3"><%= h(selectedRole == null ? "" : selectedRole.getDescription()) %></textarea>
                 <div class="form-actions">
-                    <button class="button button-secondary" type="button" onclick="resetRoleForm()">New</button>
+                    <a class="button button-secondary" href="${pageContext.request.contextPath}/admin/roles">New</a>
                     <button class="button button-primary" type="submit">Save role</button>
                 </div>
             </form>
@@ -121,13 +142,8 @@
         <section class="panel">
             <h2>Permissions</h2>
             <% if (selectedRoleId == 0) { %>
-                <p>No role selected.</p>
+                <p>Chọn Edit ở một role để chỉnh quyền. Role nào đã có quyền thì checkbox sẽ được tích sẵn.</p>
             <% } else { %>
-                <% Role selectedRole = null;
-                   if (roles != null) for (Role role : roles) {
-                       if (role.getId() == selectedRoleId) { selectedRole = role; break; }
-                   }
-                %>
                 <div class="role-summary">
                     <strong>Selected role: <%= h(selectedRole == null ? ("#" + selectedRoleId) : selectedRole.getName()) %></strong>
                     <span><%= h(selectedRole == null ? "" : selectedRole.getDescription()) %></span>
@@ -152,19 +168,5 @@
         </section>
     </div>
 </main>
-<script>
-    function fillRole(id, name, description) {
-        document.getElementById('roleFormTitle').textContent = 'Edit role #' + id;
-        document.getElementById('roleId').value = id;
-        document.getElementById('roleName').value = name;
-        document.getElementById('description').value = description;
-    }
-    function resetRoleForm() {
-        document.getElementById('roleFormTitle').textContent = 'Create role';
-        document.getElementById('roleId').value = '';
-        document.getElementById('roleName').value = '';
-        document.getElementById('description').value = '';
-    }
-</script>
 </body>
 </html>

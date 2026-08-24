@@ -1,5 +1,6 @@
 package controller.page;
 
+import dao.RoleDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -18,10 +19,12 @@ import java.util.Optional;
 public class AuthServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private UserService userService;
+    private RoleDao roleDao;
 
     @Override
     public void init() {
         userService = new UserService();
+        roleDao = new RoleDao();
     }
 
     @Override
@@ -102,6 +105,7 @@ public class AuthServlet extends HttpServlet {
             User currentUser = authenticated.get();
             currentUser.setPasswordHash(null);
             session.setAttribute("currentUser", currentUser);
+            session.setAttribute("permissionCodes", roleDao.findPermissionCodesForRole(currentUser.getRoleId()));
             session.setMaxInactiveInterval(30 * 60);
 
             response.sendRedirect(returnUrl == null ? request.getContextPath() + "/" : returnUrl);
@@ -170,6 +174,7 @@ public class AuthServlet extends HttpServlet {
             user.setPasswordHash(null);
             HttpSession session = request.getSession(true);
             session.setAttribute("currentUser", user);
+            session.setAttribute("permissionCodes", roleDao.findPermissionCodesForRole(user.getRoleId()));
             session.setMaxInactiveInterval(30 * 60);
             response.sendRedirect(request.getContextPath() + "/");
         } catch (IllegalArgumentException ex) {

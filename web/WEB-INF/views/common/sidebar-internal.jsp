@@ -15,9 +15,14 @@
     private boolean activePath(String uri, String path) {
         return uri != null && uri.contains(path);
     }
+
+    private boolean hasPermission(Object permissions, String code) {
+        return permissions instanceof java.util.Set && ((java.util.Set<?>) permissions).contains(code);
+    }
 %>
 <%
     Object sidebarUser = session.getAttribute("currentUser");
+    Object sidebarPermissions = session.getAttribute("permissionCodes");
     String sidebarRole = sideBeanString(sidebarUser, "getRoleName");
     String cp = request.getContextPath();
     String uri = request.getRequestURI();
@@ -25,6 +30,9 @@
     boolean isHousekeeping = "HOUSEKEEPING".equalsIgnoreCase(sidebarRole);
     boolean isManager = "HOTEL_MANAGER".equalsIgnoreCase(sidebarRole);
     boolean isAdmin = "ADMIN".equalsIgnoreCase(sidebarRole);
+    boolean canAdminUsers = isAdmin || hasPermission(sidebarPermissions, "ADMIN_USERS");
+    boolean canAdminRoles = isAdmin || hasPermission(sidebarPermissions, "ADMIN_ROLES");
+    boolean canAdminLogs = isAdmin || hasPermission(sidebarPermissions, "ADMIN_LOGS");
 %>
 <aside class="internal-sidebar" aria-label="Internal navigation">
     <div class="sidebar-section">
@@ -56,10 +64,16 @@
             <a class="<%= activePath(uri, "/manager/staff") ? "active" : "" %>" href="<%= cp %>/manager/staff"><span>ST</span>Nhân sự</a>
         <% } %>
 
-        <% if (isAdmin) { %>
+        <% if (isAdmin || canAdminUsers || canAdminRoles || canAdminLogs) { %>
+            <a class="<%= uri != null && (uri.endsWith(cp + "/") || uri.endsWith(cp)) ? "active" : "" %>" href="<%= cp %>/"><span>DB</span>Dashboard</a>
+        <% } %>
+        <% if (canAdminUsers) { %>
             <a class="<%= activePath(uri, "/admin/users") ? "active" : "" %>" href="<%= cp %>/admin/users"><span>US</span>Người dùng</a>
+        <% } %>
+        <% if (canAdminRoles) { %>
             <a class="<%= activePath(uri, "/admin/roles") ? "active" : "" %>" href="<%= cp %>/admin/roles"><span>RL</span>Vai trò và quyền</a>
-            <a class="<%= activePath(uri, "/admin/system-config") ? "active" : "" %>" href="<%= cp %>/admin/system-config"><span>CF</span>Cấu hình</a>
+        <% } %>
+        <% if (canAdminLogs) { %>
             <a class="<%= activePath(uri, "/admin/logs") ? "active" : "" %>" href="<%= cp %>/admin/logs"><span>LG</span>Nhật ký</a>
         <% } %>
     </div>

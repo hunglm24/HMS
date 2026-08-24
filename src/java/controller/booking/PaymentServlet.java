@@ -91,7 +91,7 @@ public class PaymentServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String note = request.getParameter("note");
 
-        if (!config.VNPayConfig.isConfigured()) {
+        if (!config.VNPayConfig.isPaymentTestMode() && !config.VNPayConfig.isConfigured()) {
             session.setAttribute("error", "VNPay chưa được cấu hình. Vui lòng thêm mã TMN và Hash Secret sandbox.");
             response.sendRedirect(request.getContextPath() + "/checkout");
             return;
@@ -176,6 +176,15 @@ public class PaymentServlet extends HttpServlet {
                 }
 
                 conn.commit();
+
+                if (config.VNPayConfig.isPaymentTestMode()) {
+                    session.setAttribute("pendingBookingId", bookingId);
+                    session.setAttribute("pendingBookingCode", bookingCode);
+                    session.setAttribute("pendingPaymentAmount", finalAmount);
+                    response.sendRedirect(request.getContextPath() + "/vnpay-demo");
+                    return;
+                }
+
                 session.setAttribute("pendingBookingId", bookingId);
                 session.setAttribute("pendingBookingCode", bookingCode);
                 session.setAttribute("pendingPaymentAmount", finalAmount);
@@ -186,7 +195,7 @@ public class PaymentServlet extends HttpServlet {
                         + request.getContextPath() + "/payment-return";
                 String paymentUrl = vnPayService.createPaymentUrl(finalAmount.longValueExact(),
                         "Thanh toan dat phong " + bookingCode, bookingCode,
-                        request.getRemoteAddr(), returnUrl);
+                        config.VNPayConfig.getIpAddress(request), returnUrl);
                 response.sendRedirect(paymentUrl);
             } catch (IllegalArgumentException e) {
                 conn.rollback();
