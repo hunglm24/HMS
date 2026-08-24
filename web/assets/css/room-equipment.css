@@ -1,0 +1,94 @@
+.room-equipment-panel {
+    padding-bottom: var(--space-5);
+}
+
+.room-equipment-toolbar {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.room-equipment-search {
+    max-width: 360px;
+}
+
+.room-equipment-block {
+    display: grid;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+}
+
+.room-equipment-block__head h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.room-equipment-block__head p {
+    margin: 4px 0 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-caption);
+}
+
+.room-equipment-table th,
+.room-equipment-table td {
+    vertical-align: top;
+}
+
+.room-equipment-table tbody td {
+    background: #ffffff;
+}
+
+.room-equipment-table input,
+.room-equipment-table select,
+.room-equipment-table textarea {
+    width: 100%;
+    background: #fff;
+}
+
+.room-equipment-status-select {
+    min-width: 170px;
+}
+
+.room-equipment-name {
+    display: grid;
+    gap: 4px;
+}
+
+.room-equipment-name strong {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.room-equipment-name small {
+    color: var(--color-text-secondary);
+}
+
+.room-equipment-description {
+    color: var(--color-text-secondary);
+    font-size: var(--text-caption);
+    line-height: 1.45;
+}
+
+.room-equipment-empty {
+    display: grid;
+    gap: 4px;
+    padding: var(--space-4);
+    text-align: center;
+}
+
+.room-equipment-empty strong {
+    color: var(--color-text-primary);
+}
+
+.room-equipment-empty span {
+    color: var(--color-text-secondary);
+    font-size: var(--text-caption);
+}
+
+.room-equipment-row__actions {
+    text-align: right;
+    vertical-align: middle;
+}
+
+.room-equipment-row__actions .btn {
+    white-space: nowrap;
+}

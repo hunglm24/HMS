@@ -12,6 +12,8 @@
     <title><c:out value="${roomPageTitle}" /></title>
     <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260824-2" />
     <link rel="stylesheet" href="${cp}/assets/css/rooms.css?v=20260824-2" />
+    <link rel="stylesheet" href="${cp}/assets/css/room-form.css?v=20260824-2" />
+    <link rel="stylesheet" href="${cp}/assets/css/room-equipment.css?v=20260824-2" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   </head>
   <body class="room-management-body room-form-body" data-context-path="${cp}">

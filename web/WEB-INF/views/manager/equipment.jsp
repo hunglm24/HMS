@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý Thiết bị & Vật tư | HMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260820-7" />
     <link rel="stylesheet" href="${cp}/assets/css/rooms.css?v=20260820-7" />
     <link rel="stylesheet" href="${cp}/assets/css/equipment.css?v=20260824-1" />
@@ -19,7 +20,7 @@
     <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
     <main class="page-container room-management-page">
-      <section class="room-management-hero panel">
+      <section class="room-management-hero panel equipment-hero">
         <div class="room-management-hero__copy">
           <p class="room-management-kicker">QUẢN LÝ KHÁCH SẠN</p>
           <h1>Quản lý Thiết bị & Vật tư</h1>
@@ -38,6 +39,41 @@
         <c:remove var="toastType" scope="session" />
       </c:if>
 
+      <section class="equipment-stats-grid">
+        <article class="equipment-stat-card">
+          <div class="equipment-stat-card__icon equipment-stat-card__icon--total">TB</div>
+          <div class="equipment-stat-card__body">
+            <span class="equipment-stat-card__label">Tổng thiết bị</span>
+            <strong class="equipment-stat-card__value">${equipmentCount}</strong>
+            <small>Toàn bộ danh mục trong hệ thống</small>
+          </div>
+        </article>
+        <article class="equipment-stat-card">
+          <div class="equipment-stat-card__icon equipment-stat-card__icon--active">HD</div>
+          <div class="equipment-stat-card__body">
+            <span class="equipment-stat-card__label">Đang hoạt động</span>
+            <strong class="equipment-stat-card__value">${activeEquipmentCount}</strong>
+            <small>Được phép gán vào phòng</small>
+          </div>
+        </article>
+        <article class="equipment-stat-card">
+          <div class="equipment-stat-card__icon equipment-stat-card__icon--maintainable">BT</div>
+          <div class="equipment-stat-card__body">
+            <span class="equipment-stat-card__label">Có thể bảo trì</span>
+            <strong class="equipment-stat-card__value">${maintainableEquipmentCount}</strong>
+            <small>Thiết bị có luồng xử lý bảo trì</small>
+          </div>
+        </article>
+        <article class="equipment-stat-card">
+          <div class="equipment-stat-card__icon equipment-stat-card__icon--inactive">NG</div>
+          <div class="equipment-stat-card__body">
+            <span class="equipment-stat-card__label">Ngừng hoạt động / Ẩn</span>
+            <strong class="equipment-stat-card__value">${inactiveEquipmentCount}</strong>
+            <small>Không dùng trong phòng mới</small>
+          </div>
+        </article>
+      </section>
+
       <section class="room-management-content">
         <section class="room-management-panel panel">
           <div class="room-management-toolbar">
@@ -52,13 +88,40 @@
                   <option value="INACTIVE" ${status eq 'INACTIVE' ? 'selected' : ''}>Ngừng hoạt động</option>
                 </select>
               </div>
-              <button class="btn btn-primary" type="submit">Lọc</button>
-              <a class="btn btn-secondary equipment-reset-btn" href="${cp}/manager/equipment">Đặt lại</a>
+              <div class="room-management-filters__select">
+                <select name="maintainable">
+                  <option value="ALL" ${empty maintainable or maintainable eq 'ALL' ? 'selected' : ''}>Bảo trì: Tất cả</option>
+                  <option value="YES" ${maintainable eq 'YES' ? 'selected' : ''}>Có thể bảo trì</option>
+                  <option value="NO" ${maintainable eq 'NO' ? 'selected' : ''}>Chỉ thay thế</option>
+                </select>
+              </div>
+              <div class="room-management-filters__select">
+                <select name="hasImage">
+                  <option value="ALL" ${empty hasImage or hasImage eq 'ALL' ? 'selected' : ''}>Ảnh: Tất cả</option>
+                  <option value="YES" ${hasImage eq 'YES' ? 'selected' : ''}>Có ảnh</option>
+                  <option value="NO" ${hasImage eq 'NO' ? 'selected' : ''}>Chưa có ảnh</option>
+                </select>
+              </div>
+              <button class="btn btn-primary equipment-icon-btn" type="submit" aria-label="Lọc" title="Lọc">
+                <i class="bi bi-funnel" aria-hidden="true"></i>
+              </button>
+              <a class="btn btn-secondary equipment-icon-btn equipment-reset-btn" href="${cp}/manager/equipment" aria-label="Đặt lại" title="Đặt lại">
+                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+              </a>
             </form>
           </div>
 
           <div class="room-management-table-wrap" data-pagination-root data-pagination-key="equipment" data-pagination-size="5">
             <table class="room-management-table equipment-table">
+              <colgroup>
+                <col class="equipment-table__col equipment-table__col--image" />
+                <col class="equipment-table__col equipment-table__col--name" />
+                <col class="equipment-table__col equipment-table__col--maintainable" />
+                <col class="equipment-table__col equipment-table__col--description" />
+                <col class="equipment-table__col equipment-table__col--price" />
+                <col class="equipment-table__col equipment-table__col--status" />
+                <col class="equipment-table__col equipment-table__col--actions" />
+              </colgroup>
               <thead>
                 <tr>
                   <th class="equipment-table__th equipment-table__th--image">Ảnh</th>
@@ -135,7 +198,9 @@
                         </td>
                         <td class="equipment-table__cell equipment-table__cell--actions">
                           <div class="room-management-actions equipment-actions">
-                            <a class="btn btn-secondary btn-sm" href="${cp}/manager/equipment/edit?id=${equipment.id}">Sửa</a>
+                            <a class="btn btn-secondary btn-sm equipment-icon-btn" href="${cp}/manager/equipment/edit?id=${equipment.id}" aria-label="Sửa" title="Sửa">
+                              <i class="bi bi-pencil" aria-hidden="true"></i>
+                            </a>
                           </div>
                         </td>
                       </tr>
@@ -199,7 +264,9 @@
                 </dl>
 
                 <div class="room-management-actions equipment-actions">
-                  <a class="btn btn-secondary btn-sm" href="${cp}/manager/equipment/edit?id=${equipment.id}">Sửa</a>
+                  <a class="btn btn-secondary btn-sm equipment-icon-btn" href="${cp}/manager/equipment/edit?id=${equipment.id}" aria-label="Sửa" title="Sửa">
+                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                  </a>
                 </div>
               </article>
             </c:forEach>

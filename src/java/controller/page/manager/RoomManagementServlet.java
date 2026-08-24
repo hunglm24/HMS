@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import util.DBConnectionUtil;
 
 @WebServlet(urlPatterns = {
@@ -108,13 +109,38 @@ public class RoomManagementServlet extends HttpServlet {
         } catch (SQLException ignored) {
         }
 
+        List<Room> allRooms = roomService.getAllRooms();
         List<Room> rooms = roomService.findRooms(
                 pageData.getKeyword(),
                 pageData.getRoomTypeId(),
                 pageData.getFloor(),
                 pageData.getRoomStatus());
+        Map<Long, String> roomEquipmentSummaries = roomEquipmentService.findRoomEquipmentSummaries(rooms);
+        if ("YES".equalsIgnoreCase(pageData.getEquipmentFilter()) || "NO".equalsIgnoreCase(pageData.getEquipmentFilter())) {
+            boolean requireEquipment = "YES".equalsIgnoreCase(pageData.getEquipmentFilter());
+            List<Room> filteredRooms = new ArrayList<>();
+            for (Room room : rooms) {
+                String summary = roomEquipmentSummaries.get(room.getId());
+                boolean hasEquipment = summary != null && !summary.isBlank();
+                if (requireEquipment == hasEquipment) {
+                    filteredRooms.add(room);
+                }
+            }
+            rooms = filteredRooms;
+            roomEquipmentSummaries = roomEquipmentService.findRoomEquipmentSummaries(rooms);
+        }
         req.setAttribute("rooms", rooms);
-        req.setAttribute("roomEquipmentSummaries", roomEquipmentService.findRoomEquipmentSummaries(rooms));
+        req.setAttribute("roomEquipmentSummaries", roomEquipmentSummaries);
+        req.setAttribute("roomCount", allRooms.size());
+        req.setAttribute(
+                "availableRoomCount",
+                allRooms.stream().filter(room -> room != null && "AVAILABLE".equalsIgnoreCase(room.getStatus())).count());
+        req.setAttribute(
+                "occupiedRoomCount",
+                allRooms.stream().filter(room -> room != null && "OCCUPIED".equalsIgnoreCase(room.getStatus())).count());
+        req.setAttribute(
+                "maintenanceRoomCount",
+                allRooms.stream().filter(room -> room != null && "MAINTENANCE".equalsIgnoreCase(room.getStatus())).count());
     }
 
     private RoomManagementPageData buildPageData(HttpServletRequest req) {
@@ -123,6 +149,7 @@ public class RoomManagementServlet extends HttpServlet {
         pageData.setRoomStatus(req.getParameter("roomStatus"));
         pageData.setRoomTypeId(ValidationUtil.optionalPositiveLong(req.getParameter("roomTypeId"), "Room type"));
         pageData.setFloor(ValidationUtil.optionalPositiveInt(req.getParameter("floor"), "Floor"));
+        pageData.setEquipmentFilter(ValidationUtil.optionalStatus(req.getParameter("equipmentFilter"), Set.of("ALL", "YES", "NO")));
         return pageData;
     }
 

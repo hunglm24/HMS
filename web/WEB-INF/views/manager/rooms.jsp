@@ -20,12 +20,11 @@
       <section class="room-management-hero panel">
         <div class="room-management-hero__copy">
           <p class="room-management-kicker">Quản lý phòng</p>
-          <h1>Quản lý phòng và thiết bị đi kèm</h1>
-          <p>Dùng danh sách để xem phòng, mở trang chỉnh sửa riêng và gán thiết bị ngay trong cùng một luồng.</p>
+          <h1>Quản lý phòng</h1>
+          <p>Danh sách phòng, trạng thái, và thiết bị gắn theo phòng</p>
         </div>
 
         <div class="room-management-hero__actions">
-          <a class="btn btn-secondary" href="${cp}/manager/room-types">Loại phòng</a>
           <a class="btn" href="${cp}/manager/rooms/new">+ Thêm phòng</a>
         </div>
       </section>
@@ -37,6 +36,41 @@
         <c:remove var="toastMessage" scope="session" />
         <c:remove var="toastType" scope="session" />
       </c:if>
+
+      <section class="room-management-stats-grid">
+        <article class="room-management-stat-card">
+          <div class="room-management-stat-card__icon room-management-stat-card__icon--total">PH</div>
+          <div class="room-management-stat-card__body">
+            <span class="room-management-stat-card__label">Tổng phòng</span>
+            <strong class="room-management-stat-card__value">${roomCount}</strong>
+            <small>Đã tạo trong hệ thống</small>
+          </div>
+        </article>
+        <article class="room-management-stat-card">
+          <div class="room-management-stat-card__icon room-management-stat-card__icon--available">TR</div>
+          <div class="room-management-stat-card__body">
+            <span class="room-management-stat-card__label">Phòng trống</span>
+            <strong class="room-management-stat-card__value">${availableRoomCount}</strong>
+            <small>Sẵn sàng nhận khách</small>
+          </div>
+        </article>
+        <article class="room-management-stat-card">
+          <div class="room-management-stat-card__icon room-management-stat-card__icon--occupied">OC</div>
+          <div class="room-management-stat-card__body">
+            <span class="room-management-stat-card__label">Đang có khách</span>
+            <strong class="room-management-stat-card__value">${occupiedRoomCount}</strong>
+            <small>Đang được sử dụng</small>
+          </div>
+        </article>
+        <article class="room-management-stat-card">
+          <div class="room-management-stat-card__icon room-management-stat-card__icon--maintenance">BT</div>
+          <div class="room-management-stat-card__body">
+            <span class="room-management-stat-card__label">Bảo trì / chưa sẵn sàng</span>
+            <strong class="room-management-stat-card__value">${maintenanceRoomCount}</strong>
+            <small>Cần xử lý trước khi bán</small>
+          </div>
+        </article>
+      </section>
 
       <section class="room-management-content">
         <section class="room-management-panel panel">
@@ -74,10 +108,16 @@
                   <option value="INSPECTION" ${pageData.roomStatus eq 'INSPECTION' ? 'selected' : ''}>Chờ kiểm tra</option>
                 </select>
               </div>
+              <div class="room-management-filters__select">
+                <select name="equipmentFilter">
+                  <option value="ALL" ${empty pageData.equipmentFilter or pageData.equipmentFilter eq 'ALL' ? 'selected' : ''}>Thiết bị: Tất cả</option>
+                  <option value="YES" ${pageData.equipmentFilter eq 'YES' ? 'selected' : ''}>Có thiết bị</option>
+                  <option value="NO" ${pageData.equipmentFilter eq 'NO' ? 'selected' : ''}>Không có thiết bị</option>
+                </select>
+              </div>
               <button class="btn btn-secondary" type="submit">Lọc</button>
               <a class="btn btn-secondary" href="${cp}/manager/rooms">Đặt lại</a>
             </form>
-            <a class="btn" href="${cp}/manager/rooms/new">+ Thêm phòng</a>
           </div>
 
           <div class="room-management-table-wrap" data-pagination-root data-pagination-key="rooms" data-pagination-size="5">

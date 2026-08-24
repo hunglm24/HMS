@@ -93,22 +93,44 @@ public class EquipmentManagementServlet extends HttpServlet {
     private void prepareEquipmentListPage(HttpServletRequest req) {
         String keyword = req.getParameter("keyword");
         String status = req.getParameter("status");
+        String maintainable = req.getParameter("maintainable");
+        String hasImage = req.getParameter("hasImage");
         String normalizedStatus = ValidationUtil.normalizeUpper(status);
         if (ValidationUtil.isBlank(normalizedStatus)) {
             normalizedStatus = "ALL";
         }
 
-        List<Equipment> equipments = equipmentService.findEquipments(keyword, normalizedStatus);
+        String normalizedMaintainable = ValidationUtil.normalizeUpper(maintainable);
+        if (ValidationUtil.isBlank(normalizedMaintainable)) {
+            normalizedMaintainable = "ALL";
+        }
+
+        String normalizedHasImage = ValidationUtil.normalizeUpper(hasImage);
+        if (ValidationUtil.isBlank(normalizedHasImage)) {
+            normalizedHasImage = "ALL";
+        }
+
+        List<Equipment> equipments = equipmentService.findEquipments(keyword, normalizedStatus, normalizedMaintainable, normalizedHasImage);
         req.setAttribute("equipments", equipments);
         req.setAttribute("keyword", ValidationUtil.normalizeText(keyword));
         req.setAttribute("status", normalizedStatus);
-        req.setAttribute("equipmentCount", equipments.size());
-        req.setAttribute(
-                "activeEquipmentCount",
-                equipments.stream()
-                        .filter(equipment -> equipment != null && "ACTIVE".equalsIgnoreCase(equipment.getStatus()))
-                        .count()
-        );
+        req.setAttribute("maintainable", normalizedMaintainable);
+        req.setAttribute("hasImage", normalizedHasImage);
+        long totalEquipmentCount = equipments.size();
+        long activeEquipmentCount = equipments.stream()
+                .filter(equipment -> equipment != null && "ACTIVE".equalsIgnoreCase(equipment.getStatus()))
+                .count();
+        long maintainableEquipmentCount = equipments.stream()
+                .filter(equipment -> equipment != null && equipment.isMaintainable())
+                .count();
+        long inactiveEquipmentCount = equipments.stream()
+                .filter(equipment -> equipment != null && "INACTIVE".equalsIgnoreCase(equipment.getStatus()))
+                .count();
+
+        req.setAttribute("equipmentCount", totalEquipmentCount);
+        req.setAttribute("activeEquipmentCount", activeEquipmentCount);
+        req.setAttribute("maintainableEquipmentCount", maintainableEquipmentCount);
+        req.setAttribute("inactiveEquipmentCount", inactiveEquipmentCount);
     }
 
     // Load lookup data for the equipment form.
