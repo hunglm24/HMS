@@ -16,7 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet(name = "RoomMapServlet", urlPatterns = {"/reception/room-map"})
+@WebServlet(name = "RoomMapServlet", urlPatterns = {"/reception/room-map", "/manager/room-map"})
 public class RoomMapServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -33,6 +33,8 @@ public class RoomMapServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String path = request.getServletPath();
+        boolean managerMode = "/manager/room-map".equals(path);
         // Load room data with room type and booking information.
         List<Room> allRooms = roomDao.findAllWithRoomTypeNameAndBookingInfo();
 
@@ -151,6 +153,9 @@ public class RoomMapServlet extends HttpServlet {
         request.setAttribute("currentStatus", (status == null || status.isEmpty()) ? "ALL" : status);
         request.setAttribute("currentFloor", request.getParameter("floor"));
         request.setAttribute("currentRoomTypeId", request.getParameter("roomTypeId"));
+        request.setAttribute("roomMapMode", managerMode ? "MANAGER" : "RECEPTION");
+        request.setAttribute("roomMapActionUrl", request.getContextPath() + path);
+        request.setAttribute("roomMapShowChangeActions", !managerMode);
 
         // Forward to the room map view.
         request.getRequestDispatcher("/WEB-INF/views/reception/room-map.jsp").forward(request, response);

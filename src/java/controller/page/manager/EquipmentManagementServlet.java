@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import model.Equipment;
 import service.EquipmentService;
+import service.AuditLogService;
 import util.LocalFileUtil;
 import util.MultipartUtil;
 import util.ValidationUtil;
@@ -42,11 +43,13 @@ public class EquipmentManagementServlet extends HttpServlet {
     );
 
     private EquipmentService equipmentService;
+    private AuditLogService auditLogService;
 
     @Override
     public void init() throws ServletException {
         // Initialize the service once for the servlet lifecycle.
         equipmentService = new EquipmentService();
+        auditLogService = new AuditLogService();
     }
 
     @Override
@@ -269,8 +272,12 @@ public class EquipmentManagementServlet extends HttpServlet {
 
             if (updating) {
                 equipmentService.updateEquipment(equipment);
+                auditLogService.log(req, "UPDATE_EQUIPMENT", "EQUIPMENT", equipment.getId(),
+                        "Updated equipment " + equipment.getName());
             } else {
                 equipmentService.createEquipment(equipment);
+                auditLogService.log(req, "CREATE_EQUIPMENT", "EQUIPMENT", equipment.getId(),
+                        "Created equipment " + equipment.getName());
             }
 
             if (updating && uploadedImagePath != null && previousImagePath != null && !previousImagePath.equals(uploadedImagePath)) {

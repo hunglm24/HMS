@@ -12,11 +12,13 @@ import java.util.HashMap;
 import java.util.Map;
 import config.VNPayConfig;
 import service.VNPayService;
+import service.AuditLogService;
 
 @WebServlet(name = "VNPayReturnServlet", urlPatterns = {"/payment-return"})
 public class VNPayReturnServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final VNPayService vnPayService = new VNPayService();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -68,6 +70,8 @@ public class VNPayReturnServlet extends HttpServlet {
                             paymentInsert.setBigDecimal(2, amount);
                             paymentInsert.setString(3, request.getParameter("vnp_TransactionNo"));
                             paymentInsert.executeUpdate();
+                            auditLogService.log(request, "BOOKING_PAYMENT_SUCCESS", "PAYMENT", bookingId,
+                                    "VNPay payment confirmed for booking " + bookingCode + " amount=" + amount);
                         }
                         conn.commit();
                         

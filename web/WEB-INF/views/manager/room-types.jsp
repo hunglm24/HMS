@@ -6,12 +6,12 @@
 <fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
+    <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý loại phòng | HMS</title>
     <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260819-1" />
-    <link rel="stylesheet" href="${cp}/assets/css/room-types.css?v=20260819-2" />
+    <link rel="stylesheet" href="${cp}/assets/css/room-types.css?v=20260824-1" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   </head>
   <body class="room-management-body room-types-preview-body">
@@ -36,6 +36,7 @@
           <div class="room-types-topbar">
             <div class="room-types-topbar__title">
               <h1>Loại phòng</h1>
+              <p class="room-types-topbar__subtitle">Quản lý danh mục loại phòng, trạng thái hiển thị và khu vực chi tiết theo thiết kế đồng bộ với hệ thống.</p>
             </div>
 
             <div class="room-types-topbar__actions">
@@ -66,6 +67,24 @@
               <a class="btn btn-warning room-types-add-btn" href="${cp}/manager/room-types/new">+ Thêm loại phòng</a>
               <button class="room-types-icon-btn" type="button" aria-label="Lọc loại phòng">⟲</button>
             </div>
+          </div>
+
+          <div class="room-types-summary">
+            <article class="room-types-summary-card room-types-summary-card--blue">
+              <div class="room-types-summary-card__label">Tổng loại phòng</div>
+              <div class="room-types-summary-card__value"><c:out value="${roomTypeTotalCount}" /></div>
+              <div class="room-types-summary-card__hint">Toàn bộ loại phòng đang có trong danh mục.</div>
+            </article>
+            <article class="room-types-summary-card room-types-summary-card--green">
+              <div class="room-types-summary-card__label">Đang hoạt động</div>
+              <div class="room-types-summary-card__value"><c:out value="${roomTypeActiveCount}" /></div>
+              <div class="room-types-summary-card__hint">Những loại phòng đang được hiển thị để bán.</div>
+            </article>
+            <article class="room-types-summary-card room-types-summary-card--amber">
+              <div class="room-types-summary-card__label">Ngừng hoạt động</div>
+              <div class="room-types-summary-card__value"><c:out value="${roomTypeInactiveCount}" /></div>
+              <div class="room-types-summary-card__hint">Loại phòng tạm ẩn khỏi luồng bán và đặt phòng.</div>
+            </article>
           </div>
 
           <c:choose>

@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Account;
 import model.Promotion;
+import service.AuditLogService;
 import util.MoneyUtil;
 import util.ValidationUtil;
 
@@ -29,6 +30,7 @@ import java.util.Set;
 })
 public class PricingServlet extends HttpServlet {
     private final PromotionDao promotionDao = new PromotionDao();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -58,13 +60,22 @@ public class PricingServlet extends HttpServlet {
         String path = request.getServletPath();
         try {
             if ("/manager/pricing/promotion/save".equals(path)) {
+                String idRaw = request.getParameter("id");
                 savePromotion(request);
+                auditLogService.log(request, ValidationUtil.isBlank(idRaw) ? "CREATE_PROMOTION" : "UPDATE_PROMOTION",
+                        "PROMOTION", ValidationUtil.optionalPositiveLong(idRaw, "Mã giảm giá"),
+                        "Saved promotion " + request.getParameter("code"));
                 flash(request, "Đã lưu mã giảm giá.", "success");
             } else if ("/manager/pricing/promotion/toggle-status".equals(path)) {
+                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Mã giảm giá");
                 togglePromotionStatus(request);
+                auditLogService.log(request, "TOGGLE_PROMOTION_STATUS", "PROMOTION", id,
+                        "Changed promotion status to " + request.getParameter("status"));
                 flash(request, "Đã cập nhật trạng thái mã giảm giá.", "success");
             } else if ("/manager/pricing/promotion/delete".equals(path)) {
-                promotionDao.delete(ValidationUtil.requirePositiveLong(request.getParameter("id"), "Mã giảm giá"));
+                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Mã giảm giá");
+                promotionDao.delete(id);
+                auditLogService.log(request, "DELETE_PROMOTION", "PROMOTION", id, "Deleted promotion");
                 flash(request, "Đã xóa mã giảm giá.", "success");
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);

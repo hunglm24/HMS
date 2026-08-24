@@ -9,9 +9,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
+import service.AuditLogService;
 
 @WebServlet(name = "VNPayDemoServlet", urlPatterns = {"/vnpay-demo"})
 public class VNPayDemoServlet extends HttpServlet {
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -77,6 +79,8 @@ public class VNPayDemoServlet extends HttpServlet {
                 paymentInsert.setString(3, "DEMO-" + bookingCode);
                 paymentInsert.executeUpdate();
                 conn.commit();
+                auditLogService.log(request, "BOOKING_PAYMENT_SUCCESS", "PAYMENT", bookingId,
+                        "VNPay demo confirmed booking " + bookingCode + " amount=" + amount);
             } catch (Exception ex) {
                 conn.rollback();
                 throw ex;
