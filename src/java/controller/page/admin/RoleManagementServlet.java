@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Role;
+import model.User;
 import service.AuditLogService;
 
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @WebServlet(urlPatterns = {"/admin/roles", "/admin/roles/save", "/admin/roles/delete", "/admin/roles/permissions"})
 public class RoleManagementServlet extends HttpServlet {
@@ -61,9 +63,9 @@ public class RoleManagementServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             long selectedRoleId = parseSelectedRole(request);
-            List<Role> roles = roleDao.findAll();
-            if (selectedRoleId == 0 && !roles.isEmpty()) {
-                selectedRoleId = roles.get(0).getId();
+            List<Role> roles = findManageableRoles();
+            if (selectedRoleId != 0 && !containsRoleId(roles, selectedRoleId)) {
+                selectedRoleId = 0;
             }
             request.setAttribute("roles", roles);
             request.setAttribute("selectedRoleId", selectedRoleId);
@@ -83,8 +85,12 @@ public class RoleManagementServlet extends HttpServlet {
         String idValue = request.getParameter("id");
         if (idValue != null && !idValue.isBlank()) {
             role.setId(Long.parseLong(idValue));
+            ensureManageableRole(role.getId());
         }
         role.setName(required(request, "name").toUpperCase(Locale.ROOT));
+        if ("ADMIN".equalsIgnoreCase(role.getName())) {
+            throw new IllegalArgumentException("Không được tạo hoặc chỉnh sửa role ADMIN.");
+        }
         role.setDescription(request.getParameter("description"));
         long id = roleDao.save(role);
         auditLogService.log(request, role.getId() == null ? "CREATE_ROLE" : "UPDATE_ROLE",
@@ -96,6 +102,7 @@ public class RoleManagementServlet extends HttpServlet {
     private void deleteRole(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
         long id = Long.parseLong(required(request, "id"));
+        ensureManageableRole(id);
         roleDao.delete(id);
         auditLogService.log(request, "DELETE_ROLE", "ROLE", id, "Deleted role");
         flash(request, "Role deleted.", "success");
@@ -105,6 +112,7 @@ public class RoleManagementServlet extends HttpServlet {
     private void savePermissions(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
         long roleId = Long.parseLong(required(request, "roleId"));
+        ensureManageableRole(roleId);
         String[] selected = request.getParameterValues("permissionId");
         List<Long> permissionIds = new ArrayList<>();
         if (selected != null) {
@@ -113,6 +121,7 @@ public class RoleManagementServlet extends HttpServlet {
             }
         }
         roleDao.replaceRolePermissions(roleId, permissionIds);
+        refreshCurrentSessionPermissions(request, roleId);
         auditLogService.log(request, "ASSIGN_ROLE_PERMISSIONS", "ROLE", roleId,
                 "Assigned " + permissionIds.size() + " permissions");
         flash(request, "Permissions updated.", "success");
@@ -124,6 +133,41 @@ public class RoleManagementServlet extends HttpServlet {
             return Long.parseLong(request.getParameter("roleId"));
         } catch (RuntimeException ex) {
             return 0;
+        }
+    }
+
+    private List<Role> findManageableRoles() throws SQLException {
+        return roleDao.findAll().stream()
+                .filter(role -> role != null && !"ADMIN".equalsIgnoreCase(role.getName()))
+                .collect(Collectors.toList());
+    }
+
+    private boolean containsRoleId(List<Role> roles, long roleId) {
+        if (roles == null) {
+            return false;
+        }
+        for (Role role : roles) {
+            if (role != null && role.getId() != null && role.getId() == roleId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void ensureManageableRole(long roleId) throws SQLException {
+        Role role = roleDao.findById(roleId);
+        if (role == null) {
+            throw new IllegalArgumentException("Không tìm thấy role.");
+        }
+        if ("ADMIN".equalsIgnoreCase(role.getName())) {
+            throw new IllegalArgumentException("Không được chỉnh sửa role ADMIN.");
+        }
+    }
+
+    private void refreshCurrentSessionPermissions(HttpServletRequest request, long roleId) throws SQLException {
+        Object currentUser = request.getSession().getAttribute("currentUser");
+        if (currentUser instanceof User && ((User) currentUser).getRoleId() == roleId) {
+            request.getSession().setAttribute("permissionCodes", roleDao.findPermissionCodesForRole(roleId));
         }
     }
 

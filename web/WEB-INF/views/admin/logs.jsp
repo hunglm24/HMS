@@ -13,6 +13,18 @@
         if (value == null) return "";
         return URLEncoder.encode(String.valueOf(value), StandardCharsets.UTF_8);
     }
+    private boolean hasPermission(Object permissions, String code) {
+        return permissions instanceof java.util.Set && ((java.util.Set<?>) permissions).contains(code);
+    }
+    private String beanString(Object bean, String getterName) {
+        if (bean == null) return "";
+        try {
+            Object value = bean.getClass().getMethod(getterName).invoke(bean);
+            return value == null ? "" : String.valueOf(value);
+        } catch (ReflectiveOperationException ex) {
+            return "";
+        }
+    }
 %>
 <%
     List<AuditLog> logs = (List<AuditLog>) request.getAttribute("logs");
@@ -22,6 +34,11 @@
     int totalPages = request.getAttribute("totalPages") == null ? 1 : (Integer) request.getAttribute("totalPages");
     int totalItems = request.getAttribute("totalItems") == null ? 0 : (Integer) request.getAttribute("totalItems");
     String pageQuery = "&q=" + enc(q);
+    String currentRole = beanString(session.getAttribute("currentUser"), "getRoleName");
+    Object permissionCodes = session.getAttribute("permissionCodes");
+    boolean admin = "ADMIN".equalsIgnoreCase(currentRole);
+    boolean canAdminUsers = admin || hasPermission(permissionCodes, "ADMIN_USERS");
+    boolean canAdminRoles = admin || hasPermission(permissionCodes, "ADMIN_ROLES");
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -51,8 +68,9 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main class="page-container">
     <nav class="admin-tabs">
-        <a href="${pageContext.request.contextPath}/admin/users">Users</a>
-        <a href="${pageContext.request.contextPath}/admin/roles">Roles & Permissions</a>
+        <a href="${pageContext.request.contextPath}/">Dashboard</a>
+        <% if (canAdminUsers) { %><a href="${pageContext.request.contextPath}/admin/users">Users</a><% } %>
+        <% if (canAdminRoles) { %><a href="${pageContext.request.contextPath}/admin/roles">Roles & Permissions</a><% } %>
         <a class="active" href="${pageContext.request.contextPath}/admin/logs">System Logs</a>
     </nav>
 

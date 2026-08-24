@@ -1,5 +1,6 @@
 package controller.page;
 
+import dao.RoleDao;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,10 +29,12 @@ public class GoogleAuthServlet extends HttpServlet {
 
     private final HttpClient http = HttpClient.newHttpClient();
     private UserService userService;
+    private RoleDao roleDao;
 
     @Override
     public void init() {
         userService = new UserService();
+        roleDao = new RoleDao();
     }
 
     @Override
@@ -105,6 +108,7 @@ public class GoogleAuthServlet extends HttpServlet {
         session.invalidate();
         HttpSession authenticated = request.getSession(true);
         authenticated.setAttribute("currentUser", user);
+        authenticated.setAttribute("permissionCodes", roleDao.findPermissionCodesForRole(user.getRoleId()));
         authenticated.setMaxInactiveInterval(30 * 60);
         response.sendRedirect(request.getContextPath() + "/");
     }

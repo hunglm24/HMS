@@ -35,6 +35,28 @@ public class HotelPolicyDao {
         }
     }
 
+    public Optional<HotelPolicy> findActiveCancellationPolicy() throws SQLException {
+        String sql = """
+                SELECT *
+                FROM hotel_policies
+                WHERE status = 'ACTIVE'
+                  AND (LOWER(category) LIKE ? OR LOWER(title) LIKE ?
+                       OR LOWER(category) LIKE ? OR LOWER(title) LIKE ?)
+                ORDER BY updated_at DESC, created_at DESC
+                LIMIT 1
+                """;
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%hủy%");
+            ps.setString(2, "%hủy%");
+            ps.setString(3, "%huy%");
+            ps.setString(4, "%huy%");
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
+            }
+        }
+    }
+
     public void save(HotelPolicy policy) throws SQLException {
         if (policy.getId() == null) {
             insert(policy);
@@ -47,6 +69,15 @@ public class HotelPolicyDao {
         try (Connection conn = DBConnectionUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement("DELETE FROM hotel_policies WHERE id = ?")) {
             ps.setLong(1, id);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateStatus(long id, String status) throws SQLException {
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE hotel_policies SET status = ? WHERE id = ?")) {
+            ps.setString(1, status);
+            ps.setLong(2, id);
             ps.executeUpdate();
         }
     }
