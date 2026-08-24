@@ -11,11 +11,13 @@ import dao.BookingDao;
 import model.CheckInBookingSummary;
 import java.util.List;
 import java.sql.SQLException;
+import service.AuditLogService;
 
 @WebServlet(name = "ManageBookingServlet", urlPatterns = {"/reception/bookings"})
 public class ManageBookingServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private BookingDao bookingDao = new BookingDao();
+    private AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -70,6 +72,7 @@ public class ManageBookingServlet extends HttpServlet {
                 
                 if ("CONFIRM".equals(action)) {
                     bookingDao.updateBookingStatus(bookingId, "CONFIRMED");
+                    auditLogService.log(request, "CONFIRM_BOOKING", "BOOKING", bookingId, "Confirmed booking " + bookingId);
                     request.getSession().setAttribute("toastMessage", "Đã xác nhận đặt phòng.");
                     request.getSession().setAttribute("toastType", "toast-success");
                 } else if ("REJECT".equals(action)) {
@@ -80,6 +83,7 @@ public class ManageBookingServlet extends HttpServlet {
                         reason = "Lễ tân từ chối: " + reason;
                     }
                     bookingDao.cancelBooking(bookingId, reason);
+                    auditLogService.log(request, "CANCEL_BOOKING", "BOOKING", bookingId, reason);
                     request.getSession().setAttribute("toastMessage", "Đã hủy đặt phòng.");
                     request.getSession().setAttribute("toastType", "toast-success");
                 } else if ("CHECK_IN".equals(action)) {
@@ -169,6 +173,7 @@ public class ManageBookingServlet extends HttpServlet {
                                     ps.executeUpdate();
                                 }
                                 conn.commit();
+                                auditLogService.log(request, "CHECK_IN_BOOKING", "BOOKING", bookingId, "Checked in booking " + bookingId);
                                 request.getSession().setAttribute("toastMessage", "Check-in thành công.");
                                 request.getSession().setAttribute("toastType", "toast-success");
                             } else {
@@ -236,6 +241,7 @@ public class ManageBookingServlet extends HttpServlet {
                             }
 
                             conn.commit();
+                            auditLogService.log(request, "REQUEST_CHECKOUT", "BOOKING", bookingId, "Requested checkout for booking " + bookingId);
                             request.getSession().setAttribute("toastMessage", "Đã gửi yêu cầu kiểm tra phòng sang Nhân viên dọn dẹp. Phòng đang ở trạng thái Kiểm tra (Inspection).");
                             request.getSession().setAttribute("toastType", "toast-success");
                         } catch (Exception e) {
@@ -383,6 +389,8 @@ public class ManageBookingServlet extends HttpServlet {
                             }
 
                             conn.commit();
+                            auditLogService.log(request, "CHECK_OUT_BOOKING", "BOOKING", bookingId,
+                                    "Completed checkout for booking " + bookingId + ", extra payment=" + totalExtra);
                             request.getSession().setAttribute("toastMessage", "Check-out hoàn tất thành công. Phòng đã chuyển sang trạng thái chờ dọn dẹp (Cleaning).");
                             request.getSession().setAttribute("toastType", "toast-success");
                         } catch (Exception e) {

@@ -24,7 +24,8 @@
           <p>Danh sách phòng, trạng thái, và thiết bị gắn theo phòng</p>
         </div>
 
-        <div class="room-management-hero__actions">
+        <div class="room-management-hero__actions" style="display:flex; gap:5px; align-items:center;">
+          <a class="btn btn-secondary" href="${cp}/manager/room-map">Sơ đồ phòng</a>
           <a class="btn" href="${cp}/manager/rooms/new">+ Thêm phòng</a>
         </div>
       </section>

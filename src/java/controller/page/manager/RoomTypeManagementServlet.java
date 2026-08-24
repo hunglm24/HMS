@@ -11,6 +11,7 @@ import jakarta.servlet.http.Part;
 import model.Amenity;
 import model.RoomType;
 import service.RoomTypeService;
+import service.AuditLogService;
 import util.LocalFileUtil;
 import util.MoneyUtil;
 import util.MultipartUtil;
@@ -53,10 +54,12 @@ public class RoomTypeManagementServlet extends HttpServlet {
     private static final String ROOM_TYPE_IMAGE_DIR = "uploads/room-types";
 
     private RoomTypeService roomTypeService;
+    private AuditLogService auditLogService;
 
     @Override
     public void init() throws ServletException {
         roomTypeService = new RoomTypeService();
+        auditLogService = new AuditLogService();
     }
 
     @Override
@@ -123,6 +126,8 @@ public class RoomTypeManagementServlet extends HttpServlet {
 
         try {
             roomTypeService.toggleRoomTypeStatus(roomTypeId);
+            auditLogService.log(req, "TOGGLE_ROOM_TYPE_STATUS", "ROOM_TYPE", roomTypeId,
+                    "Toggled room type status for id " + roomTypeId);
             req.getSession().setAttribute("toastMessage", "Đã cập nhật trạng thái loại phòng.");
             req.getSession().setAttribute("toastType", "success");
             resp.sendRedirect(req.getContextPath() + "/manager/room-types?selectedRoomTypeId=" + roomTypeId);
@@ -249,8 +254,12 @@ public class RoomTypeManagementServlet extends HttpServlet {
 
             if (updating) {
                 roomTypeService.updateRoomType(roomType, amenityIds);
+                auditLogService.log(req, "UPDATE_ROOM_TYPE", "ROOM_TYPE", roomType.getId(),
+                        "Updated room type " + roomType.getName());
             } else {
                 roomTypeService.createRoomType(roomType, amenityIds);
+                auditLogService.log(req, "CREATE_ROOM_TYPE", "ROOM_TYPE", roomType.getId(),
+                        "Created room type " + roomType.getName());
             }
 
             if (updating && uploadedImagePath != null && previousImagePath != null && !previousImagePath.equals(uploadedImagePath)) {

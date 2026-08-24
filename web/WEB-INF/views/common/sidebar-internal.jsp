@@ -52,6 +52,7 @@
         <% if (isManager) { %>
             <a class="<%= activePath(uri, "/manager/reports") ? "active" : "" %>" href="<%= cp %>/manager/reports"><span>RP</span>Báo cáo</a>
             <a class="<%= activePath(uri, "/manager/rooms") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng</a>
+            <a class="<%= activePath(uri, "/manager/room-map") ? "active" : "" %>" href="<%= cp %>/manager/room-map"><span>MP</span>Sơ đồ phòng</a>
             <a class="<%= activePath(uri, "/manager/room-types") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
             <a class="<%= activePath(uri, "/manager/equipment") ? "active" : "" %>" href="<%= cp %>/manager/equipment"><span>EQ</span>Thiết bị</a>
             <a class="<%= activePath(uri, "/manager/amenities") || activePath(uri, "/manager/amenity") ? "active" : "" %>" href="<%= cp %>/manager/amenities"><span>AM</span>Tiện nghi</a>

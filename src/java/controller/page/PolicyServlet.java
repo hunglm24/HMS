@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.HotelPolicy;
 import service.CancellationPolicyService;
+import service.AuditLogService;
 import util.ValidationUtil;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.util.Set;
 })
 public class PolicyServlet extends HttpServlet {
     private final HotelPolicyDao policyDao = new HotelPolicyDao();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -56,13 +58,22 @@ public class PolicyServlet extends HttpServlet {
         }
         try {
             if ("/manager/policies/save".equals(request.getServletPath())) {
+                String idRaw = request.getParameter("id");
                 savePolicy(request);
+                auditLogService.log(request, ValidationUtil.isBlank(idRaw) ? "CREATE_POLICY" : "UPDATE_POLICY",
+                        "POLICY", ValidationUtil.optionalPositiveLong(idRaw, "Chính sách"),
+                        "Saved policy " + request.getParameter("title"));
                 flash(request, "Đã lưu chính sách.", "success");
             } else if ("/manager/policies/toggle-status".equals(request.getServletPath())) {
+                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
                 togglePolicyStatus(request);
+                auditLogService.log(request, "TOGGLE_POLICY_STATUS", "POLICY", id,
+                        "Changed policy status to " + request.getParameter("status"));
                 flash(request, "Đã cập nhật trạng thái chính sách.", "success");
             } else if ("/manager/policies/delete".equals(request.getServletPath())) {
-                policyDao.delete(ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách"));
+                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
+                policyDao.delete(id);
+                auditLogService.log(request, "DELETE_POLICY", "POLICY", id, "Deleted policy");
                 flash(request, "Đã xóa chính sách.", "success");
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);

@@ -13,13 +13,16 @@
     Long cleaningCount = (Long) request.getAttribute("cleaningCount");
     Long maintenanceCount = (Long) request.getAttribute("maintenanceCount");
     Integer totalCount = (Integer) request.getAttribute("totalCount");
+    String roomMapMode = (String) request.getAttribute("roomMapMode");
+    boolean managerMode = "MANAGER".equals(roomMapMode);
+    String roomMapActionUrl = (String) request.getAttribute("roomMapActionUrl");
 %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sơ đồ phòng - HMS</title>
+    <title><%= managerMode ? "Sơ đồ phòng | Manager" : "Sơ đồ phòng" %> - HMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/room-map.css?v=20260822-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/room-change-modal.css?v=20260816-4">
@@ -48,7 +51,7 @@
             <section class="room-map-dashboard">
                 <section class="room-map-filter-accordion" aria-label="Bộ lọc nhanh">
                     <div class="room-map-filter-title">Bộ lọc nhanh</div>
-                    <form class="room-map-filter-form" method="get" action="${pageContext.request.contextPath}/reception/room-map">
+                    <form class="room-map-filter-form" method="get" action="<%= roomMapActionUrl == null ? request.getContextPath() + "/reception/room-map" : roomMapActionUrl %>">
                         <div class="room-map-field">
                             <label for="floor">Tầng</label>
                             <select id="floor" name="floor">
@@ -86,7 +89,7 @@
                             <label aria-hidden="true">&nbsp;</label>
                             <div class="room-map-filter-actions">
                             <button type="submit" class="btn btn-primary px-4">Áp dụng</button>
-                            <a class="btn btn-outline-primary px-4" href="${pageContext.request.contextPath}/reception/room-map">Xóa</a>
+                            <a class="btn btn-outline-primary px-4" href="<%= roomMapActionUrl == null ? request.getContextPath() + "/reception/room-map" : roomMapActionUrl %>">Xóa</a>
                             </div>
                         </div>
                     </form>
@@ -241,22 +244,28 @@
                 </div>
             </div>
 
-            <div class="drawer-card">
-                <h4 class="drawer-section-title">Hành động nhanh</h4>
-                <div class="drawer-actions">
-                    <button type="button" id="changeRoomBtn" class="btn btn-secondary">Change Room</button>
-                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/check-in">Go to Check-in</a>
+            <c:if test="${roomMapShowChangeActions != false}">
+                <div class="drawer-card">
+                    <h4 class="drawer-section-title">Hành động nhanh</h4>
+                    <div class="drawer-actions">
+                        <button type="button" id="changeRoomBtn" class="btn btn-secondary">Change Room</button>
+                        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/check-in">Go to Check-in</a>
+                    </div>
+                    <p class="drawer-note drawer-note-spaced">
+                        Drawer này đang hiển thị thông tin từ trạng thái phòng. Nếu phòng đang có khách, lễ tân có thể mở modal đổi phòng để xử lý theo đúng luồng reception.
+                    </p>
                 </div>
-                <p class="drawer-note drawer-note-spaced">
-                    Drawer này đang hiển thị thông tin từ trạng thái phòng. Nếu phòng đang có khách, lễ tân có thể mở modal đổi phòng để xử lý theo đúng luồng reception.
-                </p>
-            </div>
+            </c:if>
         </div>
     </aside>
 
-    <jsp:include page="/WEB-INF/views/reception/modals/room-change-modal.jsp" />
+    <c:if test="${roomMapShowChangeActions != false}">
+        <jsp:include page="/WEB-INF/views/reception/modals/room-change-modal.jsp" />
+    </c:if>
 
     <script src="${pageContext.request.contextPath}/assets/js/room-map.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/room-change-modal.js"></script>
+    <c:if test="${roomMapShowChangeActions != false}">
+        <script src="${pageContext.request.contextPath}/assets/js/room-change-modal.js"></script>
+    </c:if>
 </body>
 </html>

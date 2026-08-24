@@ -11,6 +11,7 @@ import model.Room;
 import model.RoomEquipment;
 import model.RoomType;
 import service.HousekeepingService;
+import service.AuditLogService;
 import service.RoomEquipmentService;
 import service.RoomService;
 import util.ValidationUtil;
@@ -41,6 +42,7 @@ public class RoomManagementServlet extends HttpServlet {
     private RoomEquipmentService roomEquipmentService;
     private HousekeepingService housekeepingService;
     private RoomTypeDao roomTypeDao;
+    private AuditLogService auditLogService;
 
     @Override
     public void init() throws ServletException {
@@ -48,6 +50,7 @@ public class RoomManagementServlet extends HttpServlet {
         roomEquipmentService = new RoomEquipmentService();
         housekeepingService = new HousekeepingService();
         roomTypeDao = new RoomTypeDao();
+        auditLogService = new AuditLogService();
     }
 
     @Override
@@ -280,6 +283,8 @@ public class RoomManagementServlet extends HttpServlet {
                     ValidationUtil.requireTrue(saved, updating ? "Failed to update the room." : "Failed to create the room.");
                     roomEquipmentService.replaceRoomEquipments(conn, room.getId(), normalizedEquipments, null);
                     conn.commit();
+                    auditLogService.log(req, updating ? "UPDATE_ROOM" : "CREATE_ROOM", "ROOM", room.getId(),
+                            (updating ? "Updated room " : "Created room ") + room.getRoomNumber() + " status=" + room.getStatus());
                 } catch (SQLException ex) {
                     try {
                         conn.rollback();
@@ -369,6 +374,7 @@ public class RoomManagementServlet extends HttpServlet {
             try {
                 boolean deactivated = roomService.deactivateRoom(id);
                 ValidationUtil.requireTrue(deactivated, "Failed to update the room.");
+                auditLogService.log(req, "DEACTIVATE_ROOM", "ROOM", id, "Deactivated room " + id);
                 req.getSession().setAttribute("toastMessage", "Room deactivated successfully.");
                 req.getSession().setAttribute("toastType", "success");
             } catch (IllegalArgumentException ex) {
@@ -392,6 +398,7 @@ public class RoomManagementServlet extends HttpServlet {
             String note = req.getParameter("note");
 
             housekeepingService.createManualTask(roomId, taskType, assignedTo, priority, cleaningTasks, note);
+            auditLogService.log(req, "CREATE_ROOM_TASK", "ROOM", roomId, "Created task " + taskType + " for room " + roomId);
             req.getSession().setAttribute("toastMessage", "Created task successfully.");
             req.getSession().setAttribute("toastType", "success");
         } catch (IllegalArgumentException ex) {

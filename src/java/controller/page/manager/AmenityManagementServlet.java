@@ -2,6 +2,7 @@ package controller.page.manager;
 
 import model.Amenity;
 import service.AmenityService;
+import service.AuditLogService;
 import util.ValidationUtil;
 
 import jakarta.servlet.ServletException;
@@ -18,6 +19,7 @@ import java.util.Map;
 @WebServlet(urlPatterns = {"/manager/amenities", "/manager/amenity", "/manager/amenity/create", "/manager/amenity/new", "/manager/amenity/edit", "/manager/amenity/update"})
 public class AmenityManagementServlet extends HttpServlet {
     private final AmenityService amenityService = new AmenityService();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -182,8 +184,12 @@ public class AmenityManagementServlet extends HttpServlet {
         try {
             if (updating) {
                 amenityService.updateAmenity(amenity);
+                auditLogService.log(req, "UPDATE_AMENITY", "AMENITY", amenity.getId(),
+                        "Updated amenity " + amenity.getName());
             } else {
                 amenityService.createAmenity(amenity);
+                auditLogService.log(req, "CREATE_AMENITY", "AMENITY", amenity.getId(),
+                        "Created amenity " + amenity.getName());
             }
 
             req.getSession().setAttribute("toastMessage", updating ? "Cập nhật tiện nghi thành công." : "Thêm tiện nghi mới thành công.");
