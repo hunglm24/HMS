@@ -9,17 +9,23 @@
                 .replace(">", "&gt;");
     }
 %>
+<%
+    model.HotelConfig loginConfig = (model.HotelConfig) application.getAttribute("hotelConfig");
+    String loginHotelName = loginConfig != null && loginConfig.getHotelName() != null && !loginConfig.getHotelName().isBlank()
+            ? loginConfig.getHotelName()
+            : "HMS Hotel";
+%>
 <!DOCTYPE html>
 <html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Đăng nhập | HMS</title>
+<title>Đăng nhập | <%= escapeAttr(loginHotelName) %></title>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css?v=20260816-4"></head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main id="main-content" class="auth-split-page login-page">
-    <section class="auth-hero" aria-label="Giới thiệu HMS">
+    <section class="auth-hero" aria-label="Giới thiệu <%= escapeAttr(loginHotelName) %>">
         <div class="auth-hero-content">
-            <a class="auth-hero-logo" href="${pageContext.request.contextPath}/">HMS</a>
+            <a class="auth-hero-logo" href="${pageContext.request.contextPath}/"><%= escapeAttr(loginHotelName) %></a>
             <p class="auth-hero-tagline">Hotel Management System</p>
             <div class="auth-preview-card auth-preview-main">
                 <span class="auth-preview-title">Quản lý khách sạn</span>
@@ -39,7 +45,7 @@
     </section>
     <section class="auth-panel" aria-labelledby="auth-title">
         <div class="auth-card auth-card-login">
-    <a class="auth-brand" href="${pageContext.request.contextPath}/">HMS</a>
+    <a class="auth-brand" href="${pageContext.request.contextPath}/"><%= escapeAttr(loginHotelName) %></a>
     <p class="auth-subtitle">Hệ thống quản lý khách sạn</p>
     <h1 id="auth-title">Đăng nhập</h1>
     <% if (request.getAttribute("error") != null) { %><div class="auth-message error" role="alert"><%= request.getAttribute("error") %></div><% } %>

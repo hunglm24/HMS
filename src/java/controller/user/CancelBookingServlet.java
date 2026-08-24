@@ -1,11 +1,15 @@
 package controller.user;
 
+import dao.HotelConfigDao;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.HotelConfig;
 
 @WebServlet(name = "CancelBookingServlet", urlPatterns = {"/user/cancel-booking"})
 public class CancelBookingServlet extends HttpServlet {
@@ -53,22 +57,32 @@ public class CancelBookingServlet extends HttpServlet {
                 return;
             }
 
-            // Calculate Fee
             java.time.LocalDate checkIn = booking.getCheckInDate().toLocalDate();
             java.time.LocalDate today = java.time.LocalDate.now();
             long daysUntilCheckIn = java.time.temporal.ChronoUnit.DAYS.between(today, checkIn);
-            
-            java.math.BigDecimal fee = java.math.BigDecimal.ZERO;
-            if (daysUntilCheckIn < 2) {
-                // Phạt 20% nếu hủy sát ngày (dưới 48h)
-                fee = booking.getTotalAmount().multiply(new java.math.BigDecimal("0.20"));
-            }
 
-            String fullReason = reason + " | Phí hủy dự kiến: " + fee + " VND";
-            
+            HotelConfig hotelConfig = resolveHotelConfig(request);
+            BigDecimal refundRate = resolveRefundRate(hotelConfig, daysUntilCheckIn < 2);
+            BigDecimal totalAmount = booking.getTotalAmount() == null ? BigDecimal.ZERO : booking.getTotalAmount();
+            BigDecimal refundAmount = totalAmount
+                    .multiply(refundRate)
+                    .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
+            BigDecimal cancellationFee = totalAmount.subtract(refundAmount);
+
+            String fullReason = reason
+                    + " | Tỷ lệ hoàn tiền áp dụng: " + refundRate.stripTrailingZeros().toPlainString() + "%"
+                    + " | Số tiền hoàn dự kiến: " + refundAmount + " VND"
+                    + " | Phí hủy dự kiến: " + cancellationFee + " VND";
+
             boolean success = bookingDao.cancelBooking(bookingId, fullReason);
             if (success) {
-                request.getSession().setAttribute("message", "Hủy phòng thành công. " + (fee.compareTo(java.math.BigDecimal.ZERO) > 0 ? "Phí hủy áp dụng: " + fee + " VND." : "Bạn được miễn phí hủy phòng."));
+                String feeMessage = cancellationFee.compareTo(BigDecimal.ZERO) > 0
+                        ? "Phí hủy áp dụng: " + cancellationFee + " VND."
+                        : "Bạn được miễn phí hủy phòng.";
+                request.getSession().setAttribute("message",
+                        "Hủy phòng thành công. Tỷ lệ hoàn tiền áp dụng: "
+                                + refundRate.stripTrailingZeros().toPlainString()
+                                + "%. " + feeMessage);
             } else {
                 request.getSession().setAttribute("error", "Hệ thống bận, vui lòng thử lại sau.");
             }
@@ -78,5 +92,32 @@ public class CancelBookingServlet extends HttpServlet {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private HotelConfig resolveHotelConfig(HttpServletRequest request) {
+        Object cached = request.getServletContext().getAttribute("hotelConfig");
+        if (cached instanceof HotelConfig) {
+            return (HotelConfig) cached;
+        }
+
+        HotelConfigDao hotelConfigDao = new HotelConfigDao();
+        try {
+            return hotelConfigDao.loadForEdit();
+        } catch (Exception ex) {
+            return hotelConfigDao.createDefaultConfig();
+        }
+    }
+
+    private BigDecimal resolveRefundRate(HotelConfig config, boolean sameDayCancellation) {
+        BigDecimal rate = sameDayCancellation
+                ? config.getSameDayRefundRate()
+                : config.getBeforeDayRefundRate();
+        if (rate == null) {
+            throw new IllegalStateException("Cấu hình hoàn tiền không hợp lệ.");
+        }
+        if (rate.compareTo(BigDecimal.ZERO) < 0 || rate.compareTo(BigDecimal.valueOf(100)) > 0) {
+            throw new IllegalStateException("Cấu hình hoàn tiền không hợp lệ.");
+        }
+        return rate;
     }
 }

@@ -41,12 +41,17 @@
     String currentPath = request.getServletPath();
     String fullName = escapeHtml(beanString(headerUser, "getFullName"));
     String avatar = fullName.isEmpty() ? "U" : fullName.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
+    model.HotelConfig headerConfig = (model.HotelConfig) application.getAttribute("hotelConfig");
+    String hotelName = headerConfig != null && headerConfig.getHotelName() != null && !headerConfig.getHotelName().isBlank()
+            ? headerConfig.getHotelName()
+            : "HMS Hotel";
+    String hotelTagline = "Quản lý khách sạn";
 %>
 <header class="site-header <%= internal ? "site-header--internal" : "" %>">
     <div class="header-container">
-        <a class="brand" href="<%= contextPath %>/" aria-label="HMS home">
-            <span class="brand-mark" aria-hidden="true">H</span>
-            <span class="brand-copy"><strong>HMS</strong><small>Quản lý khách sạn</small></span>
+        <a class="brand" href="<%= contextPath %>/" aria-label="<%= escapeHtml(hotelName) %> home">
+            <span class="brand-mark" aria-hidden="true"><%= escapeHtml(hotelName.substring(0, 1).toUpperCase(java.util.Locale.ROOT)) %></span>
+            <span class="brand-copy"><strong><%= escapeHtml(hotelName) %></strong><small><%= escapeHtml(hotelTagline) %></small></span>
         </a>
 
         <button class="nav-toggle" type="button" aria-expanded="false"

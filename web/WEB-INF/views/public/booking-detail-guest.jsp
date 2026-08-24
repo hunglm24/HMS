@@ -2,12 +2,37 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%!
+    private String escapeHtml(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+%>
+<%
+    model.HotelConfig detailConfig = (model.HotelConfig) application.getAttribute("hotelConfig");
+    String detailHotelName = detailConfig != null && detailConfig.getHotelName() != null && !detailConfig.getHotelName().isBlank()
+            ? detailConfig.getHotelName()
+            : "HMS Hotel";
+    String detailAddress = detailConfig != null && detailConfig.getAddress() != null && !detailConfig.getAddress().isBlank()
+            ? detailConfig.getAddress()
+            : "Địa chỉ đang được cập nhật";
+    String detailPhone = detailConfig != null && detailConfig.getPhone() != null && !detailConfig.getPhone().isBlank()
+            ? detailConfig.getPhone()
+            : "1900 1234";
+    String detailEmail = detailConfig != null && detailConfig.getEmail() != null && !detailConfig.getEmail().isBlank()
+            ? detailConfig.getEmail()
+            : "support@hmshotel.com";
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Chi tiết booking | HMS</title>
+    <title>Chi tiết booking | <%= escapeHtml(detailHotelName) %></title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <style>
         .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6); align-items: start; }
@@ -137,11 +162,11 @@
                 <div class="detail-card">
                     <h3>Liên hệ khách sạn</h3>
                     <div class="hotel-contact">
-                        <p>🏨 <strong>HMS Hotel Resort</strong></p>
-                        <p>📍 Đường N16 Thạch Hòa Hà Nội</p>
+                        <p>🏨 <strong><%= escapeHtml(detailHotelName) %></strong></p>
+                        <p>📍 <%= escapeHtml(detailAddress) %></p>
                         <a href="https://maps.app.goo.gl/19ttJVPZB76SSip66" target="_blank" class="map-btn">Mở Google Maps</a>
-                        <p style="margin-top: 8px;">📞 Hotline: <strong>1900 1234</strong></p>
-                        <p>✉️ Email: <strong>support@hmshotel.com</strong></p>
+                        <p style="margin-top: 8px;">📞 Hotline: <strong><%= escapeHtml(detailPhone) %></strong></p>
+                        <p>✉️ Email: <strong><%= escapeHtml(detailEmail) %></strong></p>
                     </div>
                 </div>
 

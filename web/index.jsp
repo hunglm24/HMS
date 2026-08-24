@@ -55,6 +55,10 @@
     }
 %>
 <%
+    model.HotelConfig indexConfig = (model.HotelConfig) application.getAttribute("hotelConfig");
+    String indexHotelName = indexConfig != null && indexConfig.getHotelName() != null && !indexConfig.getHotelName().isBlank()
+            ? indexConfig.getHotelName()
+            : "HMS Hotel";
     Object currentUser = session.getAttribute("currentUser");
     String role = indexBeanString(currentUser, "getRoleName");
     boolean internal = currentUser != null && !"CUSTOMER".equalsIgnoreCase(role);
@@ -77,7 +81,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>HMS</title>
+    <title><%= escapeHtml(indexHotelName) %></title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
 </head>
 <body>
