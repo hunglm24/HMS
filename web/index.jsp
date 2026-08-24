@@ -53,11 +53,19 @@
         }
         return contextPath + "/" + trimmed;
     }
+
+    private boolean indexHasPermission(Object permissions, String code) {
+        return permissions instanceof java.util.Set && ((java.util.Set<?>) permissions).contains(code);
+    }
 %>
 <%
     Object currentUser = session.getAttribute("currentUser");
+    Object permissionCodes = session.getAttribute("permissionCodes");
     String role = indexBeanString(currentUser, "getRoleName");
     boolean internal = currentUser != null && !"CUSTOMER".equalsIgnoreCase(role);
+    boolean canAdminUsers = "ADMIN".equalsIgnoreCase(role) || indexHasPermission(permissionCodes, "ADMIN_USERS");
+    boolean canAdminRoles = "ADMIN".equalsIgnoreCase(role) || indexHasPermission(permissionCodes, "ADMIN_ROLES");
+    boolean canAdminLogs = "ADMIN".equalsIgnoreCase(role) || indexHasPermission(permissionCodes, "ADMIN_LOGS");
 
     java.util.List<model.RoomType> featuredRoomTypes = java.util.Collections.emptyList();
     if (!internal) {
@@ -155,19 +163,27 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/room-types"><span>Loại phòng</span><h3>Quản lý loại phòng</h3><p>Quản lý hạng phòng, giá và sức chứa.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Buồng phòng</span><h3>Nhiệm vụ dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/news"><span>Tin tức</span><h3>Quản lý tin tức</h3><p>Thêm, sửa, xóa các chương trình khuyến mãi.</p></a>
-        <% } else if ("ADMIN".equalsIgnoreCase(role)) { %>
-            <article class="preview-card admin-action-card">
+        <% } %>
+        <% if (canAdminUsers) { %>
+            <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/users">
                 <span>Admin</span>
                 <h3>Người dùng</h3>
-                <p>Quản lý tài khoản và phân quyền.</p>
-                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Mở quản lý</a>
-            </article>
-            <article class="preview-card admin-action-card">
-                <span>Cấu hình</span>
-                <h3>Cấu hình</h3>
-                <p>Thiết lập hệ thống và tích hợp.</p>
-                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/system-config">Mở cấu hình</a>
-            </article>
+                <p>Quản lý tài khoản nội bộ, trạng thái hoạt động và phân role cho user.</p>
+            </a>
+        <% } %>
+        <% if (canAdminRoles) { %>
+            <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/roles">
+                <span>Phân quyền</span>
+                <h3>Vai trò và quyền</h3>
+                <p>Quản lý các role ngoài ADMIN và cập nhật quyền khi cần chỉnh sửa.</p>
+            </a>
+        <% } %>
+        <% if (canAdminLogs) { %>
+            <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/logs">
+                <span>Kiểm tra</span>
+                <h3>Nhật ký hệ thống</h3>
+                <p>Theo dõi các thao tác quản trị quan trọng trong hệ thống.</p>
+            </a>
         <% } %>
     </section>
 </main>

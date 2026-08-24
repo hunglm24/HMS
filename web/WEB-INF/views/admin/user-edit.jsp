@@ -11,10 +11,27 @@
     private boolean selectableRole(Role role) {
         return role != null && !"ADMIN".equalsIgnoreCase(role.getName());
     }
+    private boolean hasPermission(Object permissions, String code) {
+        return permissions instanceof java.util.Set && ((java.util.Set<?>) permissions).contains(code);
+    }
+    private String beanString(Object bean, String getterName) {
+        if (bean == null) return "";
+        try {
+            Object value = bean.getClass().getMethod(getterName).invoke(bean);
+            return value == null ? "" : String.valueOf(value);
+        } catch (ReflectiveOperationException ex) {
+            return "";
+        }
+    }
 %>
 <%
     User editUser = (User) request.getAttribute("editUser");
     List<Role> roles = (List<Role>) request.getAttribute("roles");
+    String currentRole = beanString(session.getAttribute("currentUser"), "getRoleName");
+    Object permissionCodes = session.getAttribute("permissionCodes");
+    boolean admin = "ADMIN".equalsIgnoreCase(currentRole);
+    boolean canAdminRoles = admin || hasPermission(permissionCodes, "ADMIN_ROLES");
+    boolean canAdminLogs = admin || hasPermission(permissionCodes, "ADMIN_LOGS");
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -37,9 +54,10 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main class="page-container">
     <nav class="admin-tabs">
+        <a href="${pageContext.request.contextPath}/">Dashboard</a>
         <a class="active" href="${pageContext.request.contextPath}/admin/users">Users</a>
-        <a href="${pageContext.request.contextPath}/admin/roles">Roles & Permissions</a>
-        <a href="${pageContext.request.contextPath}/admin/logs">System Logs</a>
+        <% if (canAdminRoles) { %><a href="${pageContext.request.contextPath}/admin/roles">Roles & Permissions</a><% } %>
+        <% if (canAdminLogs) { %><a href="${pageContext.request.contextPath}/admin/logs">System Logs</a><% } %>
     </nav>
 
     <h1>Edit user #<%= editUser.getUserId() %></h1>

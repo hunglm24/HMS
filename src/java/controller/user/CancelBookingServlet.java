@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import service.CancellationPolicyService;
 
 @WebServlet(name = "CancelBookingServlet", urlPatterns = {"/user/cancel-booking"})
 public class CancelBookingServlet extends HttpServlet {
@@ -53,22 +54,23 @@ public class CancelBookingServlet extends HttpServlet {
                 return;
             }
 
-            // Calculate Fee
-            java.time.LocalDate checkIn = booking.getCheckInDate().toLocalDate();
-            java.time.LocalDate today = java.time.LocalDate.now();
-            long daysUntilCheckIn = java.time.temporal.ChronoUnit.DAYS.between(today, checkIn);
-            
-            java.math.BigDecimal fee = java.math.BigDecimal.ZERO;
-            if (daysUntilCheckIn < 2) {
-                // Phạt 20% nếu hủy sát ngày (dưới 48h)
-                fee = booking.getTotalAmount().multiply(new java.math.BigDecimal("0.20"));
-            }
+            CancellationPolicyService policyService = new CancellationPolicyService();
+            CancellationPolicyService.RefundResult refund =
+                    policyService.calculateRefund(booking, java.time.LocalDate.now());
 
-            String fullReason = reason + " | Phí hủy dự kiến: " + fee + " VND";
+            String fullReason = reason
+                    + " | Tỷ lệ hoàn: " + refund.getRefundRate().stripTrailingZeros().toPlainString() + "%"
+                    + " | Số tiền hoàn dự kiến: " + refund.getRefundAmount() + " VND"
+                    + " | Phí hủy dự kiến: " + refund.getCancellationFee() + " VND"
+                    + " | Nguồn chính sách: " + (refund.isFromPolicy() ? "Manager" : "Mặc định hệ thống");
             
             boolean success = bookingDao.cancelBooking(bookingId, fullReason);
             if (success) {
-                request.getSession().setAttribute("message", "Hủy phòng thành công. " + (fee.compareTo(java.math.BigDecimal.ZERO) > 0 ? "Phí hủy áp dụng: " + fee + " VND." : "Bạn được miễn phí hủy phòng."));
+                request.getSession().setAttribute("message",
+                        "Hủy phòng thành công. Tỷ lệ hoàn "
+                                + refund.getRefundRate().stripTrailingZeros().toPlainString()
+                                + "%, số tiền hoàn dự kiến: " + refund.getRefundAmount()
+                                + " VND, phí hủy: " + refund.getCancellationFee() + " VND.");
             } else {
                 request.getSession().setAttribute("error", "Hệ thống bận, vui lòng thử lại sau.");
             }

@@ -10,7 +10,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class RoleDao {
     public List<Role> findAll() throws SQLException {
@@ -110,6 +112,26 @@ public class RoleDao {
                     permissions.add(permission);
                 }
                 return permissions;
+            }
+        }
+    }
+
+    public Set<String> findPermissionCodesForRole(long roleId) throws SQLException {
+        String sql = """
+                SELECT p.code
+                FROM permissions p
+                INNER JOIN role_permissions rp ON rp.permission_id = p.id
+                WHERE rp.role_id = ?
+                """;
+        try (Connection connection = DBConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, roleId);
+            try (ResultSet rs = statement.executeQuery()) {
+                Set<String> codes = new HashSet<>();
+                while (rs.next()) {
+                    codes.add(rs.getString("code"));
+                }
+                return codes;
             }
         }
     }
