@@ -1,13 +1,6 @@
 package controller.page.manager;
 
 import dto.RoomManagementPageData;
-import model.Amenity;
-import model.RoomType;
-import service.RoomTypeService;
-import util.LocalFileUtil;
-import util.MoneyUtil;
-import util.MultipartUtil;
-import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,11 +8,19 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import model.Amenity;
+import model.RoomType;
+import service.RoomTypeService;
+import util.LocalFileUtil;
+import util.MoneyUtil;
+import util.MultipartUtil;
+import util.ValidationUtil;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +60,7 @@ public class RoomTypeManagementServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
 
         if ("/manager/room-types".equals(path)) {
@@ -84,18 +85,20 @@ public class RoomTypeManagementServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
-        if ("/manager/room-types/create".equals(req.getServletPath())) {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String path = req.getServletPath();
+
+        if ("/manager/room-types/create".equals(path)) {
             handleCreateRoomType(req, resp);
             return;
         }
 
-        if ("/manager/room-types/update".equals(req.getServletPath())) {
+        if ("/manager/room-types/update".equals(path)) {
             handleUpdateRoomType(req, resp);
             return;
         }
 
-        if ("/manager/room-types/toggle-status".equals(req.getServletPath())) {
+        if ("/manager/room-types/toggle-status".equals(path)) {
             handleToggleRoomTypeStatus(req, resp);
             return;
         }
@@ -103,19 +106,16 @@ public class RoomTypeManagementServlet extends HttpServlet {
         resp.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
-    // Handle create-room-type form submission with server-side validation.
-    private void handleCreateRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+    private void handleCreateRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         handlePersistRoomType(req, resp, false);
     }
 
-    // Handle edit-room-type form submission with server-side validation.
-    private void handleUpdateRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
+    private void handleUpdateRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         handlePersistRoomType(req, resp, true);
     }
 
-    // Handle quick room-type status toggle from the detail panel.
-    private void handleToggleRoomTypeStatus(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
-        Long roomTypeId = ValidationUtil.optionalPositiveLong(req.getParameter("id"), "Room type");
+    private void handleToggleRoomTypeStatus(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Long roomTypeId = ValidationUtil.optionalPositiveLong(req.getParameter("id"), "Loại phòng");
         if (roomTypeId == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -123,16 +123,15 @@ public class RoomTypeManagementServlet extends HttpServlet {
 
         try {
             roomTypeService.toggleRoomTypeStatus(roomTypeId);
-            req.getSession().setAttribute("toastMessage", "Room type status updated successfully.");
+            req.getSession().setAttribute("toastMessage", "Đã cập nhật trạng thái loại phòng.");
             req.getSession().setAttribute("toastType", "success");
             resp.sendRedirect(req.getContextPath() + "/manager/room-types?selectedRoomTypeId=" + roomTypeId);
         } catch (SQLException ex) {
-            throw new ServletException("Failed to toggle room type status", ex);
+            throw new ServletException("Không thể cập nhật trạng thái loại phòng", ex);
         }
     }
 
-    // Handle create/update-room-type form submission with shared validation.
-    private void handlePersistRoomType(HttpServletRequest req, HttpServletResponse resp, boolean updating) throws ServletException, java.io.IOException {
+    private void handlePersistRoomType(HttpServletRequest req, HttpServletResponse resp, boolean updating) throws ServletException, IOException {
         Map<String, String> errors = new LinkedHashMap<>();
         RoomType existingRoomType = null;
         RoomType roomType = new RoomType();
@@ -141,10 +140,10 @@ public class RoomTypeManagementServlet extends HttpServlet {
 
         if (updating) {
             try {
-                roomTypeId = ValidationUtil.requirePositiveLong(roomTypeIdRaw, "Room type");
+                roomTypeId = ValidationUtil.requirePositiveLong(roomTypeIdRaw, "Loại phòng");
                 existingRoomType = roomTypeService.findRoomTypeById(roomTypeId);
                 if (existingRoomType == null) {
-                    errors.put("general", "Room type not found.");
+                    errors.put("general", "Không tìm thấy loại phòng.");
                 } else {
                     roomType.setId(existingRoomType.getId());
                     roomType.setImageUrl(existingRoomType.getImageUrl());
@@ -165,7 +164,7 @@ public class RoomTypeManagementServlet extends HttpServlet {
         Part coverImagePart = null;
 
         try {
-            roomType.setName(ValidationUtil.requireText(name, "Room type name", 2, 100));
+            roomType.setName(ValidationUtil.requireText(name, "Tên loại phòng", 2, 100));
         } catch (IllegalArgumentException ex) {
             errors.put("name", ex.getMessage());
         }
@@ -177,7 +176,7 @@ public class RoomTypeManagementServlet extends HttpServlet {
         }
 
         try {
-            roomType.setSizeM2(ValidationUtil.optionalBigDecimal(sizeM2Raw, "Room size"));
+            roomType.setSizeM2(ValidationUtil.optionalBigDecimal(sizeM2Raw, "Diện tích phòng"));
         } catch (IllegalArgumentException ex) {
             errors.put("sizeM2", ex.getMessage());
         }
@@ -189,13 +188,13 @@ public class RoomTypeManagementServlet extends HttpServlet {
         }
 
         try {
-            roomType.setCapacity(ValidationUtil.requirePositiveInt(capacityRaw, "Capacity"));
+            roomType.setCapacity(ValidationUtil.requirePositiveInt(capacityRaw, "Sức chứa"));
         } catch (IllegalArgumentException ex) {
             errors.put("capacity", ex.getMessage());
         }
 
         try {
-            roomType.setBasePrice(MoneyUtil.parseVndMoney(basePriceRaw, "Base price"));
+            roomType.setBasePrice(MoneyUtil.parseVndMoney(basePriceRaw, "Giá cơ bản"));
         } catch (IllegalArgumentException ex) {
             errors.put("basePrice", ex.getMessage());
         }
@@ -215,15 +214,15 @@ public class RoomTypeManagementServlet extends HttpServlet {
                         MAX_COVER_IMAGE_SIZE,
                         ALLOWED_IMAGE_EXTENSIONS,
                         ALLOWED_IMAGE_CONTENT_TYPES,
-                        "Cover image"
+                        "Ảnh đại diện"
                 );
             } else if (!updating) {
-                errors.put("coverImage", "Cover image is required.");
+                errors.put("coverImage", "Vui lòng chọn ảnh đại diện.");
             }
         } catch (IllegalArgumentException ex) {
             errors.put("coverImage", ex.getMessage());
-        } catch (java.io.IOException ex) {
-            errors.put("coverImage", "Unable to read cover image.");
+        } catch (IOException ex) {
+            errors.put("coverImage", "Không thể đọc ảnh đại diện.");
         }
 
         if (!errors.isEmpty()) {
@@ -236,6 +235,7 @@ public class RoomTypeManagementServlet extends HttpServlet {
 
         String uploadedImagePath = null;
         String previousImagePath = roomType.getImageUrl();
+
         try {
             if (coverImagePart != null && coverImagePart.getSize() > 0) {
                 uploadedImagePath = LocalFileUtil.saveImagePart(
@@ -246,15 +246,18 @@ public class RoomTypeManagementServlet extends HttpServlet {
                 );
                 roomType.setImageUrl(uploadedImagePath);
             }
+
             if (updating) {
                 roomTypeService.updateRoomType(roomType, amenityIds);
             } else {
                 roomTypeService.createRoomType(roomType, amenityIds);
             }
+
             if (updating && uploadedImagePath != null && previousImagePath != null && !previousImagePath.equals(uploadedImagePath)) {
                 LocalFileUtil.deleteByWebPath(req.getServletContext(), previousImagePath);
             }
-            req.getSession().setAttribute("toastMessage", updating ? "Room type updated successfully." : "Room type created successfully.");
+
+            req.getSession().setAttribute("toastMessage", updating ? "Đã cập nhật loại phòng." : "Đã tạo loại phòng.");
             req.getSession().setAttribute("toastType", "success");
             resp.sendRedirect(req.getContextPath() + "/manager/room-types");
         } catch (IllegalArgumentException ex) {
@@ -266,7 +269,7 @@ public class RoomTypeManagementServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
         } catch (SQLException ex) {
             LocalFileUtil.deleteByWebPath(req.getServletContext(), uploadedImagePath);
-            errors.put("general", updating ? "Failed to update room type." : "Failed to create room type.");
+            errors.put("general", updating ? "Không thể cập nhật loại phòng." : "Không thể tạo loại phòng.");
             prepareCreateForm(req);
             req.setAttribute("errors", errors);
             prepareRoomTypeFormView(req, roomType, updating, roomTypeId, new LinkedHashSet<>(amenityIds));
@@ -274,19 +277,18 @@ public class RoomTypeManagementServlet extends HttpServlet {
         } catch (RuntimeException ex) {
             LocalFileUtil.deleteByWebPath(req.getServletContext(), uploadedImagePath);
             errors.put("general", ex.getMessage() == null
-                    ? (updating ? "Unexpected error while updating room type." : "Unexpected error while creating room type.")
+                    ? (updating ? "Đã xảy ra lỗi khi cập nhật loại phòng." : "Đã xảy ra lỗi khi tạo loại phòng.")
                     : ex.getMessage());
             prepareCreateForm(req);
             req.setAttribute("errors", errors);
             prepareRoomTypeFormView(req, roomType, updating, roomTypeId, new LinkedHashSet<>(amenityIds));
             req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
-        } catch (java.io.IOException ex) {
+        } catch (IOException ex) {
             LocalFileUtil.deleteByWebPath(req.getServletContext(), uploadedImagePath);
-            throw new ServletException("Failed to save cover image", ex);
+            throw new ServletException("Không thể lưu ảnh đại diện", ex);
         }
     }
 
-    // Prepare all create-form lookups from the database.
     private void prepareCreateForm(HttpServletRequest req) {
         List<String> statuses = roomTypeService.findCreateStatuses();
         if (statuses == null || statuses.isEmpty()) {
@@ -297,26 +299,27 @@ public class RoomTypeManagementServlet extends HttpServlet {
         req.setAttribute("amenities", roomTypeService.findActiveAmenities());
     }
 
-    // Prepare the shared create/edit form view model.
     private void prepareRoomTypeFormView(HttpServletRequest req, RoomType form, boolean updating, Long roomTypeId, Set<Long> selectedAmenityIds) {
         req.setAttribute("form", form);
         req.setAttribute("selectedAmenityIds", selectedAmenityIds == null ? new LinkedHashSet<Long>() : selectedAmenityIds);
         req.setAttribute("isEditMode", updating);
         req.setAttribute("roomTypeFormAction", updating ? "/manager/room-types/update" : "/manager/room-types/create");
-        req.setAttribute("roomTypePageTitle", updating ? "Edit Room Type | HMS" : "New Room Type | HMS");
-        req.setAttribute("roomTypePageHeading", updating ? "Edit Room Type" : "New Room Type");
-        req.setAttribute("roomTypePageSubtitle", updating
-                ? "Update the room type core info, configuration, and cover image."
-                : "Create a room type with required core info and optional configuration details.");
+        req.setAttribute("roomTypePageTitle", updating ? "Sửa loại phòng | HMS" : "Thêm loại phòng | HMS");
+        req.setAttribute("roomTypePageHeading", updating ? "Sửa loại phòng" : "Thêm loại phòng");
+        req.setAttribute(
+                "roomTypePageSubtitle",
+                updating
+                        ? "Cập nhật thông tin cơ bản, cấu hình và ảnh đại diện của loại phòng."
+                        : "Tạo loại phòng với các thông tin cơ bản bắt buộc và cấu hình bổ sung tùy chọn."
+        );
         req.setAttribute("roomTypeBackUrl", "/manager/room-types");
-        req.setAttribute("roomTypeSubmitLabel", updating ? "Update" : "Save");
+        req.setAttribute("roomTypeSubmitLabel", updating ? "Cập nhật" : "Lưu");
         req.setAttribute("roomTypeId", roomTypeId != null ? roomTypeId : form.getId());
         req.setAttribute("roomTypeExistingImageUrl", form != null ? form.getImageUrl() : null);
     }
 
-    // Prepare the edit form by loading the selected room type from the database.
-    private void handleEditRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, java.io.IOException {
-        Long roomTypeId = ValidationUtil.optionalPositiveLong(req.getParameter("id"), "Room type");
+    private void handleEditRoomType(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Long roomTypeId = ValidationUtil.optionalPositiveLong(req.getParameter("id"), "Loại phòng");
         if (roomTypeId == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -336,7 +339,6 @@ public class RoomTypeManagementServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/manager/room-type-create.jsp").forward(req, resp);
     }
 
-    // Prepare the room types listing page with DB data and the selected detail item.
     private void prepareRoomTypesPage(HttpServletRequest req) {
         RoomManagementPageData pageData = new RoomManagementPageData();
         String keyword = req.getParameter("keyword");
@@ -344,7 +346,7 @@ public class RoomTypeManagementServlet extends HttpServlet {
         String roomTypeSort = ValidationUtil.isBlank(req.getParameter("sort")) ? "popular" : req.getParameter("sort");
         String roomTypeDirection = normalizeSortDirection(req.getParameter("direction"));
         if (ValidationUtil.isBlank(roomTypeStatus)) {
-            roomTypeStatus = ACTIVE_STATUS;
+            roomTypeStatus = ALL_STATUS;
         }
         String selectedRoomTypeIdRaw = req.getParameter("selectedRoomTypeId");
         String pageRaw = req.getParameter("page");
@@ -368,12 +370,21 @@ public class RoomTypeManagementServlet extends HttpServlet {
         int toIndex = Math.min(fromIndex + ROOM_TYPES_PAGE_SIZE, allRoomTypes.size());
         List<RoomType> pagedRoomTypes = allRoomTypes.subList(fromIndex, toIndex);
 
+        int roomTypeTotalCount = allRoomTypes.size();
+        int roomTypeActiveCount = (int) allRoomTypes.stream()
+                .filter(roomType -> ACTIVE_STATUS.equalsIgnoreCase(roomType.getStatus()))
+                .count();
+        int roomTypeInactiveCount = (int) allRoomTypes.stream()
+                .filter(roomType -> "INACTIVE".equalsIgnoreCase(roomType.getStatus()))
+                .count();
+
         if (selectedRoomType == null && !ValidationUtil.isBlank(selectedRoomTypeIdRaw)) {
-            Long selectedRoomTypeId = ValidationUtil.optionalPositiveLong(selectedRoomTypeIdRaw, "Room type");
+            Long selectedRoomTypeId = ValidationUtil.optionalPositiveLong(selectedRoomTypeIdRaw, "Loại phòng");
             if (selectedRoomTypeId != null) {
                 selectedRoomType = roomTypeService.findRoomTypeById(selectedRoomTypeId);
             }
         }
+
         if (selectedRoomType == null && !pagedRoomTypes.isEmpty()) {
             selectedRoomType = pagedRoomTypes.get(0);
         }
@@ -386,6 +397,9 @@ public class RoomTypeManagementServlet extends HttpServlet {
         req.setAttribute("roomTypeNextDirection", "ASC".equals(roomTypeDirection) ? "DESC" : "ASC");
         req.setAttribute("selectedRoomType", selectedRoomType);
         req.setAttribute("selectedRoomTypeId", selectedRoomType == null ? null : selectedRoomType.getId());
+        req.setAttribute("roomTypeTotalCount", roomTypeTotalCount);
+        req.setAttribute("roomTypeActiveCount", roomTypeActiveCount);
+        req.setAttribute("roomTypeInactiveCount", roomTypeInactiveCount);
         req.setAttribute(
                 "selectedRoomTypeAmenities",
                 selectedRoomType == null ? List.of() : roomTypeService.findAmenitiesByRoomTypeId(selectedRoomType.getId())
@@ -468,14 +482,13 @@ public class RoomTypeManagementServlet extends HttpServlet {
         }
     }
 
-    // Find the room type that matches the selected id if the request provided one.
     private RoomType resolveSelectedRoomType(List<RoomType> roomTypes, String selectedRoomTypeIdRaw) {
         if (roomTypes == null || roomTypes.isEmpty() || ValidationUtil.isBlank(selectedRoomTypeIdRaw)) {
             return null;
         }
 
         try {
-            long selectedRoomTypeId = ValidationUtil.requirePositiveLong(selectedRoomTypeIdRaw, "Room type");
+            long selectedRoomTypeId = ValidationUtil.requirePositiveLong(selectedRoomTypeIdRaw, "Loại phòng");
             for (RoomType roomType : roomTypes) {
                 if (roomType != null && roomType.getId() != null && roomType.getId() == selectedRoomTypeId) {
                     return roomType;
@@ -487,7 +500,6 @@ public class RoomTypeManagementServlet extends HttpServlet {
         return null;
     }
 
-    // Parse amenity ids from the multi-select checkbox field.
     private List<Long> parseAmenityIds(String[] rawIds, Map<String, String> errors) {
         List<Long> amenityIds = new ArrayList<>();
         if (rawIds == null || rawIds.length == 0) {
@@ -499,7 +511,7 @@ public class RoomTypeManagementServlet extends HttpServlet {
                 continue;
             }
             try {
-                long amenityId = ValidationUtil.requirePositiveLong(rawId, "Amenity");
+                long amenityId = ValidationUtil.requirePositiveLong(rawId, "Tiện ích");
                 amenityIds.add(amenityId);
             } catch (IllegalArgumentException ex) {
                 errors.put("amenityIds", ex.getMessage());
