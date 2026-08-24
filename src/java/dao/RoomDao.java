@@ -76,7 +76,6 @@ public class RoomDao {
         return rooms;
     }
 
-    // Lấy danh sách tất cả các phòng kèm theo tên loại phòng tương ứng
     public List<Room> findAllWithRoomTypeName() {
         List<Room> rooms = new ArrayList<>();
         String sql = "SELECT r.*, rt.name AS room_type_name "
@@ -113,13 +112,13 @@ public class RoomDao {
                     SELECT br1.room_id, br1.booking_id
                     FROM booking_rooms br1
                     JOIN bookings b1 ON b1.id = br1.booking_id
-                    WHERE b1.status IN ('CONFIRMED', 'CHECKED_IN')
+                    WHERE b1.status IN ('CONFIRMED', 'CHECKED_IN', 'CHECKOUT_PENDING')
                       AND br1.id = (
                           SELECT MAX(br2.id)
                           FROM booking_rooms br2
                           JOIN bookings b2 ON b2.id = br2.booking_id
                           WHERE br2.room_id = br1.room_id
-                            AND b2.status IN ('CONFIRMED', 'CHECKED_IN')
+                            AND b2.status IN ('CONFIRMED', 'CHECKED_IN', 'CHECKOUT_PENDING')
                       )
                 ) active_br ON active_br.room_id = r.id
                 LEFT JOIN bookings b ON b.id = active_br.booking_id
@@ -147,7 +146,6 @@ public class RoomDao {
         return rooms;
     }
 
-    // Lấy danh sách các phòng, chỉ dữ liệu thuần của bảng rooms
     public List<Room> findAll() {
         List<Room> rooms = new ArrayList<>();
         String sql = "SELECT * FROM rooms ORDER BY room_number ASC";
@@ -164,7 +162,6 @@ public class RoomDao {
         return rooms;
     }
 
-    // Tìm một phòng cụ thể theo ID
     public Optional<Room> findById(long id) {
         String sql = "SELECT * FROM rooms WHERE id = ?";
 
@@ -195,7 +192,6 @@ public class RoomDao {
         return Optional.empty();
     }
 
-    // Thêm mới một phòng vật lý
     public boolean insert(Room room) {
         String sql = "INSERT INTO rooms (room_type_id, room_number, floor_number, status, description) "
                 + "VALUES (?, ?, ?, ?, ?)";
@@ -231,7 +227,6 @@ public class RoomDao {
         return false;
     }
 
-    // Cập nhật thông tin phòng vật lý
     public boolean update(Room room) {
         String sql = "UPDATE rooms SET room_type_id = ?, room_number = ?, floor_number = ?, status = ?, description = ? "
                 + "WHERE id = ?";
@@ -268,7 +263,6 @@ public class RoomDao {
         }
     }
 
-    // Xóa một phòng
     public boolean delete(long id) {
         String sql = "DELETE FROM rooms WHERE id = ?";
 
@@ -282,16 +276,13 @@ public class RoomDao {
         return false;
     }
 
-    // Hàm phụ trợ chuyển đổi ResultSet thành đối tượng Room
     private Room mapRow(ResultSet rs) throws SQLException {
         Room room = new Room();
         room.setId(rs.getLong("id"));
         room.setRoomTypeId(rs.getLong("room_type_id"));
         room.setRoomNumber(rs.getString("room_number"));
 
-        // getInt có thể trả về 0 nếu giá trị trong database là NULL
         int floorNumber = rs.getInt("floor_number");
-        // wasNull() kiểm tra cột vừa đọc có phải NULL hay không
         room.setFloorNumber(rs.wasNull() ? null : floorNumber);
 
         room.setStatus(rs.getString("status"));

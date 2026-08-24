@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="model.Room" %>
@@ -8,6 +8,8 @@
     Map<Integer, List<Room>> roomsByFloor = (Map<Integer, List<Room>>) request.getAttribute("roomsByFloor");
     Long availableCount = (Long) request.getAttribute("availableCount");
     Long occupiedCount = (Long) request.getAttribute("occupiedCount");
+    Long reservedCount = (Long) request.getAttribute("reservedCount");
+    Long inspectionCount = (Long) request.getAttribute("inspectionCount");
     Long cleaningCount = (Long) request.getAttribute("cleaningCount");
     Long maintenanceCount = (Long) request.getAttribute("maintenanceCount");
     Integer totalCount = (Integer) request.getAttribute("totalCount");
@@ -35,6 +37,7 @@
                 <div class="stat-badge stat-available">Trống: ${availableCount}</div>
                 <div class="stat-badge stat-occupied">Đang có khách: ${occupiedCount}</div>
                 <div class="stat-badge stat-reserved" style="background:#ffc107; color:#000;">Đã đặt trước: ${reservedCount}</div>
+                <div class="stat-badge stat-inspection" style="background:#8b5cf6; color:#fff;">Đang kiểm tra: ${inspectionCount}</div>
                 <div class="stat-badge stat-cleaning">Đang dọn: ${cleaningCount}</div>
                 <div class="stat-badge stat-maintenance">Bảo trì: ${maintenanceCount}</div>
                 <div class="stat-badge">Tổng: ${totalCount}</div>
@@ -74,6 +77,7 @@
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="AVAILABLE" ${param.status == 'AVAILABLE' ? 'selected' : ''}>Trống</option>
                                 <option value="OCCUPIED" ${param.status == 'OCCUPIED' ? 'selected' : ''}>Đang có khách</option>
+                                <option value="INSPECTION" ${param.status == 'INSPECTION' ? 'selected' : ''}>Đang kiểm tra</option>
                                 <option value="CLEANING" ${param.status == 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
                                 <option value="MAINTENANCE" ${param.status == 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
                             </select>
@@ -159,7 +163,7 @@
                                                     <c:set var="statusLabel" value="Chưa sẵn sàng" />
                                                 </c:when>
                                                 <c:when test="${roomStatus eq 'INSPECTION'}">
-                                                    <c:set var="statusLabel" value="Chờ kiểm tra" />
+                                                    <c:set var="statusLabel" value="Đang kiểm tra" />
                                                 </c:when>
                                                 <c:otherwise>
                                                     <c:set var="statusLabel" value="Không rõ" />
@@ -256,7 +260,3 @@
     <script src="${pageContext.request.contextPath}/assets/js/room-change-modal.js"></script>
 </body>
 </html>
-
-
-
-

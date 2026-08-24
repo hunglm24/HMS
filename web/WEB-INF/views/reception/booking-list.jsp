@@ -29,6 +29,11 @@
             <span>Đang lưu trú</span><strong>${checkedInCount}</strong>
         </div>
     </a>
+    <a href="?status=CHECKOUT_PENDING" style="text-decoration: none; color: inherit; display: block;">
+        <div class="metric-card ${param.status == 'CHECKOUT_PENDING' ? 'active' : ''}">
+            <span>Chờ kiểm phòng</span><strong>${checkoutPendingCount}</strong>
+        </div>
+    </a>
 </section>
 <form class="toolbar-card" method="get" action="${pageContext.request.contextPath}/reception/bookings">
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; align-items: end;">
@@ -39,6 +44,7 @@
             <option value="PENDING_PAYMENT" ${param.status == 'PENDING_PAYMENT' ? 'selected' : ''}>Chờ duyệt/Cọc (Pending)</option>
             <option value="CONFIRMED" ${param.status == 'CONFIRMED' ? 'selected' : ''}>Đã duyệt (Confirmed)</option>
             <option value="CHECKED_IN" ${param.status == 'CHECKED_IN' ? 'selected' : ''}>Đang lưu trú (Checked-in)</option>
+            <option value="CHECKOUT_PENDING" ${param.status == 'CHECKOUT_PENDING' ? 'selected' : ''}>Chờ kiểm phòng (Checkout Pending)</option>
             <option value="CHECKED_OUT" ${param.status == 'CHECKED_OUT' ? 'selected' : ''}>Đã trả phòng (Checked-out)</option>
             <option value="CANCELLED" ${param.status == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
         </select></label>
@@ -92,7 +98,10 @@
                     <a class="btn btn-primary" href="${pageContext.request.contextPath}/reception/check-in?bookingId=${b.bookingId}">Check-in</a>
                 </c:if>
                 <c:if test="${b.status == 'CHECKED_IN'}">
-                    <a class="btn btn-primary" style="background-color: var(--color-warning-600);" href="${pageContext.request.contextPath}/reception/check-out?bookingId=${b.bookingId}">Check-out</a>
+                    <a class="btn btn-primary" style="background-color: var(--color-warning-600);" href="${pageContext.request.contextPath}/reception/check-out?bookingId=${b.bookingId}#selected-booking">Trả phòng</a>
+                </c:if>
+                <c:if test="${b.status == 'CHECKOUT_PENDING'}">
+                    <a class="btn btn-primary" style="background-color: #d97706;" href="${pageContext.request.contextPath}/reception/check-out?bookingId=${b.bookingId}#selected-booking">Hoàn tất Check-out</a>
                 </c:if>
                 <c:if test="${b.status != 'PENDING_PAYMENT'}">
                     <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/booking-detail?id=${b.bookingId}">Chi tiết</a>

@@ -4,12 +4,15 @@ import model.CheckInBookingSummary;
 import model.RoomType;
 import util.DBConnectionUtil;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class BookingDao {
@@ -356,7 +359,8 @@ public class BookingDao {
                 case "overdue" -> conditions.add("DATE(b.check_in_date) < CURDATE() AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED')");
                 case "checkout_today" -> conditions.add("DATE(b.check_out_date) = CURDATE()");
                 case "checkout_upcoming" -> conditions.add("DATE(b.check_out_date) > CURDATE()");
-                case "checkout_overdue" -> conditions.add("DATE(b.check_out_date) < CURDATE() AND b.status = 'CHECKED_IN'");
+                case "checkout_overdue" -> conditions.add("DATE(b.check_out_date) < CURDATE() AND b.status IN ('CHECKED_IN', 'CHECKOUT_PENDING')");
+                case "checkout_pending" -> conditions.add("b.status = 'CHECKOUT_PENDING'");
                 default -> {
                 }
             }
@@ -389,6 +393,8 @@ public class BookingDao {
             case "Pending" -> "PENDING_PAYMENT";
             case "Confirmed" -> "CONFIRMED";
             case "CheckedIn" -> "CHECKED_IN";
+            case "CheckoutPending" -> "CHECKOUT_PENDING";
+            case "CheckedOut" -> "CHECKED_OUT";
             case "Cancelled" -> "CANCELLED";
             default -> bookingStatus;
         };
@@ -449,6 +455,88 @@ public class BookingDao {
         booking.setRoomTypes(resultSet.getString("room_types"));
         booking.setRoomNumbers(resultSet.getString("room_numbers"));
         return booking;
+    }
+
+    public List<Map<String, Object>> getInspectionSummary(long bookingId) throws SQLException {
+        String sql = """
+                SELECT br.id AS booking_room_id, r.id AS room_id, r.room_number, rt.name AS room_type_name,
+                       ri.id AS inspection_id, ri.status AS inspection_status, ri.note AS inspection_note,
+                       ht.id AS task_id, ht.status AS task_status,
+                       COALESCE(a.full_name, 'Chưa chỉ định') AS staff_name
+                FROM booking_rooms br
+                JOIN rooms r ON br.room_id = r.id
+                JOIN room_types rt ON r.room_type_id = rt.id
+                LEFT JOIN room_inspections ri ON ri.booking_room_id = br.id
+                LEFT JOIN housekeeping_tasks ht ON ht.id = ri.housekeeping_task_id
+                LEFT JOIN accounts a ON ht.assigned_to = a.id
+                WHERE br.booking_id = ?
+                ORDER BY r.room_number ASC
+                """;
+        try (Connection conn = requireConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, bookingId);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<Map<String, Object>> list = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("bookingRoomId", rs.getLong("booking_room_id"));
+                    map.put("roomId", rs.getLong("room_id"));
+                    map.put("roomNumber", rs.getString("room_number"));
+                    map.put("roomTypeName", rs.getString("room_type_name"));
+                    map.put("inspectionId", rs.getObject("inspection_id"));
+                    map.put("inspectionStatus", rs.getString("inspection_status"));
+                    map.put("inspectionNote", rs.getString("inspection_note"));
+                    map.put("taskId", rs.getObject("task_id"));
+                    map.put("taskStatus", rs.getString("task_status"));
+                    map.put("staffName", rs.getString("staff_name"));
+                    list.add(map);
+                }
+                return list;
+            }
+        }
+    }
+
+    public List<Map<String, Object>> getDamageReports(long bookingId) throws SQLException {
+        String sql = """
+                SELECT dr.id, dr.damage_type, dr.compensation_amount, dr.charge_status, dr.note,
+                       e.name AS equipment_name, r.room_number
+                FROM damage_reports dr
+                JOIN room_equipment re ON dr.room_equipment_id = re.id
+                JOIN equipment e ON re.equipment_id = e.id
+                JOIN rooms r ON re.room_id = r.id
+                WHERE dr.booking_id = ?
+                ORDER BY dr.id ASC
+                """;
+        try (Connection conn = requireConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, bookingId);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<Map<String, Object>> list = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", rs.getLong("id"));
+                    map.put("damageType", rs.getString("damage_type"));
+                    map.put("compensationAmount", rs.getBigDecimal("compensation_amount"));
+                    map.put("chargeStatus", rs.getString("charge_status"));
+                    map.put("note", rs.getString("note"));
+                    map.put("equipmentName", rs.getString("equipment_name"));
+                    map.put("roomNumber", rs.getString("room_number"));
+                    list.add(map);
+                }
+                return list;
+            }
+        }
+    }
+
+    public BigDecimal getTotalDamageAmount(long bookingId) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(compensation_amount), 0) FROM damage_reports WHERE booking_id = ? AND charge_status != 'WAIVED'";
+        try (Connection conn = requireConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, bookingId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getBigDecimal(1) : BigDecimal.ZERO;
+            }
+        }
     }
 
     private Connection requireConnection() throws SQLException {

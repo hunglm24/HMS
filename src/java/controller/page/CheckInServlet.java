@@ -31,8 +31,10 @@ public class CheckInServlet extends HttpServlet {
         int bookingId = parseInt(request.getParameter("bookingId"));
         String keyword = request.getParameter("q");
         String bookingStatus = request.getParameter("status");
+        if (bookingStatus == null) bookingStatus = "Confirmed";
         Integer roomTypeId = parseNullableInt(request.getParameter("roomTypeId"));
         String scope = request.getParameter("scope");
+        if (scope == null) scope = "today";
         String sort = request.getParameter("sort");
         String direction = request.getParameter("direction");
         int page = parseInt(request.getParameter("page"));
