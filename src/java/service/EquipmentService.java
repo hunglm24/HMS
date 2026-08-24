@@ -14,6 +14,7 @@ import java.util.Set;
 public class EquipmentService {
     private static final Set<String> EQUIPMENT_STATUSES = Set.of("ACTIVE", "INACTIVE");
     private static final Set<String> FILTER_STATUSES = Set.of("ACTIVE", "INACTIVE", "ALL");
+    private static final Set<String> FILTER_FLAGS = Set.of("ALL", "YES", "NO");
     private final EquipmentDao equipmentDao;
 
     public EquipmentService() {
@@ -31,12 +32,14 @@ public class EquipmentService {
     }
 
     // Return filtered equipment items for the management list.
-    public List<Equipment> findEquipments(String keyword, String status) {
+    public List<Equipment> findEquipments(String keyword, String status, String maintainable, String hasImage) {
         String normalizedKeyword = ValidationUtil.normalizeLower(keyword);
         String filterKeyword = normalizedKeyword.length() > 100
                 ? normalizedKeyword.substring(0, 100)
                 : normalizedKeyword;
         String normalizedStatus = ValidationUtil.optionalStatus(status, FILTER_STATUSES);
+        String normalizedMaintainable = ValidationUtil.optionalStatus(maintainable, FILTER_FLAGS);
+        String normalizedHasImage = ValidationUtil.optionalStatus(hasImage, FILTER_FLAGS);
 
         List<Equipment> equipments = findEquipments();
         if (equipments.isEmpty()) {
@@ -48,6 +51,14 @@ public class EquipmentService {
                 .filter(equipment -> normalizedStatus == null
                         || "ALL".equals(normalizedStatus)
                         || normalizedStatus.equalsIgnoreCase(equipment.getStatus()))
+                .filter(equipment -> normalizedMaintainable == null
+                        || "ALL".equals(normalizedMaintainable)
+                        || ("YES".equals(normalizedMaintainable) && equipment != null && equipment.isMaintainable())
+                        || ("NO".equals(normalizedMaintainable) && equipment != null && !equipment.isMaintainable()))
+                .filter(equipment -> normalizedHasImage == null
+                        || "ALL".equals(normalizedHasImage)
+                        || ("YES".equals(normalizedHasImage) && equipment != null && !ValidationUtil.isBlank(equipment.getImageUrl()))
+                        || ("NO".equals(normalizedHasImage) && equipment != null && ValidationUtil.isBlank(equipment.getImageUrl())))
                 .toList();
     }
 

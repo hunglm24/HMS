@@ -14,6 +14,7 @@ public class RoomManagementPageData {
     private Integer floor;
     private String roomTypeStatus;
     private String roomStatus;
+    private String equipmentFilter;
 
     // Shared list of room types for both tabs and modal dropdowns.
     public List<RoomType> getRoomTypes() {
@@ -85,5 +86,14 @@ public class RoomManagementPageData {
 
     public void setRoomStatus(String roomStatus) {
         this.roomStatus = roomStatus;
+    }
+
+    // Optional filter to show rooms with or without assigned equipment.
+    public String getEquipmentFilter() {
+        return equipmentFilter;
+    }
+
+    public void setEquipmentFilter(String equipmentFilter) {
+        this.equipmentFilter = equipmentFilter;
     }
 }
