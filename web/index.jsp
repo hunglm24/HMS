@@ -75,7 +75,7 @@
     java.util.List<model.News> latestNews = java.util.Collections.emptyList();
     if (!internal) {
         dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
-        featuredRoomTypes = roomTypeDao.findActive();
+        featuredRoomTypes = roomTypeDao.findFeaturedAvailable(4);
         try {
             dao.NewsDao newsDao = new dao.NewsDao();
             latestNews = newsDao.getLatestNews(3);
@@ -105,12 +105,13 @@
     </section>
 
     <section class="section-head">
-        <div><h2>Danh sách phòng</h2></div>
+        <div><p class="section-kicker">Gợi ý cho bạn</p><h2>Phòng nổi bật</h2></div>
+        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/search">Xem tất cả phòng trống</a>
     </section>
 
     <section class="room-card-grid">
         <% if (featuredRoomTypes.isEmpty()) { %>
-            <p>Hiện chưa có loại phòng nào.</p>
+            <p>Hiện chưa có phòng trống để giới thiệu.</p>
         <% } else { %>
             <% for (model.RoomType roomType : featuredRoomTypes) {
                 String imageUrl = resolveImageSrc(
@@ -133,6 +134,7 @@
                         <h3><%= escapeHtml(roomType.getName()) %></h3>
                         <p><%= escapeHtml(description) %></p>
                         <div class="room-meta">
+                            <span><%= roomType.getAvailableQuantity() %> phòng trống</span>
                             <span><%= roomType.getCapacity() %> khách</span>
                             <span><%= "-".equals(sizeText) ? "-" : sizeText %> m2</span>
                             <span><%= escapeHtml(bedType) %></span>
