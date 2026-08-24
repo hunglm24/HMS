@@ -60,14 +60,39 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
       </select>
 
       <label for="roomStatus">Trạng thái</label>
-      <select id="roomStatus" name="status">
+      <!-- <select id="roomStatus" name="status">
         <option value="AVAILABLE">Trống</option>
         <option value="OCCUPIED">Đang có khách</option>
         <option value="CLEANING">Đang dọn</option>
         <option value="MAINTENANCE">Bảo trì</option>
         <option value="NOT_READY">Chưa sẵn sàng</option>
         <option value="INSPECTION">Chờ kiểm tra</option>
-      </select>
+      </select> -->
+      <c:choose>
+        <c:when
+          test="${isEditMode and (form.status eq 'OCCUPIED' or form.status eq 'NOT_READY')}"
+        >
+          <input
+            type="hidden"
+            id="roomStatus"
+            name="status"
+            value="${form.status}"
+          />
+          <div class="room-status-readonly">
+            <c:out value="${form.status}" />
+          </div>
+        </c:when>
+        <c:otherwise>
+          <select id="roomStatus" name="status">
+            <option value="AVAILABLE">Trống</option>
+            <option value="CLEANING">Đang dọn</option>
+            <option value="MAINTENANCE">Bảo trì</option>
+            <option value="INSPECTION">Chờ kiểm tra</option>
+            <option value="OCCUPIED" disabled>Đang có khách</option>
+            <option value="NOT_READY" disabled>Chưa sẵn sàng</option>
+          </select>
+        </c:otherwise>
+      </c:choose>
 
       <label for="roomDescription">Mô tả</label>
       <textarea

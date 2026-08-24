@@ -144,7 +144,7 @@
                 </c:choose>
                 </tbody>
             </table>
-            <div class="room-management-pagination" data-pagination-controls></div>
+        <div class="room-management-pagination" data-pagination-controls data-pagination-target="room-change-history"></div>
         </div>
     </section>
 </main>
