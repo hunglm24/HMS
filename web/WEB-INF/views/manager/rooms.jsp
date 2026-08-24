@@ -80,7 +80,7 @@
                 <button class="btn" type="button" data-room-mgmt-open="room">+ Thêm phòng</button>
             </div>
 
-            <div class="room-management-table-wrap" data-pagination-root data-pagination-key="rooms-table" data-pagination-size="5">
+            <div class="room-management-table-wrap" data-pagination-root data-pagination-key="rooms" data-pagination-size="5">
                 <table class="room-management-table">
                     <thead>
                     <tr>
@@ -168,10 +168,9 @@
                     </c:choose>
                     </tbody>
                 </table>
-                <div class="room-management-pagination" data-pagination-controls></div>
             </div>
 
-            <div class="room-management-mobile-list" data-pagination-root data-pagination-key="rooms-mobile" data-pagination-size="5">
+            <div class="room-management-mobile-list" data-pagination-root data-pagination-key="rooms" data-pagination-size="5">
                 <%-- Render the room mobile cards. --%>
                 <c:forEach var="room" items="${rooms}">
                     <article class="room-management-card" data-pagination-item>
@@ -229,8 +228,9 @@
                         </div>
                     </article>
                 </c:forEach>
-                <div class="room-management-pagination" data-pagination-controls></div>
             </div>
+
+            <div class="room-management-pagination" data-pagination-controls data-pagination-target="rooms"></div>
         </section>
       </section>
     </main>
@@ -239,6 +239,6 @@
     <jsp:include page="/WEB-INF/views/manager/modals/task-modal.jsp" />
 
     <script src="${pageContext.request.contextPath}/assets/js/rooms.js?v=20260820-5"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/pagination.js?v=20260820-7?v=20260820-7"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/pagination.js?v=20260820-7"></script>
   </body>
 </html>

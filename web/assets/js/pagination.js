@@ -14,6 +14,10 @@
         return Array.from(root.querySelectorAll('[data-pagination-item]'));
     }
 
+    function getPaginationKey(root) {
+        return root.dataset.paginationKey || root.id || root.className || 'default';
+    }
+
     function clampPage(page, totalPages) {
         return Math.min(Math.max(page, 1), Math.max(totalPages, 1));
     }
@@ -28,20 +32,26 @@
         return button;
     }
 
-    function renderPagination(root) {
-        const items = getItems(root);
-        let controls = root.querySelector('[data-pagination-controls]');
-        if (!controls && root.nextElementSibling && root.nextElementSibling.matches('[data-pagination-controls]')) {
-            controls = root.nextElementSibling;
-        }
-        if (!controls && root.parentElement) {
-            controls = root.parentElement.querySelector('[data-pagination-controls]');
-        }
-        if (!controls) return;
+    function getControlsForGroup(key) {
+        return document.querySelector(`[data-pagination-controls][data-pagination-target="${key}"]`);
+    }
 
-        const pageSize = getPageSize(root);
-        const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-        const storageKey = getStorageKey(root);
+    function renderPaginationGroup(roots) {
+        if (!roots.length) {
+            return;
+        }
+
+        const key = getPaginationKey(roots[0]);
+        const controls = getControlsForGroup(key);
+        if (!controls) {
+            return;
+        }
+
+        const pageSize = getPageSize(roots[0]);
+        const itemsByRoot = roots.map((root) => getItems(root));
+        const totalItems = itemsByRoot[0].length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+        const storageKey = getStorageKey(roots[0]);
         const savedPage = Number.parseInt(sessionStorage.getItem(storageKey) || '1', 10);
         let currentPage = clampPage(Number.isFinite(savedPage) ? savedPage : 1, totalPages);
 
@@ -49,16 +59,18 @@
             currentPage = clampPage(page, totalPages);
             sessionStorage.setItem(storageKey, String(currentPage));
 
-            items.forEach((item, index) => {
-                const start = (currentPage - 1) * pageSize;
-                const end = start + pageSize;
-                const isHidden = (index < start || index >= end);
-                item.hidden = isHidden;
-                if (isHidden) {
-                    item.style.setProperty('display', 'none', 'important');
-                } else {
-                    item.style.removeProperty('display');
-                }
+            itemsByRoot.forEach((items) => {
+                items.forEach((item, index) => {
+                    const start = (currentPage - 1) * pageSize;
+                    const end = start + pageSize;
+                    const isHidden = index < start || index >= end;
+                    item.hidden = isHidden;
+                    if (isHidden) {
+                        item.style.setProperty('display', 'none', 'important');
+                    } else {
+                        item.style.removeProperty('display');
+                    }
+                });
             });
 
             controls.innerHTML = '';
@@ -90,7 +102,17 @@
     }
 
     function init() {
-        document.querySelectorAll('[data-pagination-root]').forEach(renderPagination);
+        const groupedRoots = new Map();
+
+        document.querySelectorAll('[data-pagination-root]').forEach((root) => {
+            const key = getPaginationKey(root);
+            if (!groupedRoots.has(key)) {
+                groupedRoots.set(key, []);
+            }
+            groupedRoots.get(key).push(root);
+        });
+
+        groupedRoots.forEach((roots) => renderPaginationGroup(roots));
     }
 
     if (document.readyState === 'loading') {

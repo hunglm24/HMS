@@ -166,7 +166,7 @@
                 <% } %>
             </tbody>
         </table>
-        <div class="room-management-pagination" data-pagination-controls></div>
+        <div class="room-management-pagination" data-pagination-controls data-pagination-target="task-list-table"></div>
     </div>
     <% } %>
 </main>

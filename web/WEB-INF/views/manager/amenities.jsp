@@ -62,7 +62,7 @@
             </form>
           </div>
 
-          <div class="room-management-table-wrap" data-pagination-root data-pagination-key="amenities-table" data-pagination-size="5">
+          <div class="room-management-table-wrap" data-pagination-root data-pagination-key="amenities" data-pagination-size="5">
             <table class="room-management-table">
               <thead>
                 <tr>
@@ -131,10 +131,9 @@
                 </c:choose>
               </tbody>
             </table>
-            <div class="room-management-pagination" data-pagination-controls></div>
           </div>
 
-          <div class="room-management-mobile-list" data-pagination-root data-pagination-key="amenities-mobile" data-pagination-size="5">
+          <div class="room-management-mobile-list" data-pagination-root data-pagination-key="amenities" data-pagination-size="5">
             <c:forEach var="amenity" items="${amenities}">
               <article class="room-management-card" data-pagination-item>
                 <div class="room-management-card__head">
@@ -167,8 +166,9 @@
                 </div>
               </article>
             </c:forEach>
-            <div class="room-management-pagination" data-pagination-controls></div>
           </div>
+
+          <div class="room-management-pagination" data-pagination-controls data-pagination-target="amenities"></div>
         </section>
       </section>
     </main>

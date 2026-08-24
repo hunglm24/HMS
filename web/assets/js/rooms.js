@@ -1,5 +1,7 @@
 (function () {
     // Room management uses a tiny modal controller and confirm hooks.
+    const LOCKED_ROOM_STATUSES = new Set(['OCCUPIED', 'NOT_READY']);
+    const ROOM_STATUS_HIDDEN_INPUT_ID = 'roomStatusLockedValue';
     const modalState = {
         room: document.getElementById('roomModal'),
         task: document.getElementById('taskModal')
@@ -13,9 +15,78 @@
         modal.setAttribute('aria-hidden', 'false');
     }
 
+    function getRoomForm() {
+        return modalState.room ? modalState.room.querySelector('form.room-management-form') : null;
+    }
+
+    function getRoomStatusField() {
+        return document.getElementById('roomStatus');
+    }
+
+    function getRoomStatusHiddenInput() {
+        return document.getElementById(ROOM_STATUS_HIDDEN_INPUT_ID);
+    }
+
+    function clearRoomStatusLock() {
+        const hiddenInput = getRoomStatusHiddenInput();
+        const field = getRoomStatusField();
+        if (hiddenInput && hiddenInput !== field) {
+            hiddenInput.remove();
+        }
+
+        if (field && field.tagName === 'SELECT') {
+            field.disabled = false;
+        }
+    }
+
+    function lockRoomStatus(status) {
+        const field = getRoomStatusField();
+        const form = getRoomForm();
+        if (!field || !form) return;
+
+        const lockedStatus = String(status || '').trim().toUpperCase();
+        if (!LOCKED_ROOM_STATUSES.has(lockedStatus)) {
+            clearRoomStatusLock();
+            return;
+        }
+
+        if (field.tagName !== 'SELECT') {
+            field.value = lockedStatus;
+            return;
+        }
+
+        let hiddenInput = getRoomStatusHiddenInput();
+        if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = ROOM_STATUS_HIDDEN_INPUT_ID;
+            hiddenInput.name = 'status';
+            field.insertAdjacentElement('beforebegin', hiddenInput);
+        }
+
+        hiddenInput.value = lockedStatus;
+        field.value = lockedStatus;
+        field.disabled = true;
+    }
+
+    function syncRoomStatusField(status) {
+        const normalizedStatus = String(status || '').trim().toUpperCase();
+        if (LOCKED_ROOM_STATUSES.has(normalizedStatus)) {
+            lockRoomStatus(normalizedStatus);
+            return;
+        }
+
+        clearRoomStatusLock();
+        const field = getRoomStatusField();
+        if (field) {
+            field.value = normalizedStatus || 'AVAILABLE';
+        }
+    }
+
     // Reset the room modal into create mode.
     function openRoomModal() {
         removeTemporaryRoomTypeOption();
+        clearRoomStatusLock();
         setText('roomModalTitle', 'Thêm phòng');
         setValue('roomId', '');
         setValue('roomNumber', '');
@@ -287,7 +358,7 @@
                 setValue('roomFloor', button.dataset.roomFloor);
                 ensureRoomTypeOption(button.dataset.roomTypeId, button.dataset.roomTypeName);
                 setValue('roomTypeSelect', button.dataset.roomTypeId);
-                setValue('roomStatus', button.dataset.roomStatus || 'AVAILABLE');
+                syncRoomStatusField(button.dataset.roomStatus || 'AVAILABLE');
                 setValue('roomDescription', button.dataset.roomDescription);
                 openModal('room');
             });

@@ -11,12 +11,152 @@
     padding-bottom: var(--space-5);
 }
 
-body > .internal-sidebar ~ main.equipment-management-page {
-    width: calc(100% - 260px);
-    max-width: none;
-    margin-left: 260px;
-    padding: 32px;
-    box-sizing: border-box;
+.equipment-filters {
+    grid-template-columns: minmax(260px, 2fr) minmax(180px, 1fr) auto auto;
+    gap: var(--space-3);
+    align-items: end;
+}
+
+.equipment-reset-btn {
+    text-decoration: none;
+    text-align: center;
+}
+
+.equipment-table__th--image {
+    width: 60px;
+    text-align: center;
+}
+
+.equipment-table__th--actions {
+    text-align: right;
+}
+
+.equipment-table__cell--image {
+    text-align: center;
+}
+
+.equipment-table__cell--actions {
+    text-align: right;
+}
+
+.equipment-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f8fafc;
+    border: 1px solid #dbeafe;
+    display: grid;
+    place-items: center;
+    flex: none;
+}
+
+.equipment-thumb__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.equipment-thumb--fallback {
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.equipment-item-name {
+    display: grid;
+    gap: 4px;
+}
+
+.equipment-item-name strong {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-text-primary);
+}
+
+.equipment-item-name__id {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.equipment-maintainable-chip {
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    gap: 4px;
+}
+
+.equipment-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: #475569;
+    font-size: 13.5px;
+    line-height: 1.4;
+}
+
+.equipment-price {
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.equipment-actions {
+    justify-content: flex-end;
+}
+
+.equipment-card {
+    gap: var(--space-3);
+}
+
+.equipment-card__head {
+    gap: var(--space-3);
+}
+
+.equipment-card__head-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.equipment-card__title {
+    min-width: 0;
+}
+
+.equipment-card__title h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.equipment-card__badge-row {
+    margin: 8px 0 0;
+}
+
+.equipment-card__meta {
+    margin: 0;
+}
+
+.equipment-card__meta-item {
+    display: grid;
+    gap: 4px;
+}
+
+.equipment-card__meta-item dd {
+    margin: 0;
+}
+
+.equipment-table tbody td {
+    vertical-align: middle;
+}
+
+.equipment-table tbody tr:hover td {
+    background: #f8fbff;
 }
 
 .equipment-toolbar,
@@ -188,59 +328,12 @@ body > .internal-sidebar ~ main.equipment-management-page {
     border-bottom-right-radius: 18px;
 }
 
-.equipment-thumb {
-    width: 64px;
-    height: 64px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #edf2fb;
-    display: grid;
-    place-items: center;
-    color: #94a3b8;
-    font-size: 14px;
-    font-weight: 800;
-}
-
-.equipment-thumb img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.equipment-item-name {
-    display: grid;
-    gap: 4px;
-}
-
-.equipment-item-name strong {
-    font-size: 16px;
-    line-height: 1.2;
-}
-
-.equipment-item-name span,
-.equipment-category,
-.equipment-updated {
-    color: var(--color-text-secondary);
-    font-size: 13px;
-}
-
 .equipment-category {
     display: inline-block;
     max-width: 220px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.status-chip--success {
-    background: #d9fbe0;
-    color: #15803d;
-}
-
-.status-chip--neutral {
-    background: #f3f4f6;
-    color: #6b7280;
 }
 
 .equipment-stock {
@@ -334,6 +427,11 @@ body > .internal-sidebar ~ main.equipment-management-page {
         gap: 4px;
         padding: 0;
         border: 0 !important;
+    }
+
+    .equipment-table tbody td.equipment-table__cell--image,
+    .equipment-table tbody td.equipment-table__cell--actions {
+        text-align: left;
     }
 
     .equipment-table tbody td::before {

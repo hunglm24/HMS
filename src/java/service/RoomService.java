@@ -14,6 +14,7 @@ import java.util.Set;
 public class RoomService {
     private static final Set<String> STATUSES = Set.of(
             "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION");
+    private static final Set<String> LOCKED_EDIT_STATUSES = Set.of("OCCUPIED", "NOT_READY");
 
     private final RoomDao roomDao;
     private final RoomTypeDao roomTypeDao;
@@ -66,6 +67,11 @@ public class RoomService {
         validateRoom(room);
         ensureRoomTypeAssignable(room);
         Long roomId = room.getId();
+        if (roomId != null && roomId > 0) {
+            Room existingRoom = roomDao.findById(roomId)
+                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay phong."));
+            applyEditableStatusRule(room, existingRoom);
+        }
         ensureRoomNumberUnique(room.getRoomNumber(), roomId == null || roomId <= 0 ? null : roomId);
         if (roomId != null && roomId > 0) {
             return roomDao.update(room);
@@ -125,6 +131,24 @@ public class RoomService {
         room.setRoomNumber(roomNumber);
         room.setDescription(description.isEmpty() ? null : description);
         room.setStatus(status == null ? "AVAILABLE" : status);
+    }
+
+    // Keep protected statuses stable on edit, and reject manual switching to them.
+    private void applyEditableStatusRule(Room incomingRoom, Room existingRoom) {
+        String currentStatus = ValidationUtil.optionalStatus(existingRoom.getStatus(), STATUSES);
+        String requestedStatus = ValidationUtil.optionalStatus(incomingRoom.getStatus(), STATUSES);
+        if (currentStatus != null && LOCKED_EDIT_STATUSES.contains(currentStatus.toUpperCase())) {
+            boolean sameStatus = requestedStatus != null && currentStatus.equalsIgnoreCase(requestedStatus);
+            ValidationUtil.requireTrue(sameStatus, "Trang thai nay khong duoc phep chinh tay.");
+            incomingRoom.setStatus(currentStatus);
+            return;
+        }
+
+        if (requestedStatus != null && LOCKED_EDIT_STATUSES.contains(requestedStatus.toUpperCase())) {
+            throw new IllegalArgumentException("Trang thai nay khong duoc phep chinh tay.");
+        }
+
+        incomingRoom.setStatus(requestedStatus == null ? "AVAILABLE" : requestedStatus);
     }
 
     // Make sure the selected room type really exists before saving.
