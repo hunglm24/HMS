@@ -9,21 +9,27 @@
                 .replace(">", "&gt;");
     }
 %>
+<%
+    model.HotelConfig registerConfig = (model.HotelConfig) application.getAttribute("hotelConfig");
+    String registerHotelName = registerConfig != null && registerConfig.getHotelName() != null && !registerConfig.getHotelName().isBlank()
+            ? registerConfig.getHotelName()
+            : "HMS Hotel";
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Đăng ký | HMS</title>
+    <title>Đăng ký | <%= escapeAttr(registerHotelName) %></title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css?v=20260816-4">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main id="main-content" class="auth-split-page register-page">
-    <section class="auth-hero" aria-label="Giới thiệu HMS">
+    <section class="auth-hero" aria-label="Giới thiệu <%= escapeAttr(registerHotelName) %>">
         <div class="auth-hero-content">
-            <a class="auth-hero-logo" href="${pageContext.request.contextPath}/">HMS</a>
+            <a class="auth-hero-logo" href="${pageContext.request.contextPath}/"><%= escapeAttr(registerHotelName) %></a>
             <p class="auth-hero-tagline">Hotel Management System</p>
             <div class="auth-preview-card auth-preview-main">
                 <span class="auth-preview-title">Theo dõi đặt phòng</span>
@@ -43,7 +49,7 @@
     </section>
     <section class="auth-panel" aria-labelledby="auth-title">
         <div class="auth-card auth-card-register">
-        <a class="auth-brand" href="${pageContext.request.contextPath}/">HMS</a>
+        <a class="auth-brand" href="${pageContext.request.contextPath}/"><%= escapeAttr(registerHotelName) %></a>
         <p class="auth-subtitle">Hệ thống quản lý khách sạn</p>
         <h1 id="auth-title">Đăng ký</h1>
         <p class="auth-form-note">Tạo tài khoản để theo dõi và quản lý đặt phòng.</p>

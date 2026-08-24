@@ -54,7 +54,8 @@
   border-color: #fde68a;
 }
 
-.page-container.room-map-page {
+.page-container.room-map-page,
+body .internal-sidebar .page-container.room-map-page {
   width: calc(100% - 260px);
   max-width: none;
   margin-left: 260px;
@@ -62,15 +63,7 @@
 }
 
 body .internal-sidebar .page-container.room-map-page {
-  width: calc(100% - 260px);
-  max-width: none;
-  margin-left: 260px;
-  margin-right: 0;
   padding: 24px;
-}
-
-.room-map-shell {
-  display: block;
 }
 
 .room-map-dashboard {
@@ -96,10 +89,6 @@ body .internal-sidebar .page-container.room-map-page {
   border: 1px solid #d8e2f0;
   border-radius: 18px;
   background: #fff;
-}
-
-.room-map-filter-header {
-  margin-bottom: 6px;
 }
 
 .room-map-filter-title {
@@ -180,9 +169,6 @@ body .internal-sidebar .page-container.room-map-page {
   align-items: center;
   justify-content: center;
   line-height: 1;
-}
-
-.room-map-filter-actions .btn {
   text-decoration: none;
 }
 
@@ -221,10 +207,6 @@ body .internal-sidebar .page-container.room-map-page {
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 2px;
-}
-
-.floor-section__header {
-  margin-bottom: 0;
 }
 
 .floor-tag {
@@ -296,13 +278,13 @@ body .internal-sidebar .page-container.room-map-page {
   box-shadow: 0 0 0 3px rgba(30, 99, 214, 0.16), 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
-.room-card.AVAILABLE { background: #eef4ff; border-color: #c9d8f7; }
-.room-card.OCCUPIED { background: #fff2e8; border-color: #f2d3c1; }
-.room-card.RESERVED { background: #fefce8; border-color: #f4df8b; }
-.room-card.CLEANING { background: #eefdf5; border-color: #cdeed2; }
-.room-card.MAINTENANCE { background: #f5f7fb; border-color: #d8dce7; }
+.room-card.AVAILABLE { background: #edf9ef; border-color: #bbf7d0; }
+.room-card.OCCUPIED { background: #edf4ff; border-color: #bfdbfe; }
+.room-card.RESERVED { background: #fef3c7; border-color: #fde68a; }
+.room-card.CLEANING { background: #fff5ea; border-color: #fde0bc; }
+.room-card.MAINTENANCE { background: #fef2f2; border-color: #fecaca; }
 .room-card.NOT_READY,
-.room-card.INSPECTION { background: #f3f4f6; border-color: #dde3ee; }
+.room-card.INSPECTION { background: #ede9fe; border-color: #ddd6fe; }
 
 .room-number {
   margin-bottom: 4px;
@@ -328,12 +310,12 @@ body .internal-sidebar .page-container.room-map-page {
 }
 
 .AVAILABLE .room-status { color: #166534; }
-.OCCUPIED .room-status { color: #b91c1c; }
+.OCCUPIED .room-status { color: #1e63d6; }
 .RESERVED .room-status { color: #854d0e; }
-.CLEANING .room-status { color: #b45309; }
-.MAINTENANCE .room-status { color: #7c3aed; }
+.CLEANING .room-status { color: #f97316; }
+.MAINTENANCE .room-status { color: #dc2626; }
 .NOT_READY .room-status,
-.INSPECTION .room-status { color: #64748b; }
+.INSPECTION .room-status { color: #6d28d9; }
 
 .drawer-backdrop {
   position: fixed;

@@ -33,7 +33,6 @@
             <a class="<%= activePath(uri, "/reception/bookings") ? "active" : "" %>" href="<%= cp %>/reception/bookings"><span>BK</span>Danh sách booking</a>
             <a class="<%= activePath(uri, "/reception/walk-in") ? "active" : "" %>" href="<%= cp %>/reception/walk-in"><span>WI</span>Đặt tại quầy</a>
             <a class="<%= activePath(uri, "/reception/room-map") ? "active" : "" %>" href="<%= cp %>/reception/room-map"><span>RM</span>Sơ đồ phòng</a>
-            <a class="<%= activePath(uri, "/reception/room-change-history") ? "active" : "" %>" href="<%= cp %>/reception/room-change-history"><span>RH</span>Lịch sử đổi phòng</a>
         <% } %>
 
         <% if (isHousekeeping) { %>

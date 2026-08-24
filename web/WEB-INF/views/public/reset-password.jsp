@@ -1,6 +1,22 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%!
+    private String escapeAttr(Object value) {
+        if (value == null) return "";
+        return value.toString()
+                .replace("&", "&amp;")
+                .replace("\"", "&quot;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+%>
+<%
+    model.HotelConfig resetConfig = (model.HotelConfig) application.getAttribute("hotelConfig");
+    String resetHotelName = resetConfig != null && resetConfig.getHotelName() != null && !resetConfig.getHotelName().isBlank()
+            ? resetConfig.getHotelName()
+            : "HMS Hotel";
+%>
 <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Đặt lại mật khẩu | HMS</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1"><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css?v=20260816-4"></head>
+<title>Đặt lại mật khẩu | <%= escapeAttr(resetHotelName) %></title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1"><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css?v=20260816-4"></head>
 <body><jsp:include page="/WEB-INF/views/common/header.jsp"/><main id="main-content" class="auth-page"><section class="auth-card"><h1>Đặt mật khẩu mới</h1><p class="auth-subtitle">Mật khẩu phải có ít nhất 8 ký tự.</p>
 <% if(request.getAttribute("error") != null){ %><div class="auth-message error" role="alert"><%=request.getAttribute("error")%></div><% } %>
 <form class="auth-form" method="post" action="${pageContext.request.contextPath}/reset-password"><input type="hidden" name="token" value="${token}"><div class="auth-field"><label for="password">Mật khẩu mới</label><input id="password" name="password" type="password" minlength="8" required></div><div class="auth-field"><label for="confirmPassword">Xác nhận mật khẩu</label><input id="confirmPassword" name="confirmPassword" type="password" minlength="8" required></div><button class="auth-submit" type="submit" data-loading-label="Đang cập nhật...">Đặt lại mật khẩu</button></form></section></main><script src="${pageContext.request.contextPath}/assets/js/auth.js"></script></body></html>

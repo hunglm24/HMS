@@ -1,5 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%
+    model.HotelConfig homeConfig = (model.HotelConfig) application.getAttribute("hotelConfig");
+    String homeHotelName = homeConfig != null && homeConfig.getHotelName() != null && !homeConfig.getHotelName().isBlank()
+            ? homeConfig.getHotelName()
+            : "HMS Hotel";
     java.util.List<model.RoomType> publicRoomTypes = new dao.RoomTypeDao().findActive();
 %>
 <!DOCTYPE html>
@@ -7,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>HMS Hotel</title>
+    <title><%= escapeHtml(homeHotelName) %></title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
 </head>
 <body>
@@ -15,7 +19,7 @@
 <main class="public-page">
     <section class="hero-section">
         <div class="hero-content">
-            <p class="hero-kicker">Hệ thống quản lý khách sạn</p>
+            <p class="hero-kicker"><%= escapeHtml(homeHotelName) %></p>
             <h1>Đặt phòng nhanh, vận hành khách sạn gọn gàng.</h1>
             <p>Giao diện website khách sạn: tìm phòng, chọn ngày lưu trú, xem hạng phòng và theo dõi booking cá nhân.</p>
             <form class="booking-strip" method="get" action="${pageContext.request.contextPath}/search">

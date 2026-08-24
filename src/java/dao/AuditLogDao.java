@@ -9,7 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDate;
 
 public class AuditLogDao {
     public void log(Long actorId, String action, String targetType, Long targetId,
@@ -146,80 +145,6 @@ public class AuditLogDao {
                     log.setTargetType(rs.getString("target_type"));
                     long targetId = rs.getLong("target_id");
                     log.setTargetId(rs.wasNull() ? null : targetId);
-                    log.setDetail(rs.getString("detail"));
-                    log.setIpAddress(rs.getString("ip_address"));
-                    log.setCreatedAt(rs.getTimestamp("created_at"));
-                    logs.add(log);
-                }
-                return logs;
-            }
-        }
-    }
-
-    public List<AuditLog> findRoomChangeHistory(String bookingCode, LocalDate fromDate,
-                                                LocalDate toDate, Long receptionistId,
-                                                int limit) throws SQLException {
-        if (!tableExists()) {
-            return new ArrayList<>();
-        }
-        int safeLimit = Math.max(10, Math.min(limit, 500));
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT l.id, l.actor_id, a.full_name AS actor_name, l.action, ");
-        sql.append("l.target_type, l.target_id, b.booking_code, l.detail, l.ip_address, l.created_at ");
-        sql.append("FROM system_logs l ");
-        sql.append("LEFT JOIN accounts a ON a.id = l.actor_id ");
-        sql.append("LEFT JOIN bookings b ON b.id = l.target_id ");
-        sql.append("WHERE l.action = 'ROOM_CHANGE'");
-        List<Object> params = new ArrayList<>();
-        if (bookingCode != null && !bookingCode.isBlank()) {
-            sql.append(" AND b.booking_code LIKE ? ");
-            params.add("%" + bookingCode.trim() + "%");
-        }
-        if (fromDate != null) {
-            sql.append(" AND DATE(l.created_at) >= ? ");
-            params.add(java.sql.Date.valueOf(fromDate));
-        }
-        if (toDate != null) {
-            sql.append(" AND DATE(l.created_at) <= ? ");
-            params.add(java.sql.Date.valueOf(toDate));
-        }
-        if (receptionistId != null) {
-            sql.append(" AND l.actor_id = ? ");
-            params.add(receptionistId);
-        }
-        sql.append(" ORDER BY l.created_at DESC, l.id DESC LIMIT ?");
-        params.add(safeLimit);
-
-        try (Connection connection = DBConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                Object param = params.get(i);
-                int index = i + 1;
-                if (param instanceof String) {
-                    statement.setString(index, (String) param);
-                } else if (param instanceof java.sql.Date) {
-                    statement.setDate(index, (java.sql.Date) param);
-                } else if (param instanceof Long) {
-                    statement.setLong(index, (Long) param);
-                } else if (param instanceof Integer) {
-                    statement.setInt(index, (Integer) param);
-                } else {
-                    statement.setObject(index, param);
-                }
-            }
-            try (ResultSet rs = statement.executeQuery()) {
-                List<AuditLog> logs = new ArrayList<>();
-                while (rs.next()) {
-                    AuditLog log = new AuditLog();
-                    log.setId(rs.getLong("id"));
-                    long actorId = rs.getLong("actor_id");
-                    log.setActorId(rs.wasNull() ? null : actorId);
-                    log.setActorName(rs.getString("actor_name"));
-                    log.setAction(rs.getString("action"));
-                    log.setTargetType(rs.getString("target_type"));
-                    long targetId = rs.getLong("target_id");
-                    log.setTargetId(rs.wasNull() ? null : targetId);
-                    log.setBookingCode(rs.getString("booking_code"));
                     log.setDetail(rs.getString("detail"));
                     log.setIpAddress(rs.getString("ip_address"));
                     log.setCreatedAt(rs.getTimestamp("created_at"));
