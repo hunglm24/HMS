@@ -174,13 +174,14 @@ public class BookingDao {
                    b.status,
                    b.cancellation_reason,
                    b.cancelled_at,
+                   COALESCE(b.total_room_amount, 0) AS total_room_amount,
+                   COALESCE(b.total_damage_amount, 0) AS total_damage_amount,
                    b.total_amount,
                    b.note,
                    COALESCE((
                        SELECT SUM(p.amount)
                        FROM payments p
                        WHERE p.booking_id = b.id
-                         AND p.payment_type = 'DEPOSIT'
                          AND p.status = 'SUCCESS'
                    ), 0) AS deposit_amount,
                    b.created_at,
@@ -247,7 +248,7 @@ public class BookingDao {
         QueryParts query = filters(null, null, null, null, bookingId, null, null, null);
         String sql = BASE_SELECT + query.whereClause()
                 + " GROUP BY b.id, b.booking_code, b.customer_id, guest_name, phone, email, b.note,"
-                + " b.booking_source, b.check_in_date, b.check_out_date, b.status, b.total_amount, b.created_at"
+                + " b.booking_source, b.check_in_date, b.check_out_date, b.status, b.total_room_amount, b.total_damage_amount, b.total_amount, b.created_at"
                 + " LIMIT 1";
         try (Connection connection = requireConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -266,7 +267,7 @@ public class BookingDao {
         QueryParts query = filters(keyword, bookingStatus, roomTypeId, scope, null, fromDate, toDate, source);
         String sql = BASE_SELECT + query.whereClause()
                 + " GROUP BY b.id, b.booking_code, b.customer_id, guest_name, phone, email, b.note,"
-                + " b.booking_source, b.check_in_date, b.check_out_date, b.status, b.total_amount, b.created_at"
+                + " b.booking_source, b.check_in_date, b.check_out_date, b.status, b.total_room_amount, b.total_damage_amount, b.total_amount, b.created_at"
                 + " ORDER BY " + normalizeSortColumn(sortColumn) + " " + normalizeSortDirection(sortDirection)
                 + ", b.id DESC"
                 + " LIMIT ? OFFSET ?";
@@ -447,6 +448,8 @@ public class BookingDao {
         booking.setCheckInDate(resultSet.getDate("check_in_date"));
         booking.setCheckOutDate(resultSet.getDate("check_out_date"));
         booking.setStatus(resultSet.getString("status"));
+        booking.setTotalRoomAmount(resultSet.getDouble("total_room_amount"));
+        booking.setTotalDamageAmount(resultSet.getDouble("total_damage_amount"));
         booking.setTotalAmount(resultSet.getDouble("total_amount"));
         booking.setDepositAmount(resultSet.getDouble("deposit_amount"));
         booking.setNote(resultSet.getString("note"));

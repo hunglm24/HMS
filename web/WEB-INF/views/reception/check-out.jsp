@@ -241,8 +241,15 @@
                                                     <td style="padding: 6px; font-weight: 600;">${dr.equipmentName}</td>
                                                     <td style="padding: 6px; color: #c53030;">${dr.damageType == 'DAMAGED' ? 'Hư hỏng' : 'Mất / Thiếu'}</td>
                                                     <td style="padding: 6px; color: #666;">${dr.note}</td>
-                                                    <td style="padding: 6px; text-align: right; font-weight: 600; color: #c53030;">
-                                                        <fmt:formatNumber value="${dr.compensationAmount}" pattern="#,##0" /> đ
+                                                    <td style="padding: 6px; text-align: right; font-weight: 600; color: ${dr.chargeStatus eq 'WAIVED' ? '#667085' : '#c53030'};">
+                                                        <c:choose>
+                                                            <c:when test="${dr.chargeStatus eq 'WAIVED'}">
+                                                                0 đ <small style="color: #027a48; font-weight: 600;">(Miễn phạt)</small>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <fmt:formatNumber value="${dr.compensationAmount}" pattern="#,##0" /> đ
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </td>
                                                 </tr>
                                             </c:forEach>
@@ -253,8 +260,9 @@
                         </div>
 
                         <%-- Khối thanh toán tổng kết --%>
-                        <c:set var="roomRemaining" value="${selectedBooking.totalAmount - selectedBooking.depositAmount}" />
                         <c:set var="damageFee" value="${not empty totalDamageAmount ? totalDamageAmount : 0}" />
+                        <c:set var="roomBase" value="${selectedBooking.totalRoomAmount > 0 ? selectedBooking.totalRoomAmount : (selectedBooking.totalAmount - damageFee)}" />
+                        <c:set var="roomRemaining" value="${roomBase - selectedBooking.depositAmount}" />
                         
                         <div style="background: var(--color-gray-50); padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid var(--color-gray-200);">
                             <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.125rem;">Tổng kết Thanh toán Check-out</h3>
@@ -463,8 +471,10 @@
 </main>
 <script>
 function updateTotalDue() {
-    var baseRemaining = ${selectedBooking != null && (selectedBooking.totalAmount - selectedBooking.depositAmount) > 0 ? (selectedBooking.totalAmount - selectedBooking.depositAmount) : 0};
     var damageFee = ${not empty totalDamageAmount ? totalDamageAmount : 0};
+    var totalRoom = ${selectedBooking != null ? (selectedBooking.totalRoomAmount > 0 ? selectedBooking.totalRoomAmount : (selectedBooking.totalAmount - (not empty totalDamageAmount ? totalDamageAmount : 0))) : 0};
+    var deposit = ${selectedBooking != null ? selectedBooking.depositAmount : 0};
+    var baseRemaining = (totalRoom - deposit > 0) ? (totalRoom - deposit) : 0;
     var inputElem = document.getElementById('surchargeInput');
     var surchargeVal = inputElem ? (parseFloat(inputElem.value) || 0) : 0;
     var total = baseRemaining + damageFee + surchargeVal;

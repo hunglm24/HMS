@@ -11,6 +11,8 @@ public class CheckInBookingSummary {
     private java.util.Date checkInDate;
     private java.util.Date checkOutDate;
     private String status;
+    private double totalRoomAmount;
+    private double totalDamageAmount;
     private double totalAmount;
     private double depositAmount;
     private java.util.Date createdAt;
@@ -20,6 +22,22 @@ public class CheckInBookingSummary {
     private String note;
 
     public CheckInBookingSummary() {
+    }
+
+    public double getTotalRoomAmount() {
+        return totalRoomAmount;
+    }
+
+    public void setTotalRoomAmount(double totalRoomAmount) {
+        this.totalRoomAmount = totalRoomAmount;
+    }
+
+    public double getTotalDamageAmount() {
+        return totalDamageAmount;
+    }
+
+    public void setTotalDamageAmount(double totalDamageAmount) {
+        this.totalDamageAmount = totalDamageAmount;
     }
 
     public String getNote() {

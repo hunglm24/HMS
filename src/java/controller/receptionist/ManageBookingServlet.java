@@ -368,20 +368,47 @@ public class ManageBookingServlet extends HttpServlet {
                                 }
                             }
 
-                            // Update charge_status to PAID
-                            try (java.sql.PreparedStatement updateDmgPs = conn.prepareStatement("UPDATE damage_reports SET charge_status = 'PAID', updated_at = CURRENT_TIMESTAMP WHERE booking_id = ? AND charge_status = 'PENDING'")) {
+                            // Update charge_status to PAID for all non-waived reports
+                            try (java.sql.PreparedStatement updateDmgPs = conn.prepareStatement("UPDATE damage_reports SET charge_status = 'PAID', updated_at = CURRENT_TIMESTAMP WHERE booking_id = ? AND charge_status IN ('PENDING', 'CHARGED')")) {
                                 updateDmgPs.setLong(1, bookingId);
                                 updateDmgPs.executeUpdate();
                             }
 
-                            java.math.BigDecimal totalExtra = surcharge.add(damageAmount);
+                            // Update invoice status to PAID
+                            try (java.sql.PreparedStatement updateInvPs = conn.prepareStatement("UPDATE invoices SET status = 'PAID', updated_at = CURRENT_TIMESTAMP WHERE booking_id = ?")) {
+                                updateInvPs.setLong(1, bookingId);
+                                updateInvPs.executeUpdate();
+                            }
+
+                            // Calculate room remaining
+                            java.math.BigDecimal roomRemaining = java.math.BigDecimal.ZERO;
+                            String checkRoomSql = "SELECT COALESCE(b.total_room_amount, b.total_amount - COALESCE(b.total_damage_amount, 0)) AS room_base, " +
+                                                  "COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.booking_id = b.id AND p.status = 'SUCCESS'), 0) AS paid_amount " +
+                                                  "FROM bookings b WHERE b.id = ?";
+                            try (java.sql.PreparedStatement rPs = conn.prepareStatement(checkRoomSql)) {
+                                rPs.setLong(1, bookingId);
+                                try (java.sql.ResultSet rRs = rPs.executeQuery()) {
+                                    if (rRs.next()) {
+                                        java.math.BigDecimal roomBase = rRs.getBigDecimal("room_base");
+                                        java.math.BigDecimal paidAmount = rRs.getBigDecimal("paid_amount");
+                                        if (roomBase == null) roomBase = java.math.BigDecimal.ZERO;
+                                        if (paidAmount == null) paidAmount = java.math.BigDecimal.ZERO;
+                                        roomRemaining = roomBase.subtract(paidAmount);
+                                        if (roomRemaining.compareTo(java.math.BigDecimal.ZERO) < 0) {
+                                            roomRemaining = java.math.BigDecimal.ZERO;
+                                        }
+                                    }
+                                }
+                            }
+
+                            java.math.BigDecimal totalPaymentAtCheckout = roomRemaining.add(damageAmount).add(surcharge);
 
                             // Record extra payment if applicable
-                            if (totalExtra.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                            if (totalPaymentAtCheckout.compareTo(java.math.BigDecimal.ZERO) > 0) {
                                 String insertPayment = "INSERT INTO payments (booking_id, amount, payment_method, payment_type, status, processed_by, paid_at, created_at) VALUES (?, ?, ?, 'FINAL_PAYMENT', 'SUCCESS', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
                                 try (java.sql.PreparedStatement payPs = conn.prepareStatement(insertPayment)) {
                                     payPs.setLong(1, bookingId);
-                                    payPs.setBigDecimal(2, totalExtra);
+                                    payPs.setBigDecimal(2, totalPaymentAtCheckout);
                                     payPs.setString(3, paymentMethod);
                                     if (staffId != null) payPs.setLong(4, staffId); else payPs.setNull(4, java.sql.Types.BIGINT);
                                     payPs.executeUpdate();
@@ -390,7 +417,7 @@ public class ManageBookingServlet extends HttpServlet {
 
                             conn.commit();
                             auditLogService.log(request, "CHECK_OUT_BOOKING", "BOOKING", bookingId,
-                                    "Completed checkout for booking " + bookingId + ", extra payment=" + totalExtra);
+                                    "Completed checkout for booking " + bookingId + ", payment=" + totalPaymentAtCheckout);
                             request.getSession().setAttribute("toastMessage", "Check-out hoàn tất thành công. Phòng đã chuyển sang trạng thái chờ dọn dẹp (Cleaning).");
                             request.getSession().setAttribute("toastType", "toast-success");
                         } catch (Exception e) {

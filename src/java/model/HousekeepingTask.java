@@ -133,6 +133,7 @@ public class HousekeepingTask {
         private Integer initialQuantity;
         private String conditionStatus = "NORMAL";
         private BigDecimal damageFee = BigDecimal.ZERO;
+        private BigDecimal defaultCompensationPrice = BigDecimal.ZERO;
         private String note;
 
         public long getRoomEquipmentId() { return roomEquipmentId; }
@@ -164,6 +165,8 @@ public class HousekeepingTask {
         public void setConditionStatus(String conditionStatus) { this.conditionStatus = conditionStatus; }
         public BigDecimal getDamageFee() { return damageFee; }
         public void setDamageFee(BigDecimal damageFee) { this.damageFee = damageFee; }
+        public BigDecimal getDefaultCompensationPrice() { return defaultCompensationPrice; }
+        public void setDefaultCompensationPrice(BigDecimal defaultCompensationPrice) { this.defaultCompensationPrice = defaultCompensationPrice; }
         public String getNote() { return note; }
         public void setNote(String note) { this.note = note; }
         private boolean maintainable = true;
