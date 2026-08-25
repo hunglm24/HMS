@@ -48,6 +48,7 @@
     boolean canAdminUsers = isAdmin || hasPermission(sidebarPermissions, "ADMIN_USERS");
     boolean canAdminRoles = isAdmin || hasPermission(sidebarPermissions, "ADMIN_ROLES");
     boolean canAdminLogs = isAdmin || hasPermission(sidebarPermissions, "ADMIN_LOGS");
+<<<<<<< HEAD
 
     // Xử lý active tab cho Housekeeping & Manager
     String currentView = request.getParameter("view");
@@ -58,10 +59,14 @@
     boolean isHkHistory = "history".equals(currentView);
     boolean isHkTaskPage = isPathActive(request, "/housekeeping/tasks", "task-list", "task-detail") && !isPathActive(request, "/manager/housekeeping");
     boolean isHkIssuePage = isPathActive(request, "/housekeeping/issues", "issue-list", "issue-report", "maintenance-verify") && !isPathActive(request, "/manager/issues");
+    boolean isInternal = isReception || isHousekeeping || isManager || isAdmin || canAdminUsers || canAdminRoles || canAdminLogs;
 %>
 <aside class="internal-sidebar" aria-label="Internal navigation">
     <div class="sidebar-section">
         <p class="sidebar-label">Vận hành</p>
+        <% if (isInternal) { %>
+            <a class="<%= isPathActive(request, "/dashboard") ? "active" : "" %>" href="<%= cp %>/dashboard"><span>DB</span>Dashboard</a>
+        <% } %>
         <% if (isReception) { %>
             <a class="<%= isPathActive(request, "/reception/bookings", "/reception/booking-detail") ? "active" : "" %>" href="<%= cp %>/reception/bookings"><span>BK</span>Danh sách booking</a>
             <a class="<%= isPathActive(request, "/reception/walk-in", "/receptionist/walk-in") ? "active" : "" %>" href="<%= cp %>/reception/walk-in"><span>WI</span>Đặt tại quầy</a>
@@ -89,9 +94,6 @@
             <a class="<%= isPathActive(request, "/manager/feedbacks") ? "active" : "" %>" href="<%= cp %>/manager/feedbacks"><span>FB</span>Đánh giá khách hàng</a>
         <% } %>
 
-        <% if (isAdmin || canAdminUsers || canAdminRoles || canAdminLogs) { %>
-            <a class="<%= isPathActive(request, "/admin/dashboard") || (isAdmin && (uri.endsWith(cp + "/") || uri.endsWith(cp))) ? "active" : "" %>" href="<%= cp %>/"><span>DB</span>Dashboard</a>
-        <% } %>
         <% if (canAdminUsers) { %>
             <a class="<%= isPathActive(request, "/admin/users", "/admin/user-form") ? "active" : "" %>" href="<%= cp %>/admin/users"><span>US</span>Người dùng</a>
         <% } %>
