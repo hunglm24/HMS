@@ -235,15 +235,11 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Nhật ký</span><h3>Lịch sử dọn phòng</h3><p>Xem lại các công việc kiểm tra và dọn dẹp đã hoàn tất.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/issues"><span>Bảo trì</span><h3>Sự cố thiết bị</h3><p>Báo cáo hư hỏng và kiểm tra bảo trì thiết bị trong phòng.</p></a>
         <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(role)) { %>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo</h3><p>Theo dõi doanh thu, công suất phòng và nhân sự.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý và trạng thái phòng.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/room-types"><span>Loại phòng</span><h3>Quản lý loại phòng</h3><p>Quản lý hạng phòng, giá và sức chứa.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/equipment"><span>Thiết bị</span><h3>Quản lý thiết bị</h3><p>Danh mục thiết bị và định mức bồi thường.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/amenities"><span>Tiện nghi</span><h3>Quản lý tiện nghi</h3><p>Cấu hình tiện ích gắn theo từng loại phòng.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/housekeeping"><span>Dọn phòng</span><h3>Lịch sử dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo vận hành</h3><p>Theo dõi doanh thu, công suất phòng và hiệu suất hoạt động.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Xem sơ đồ phòng, trạng thái phòng và thiết bị phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/housekeeping"><span>Dọn phòng</span><h3>Lịch sử dọn phòng</h3><p>Theo dõi tiến độ kiểm tra và công việc dọn dẹp phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/issues"><span>Sự cố</span><h3>Sự cố thiết bị</h3><p>Theo dõi và nghiệm thu các thiết bị cần sửa chữa.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/feedbacks"><span>Đánh giá</span><h3>Đánh giá khách hàng</h3><p>Xem đánh giá, quản lý phản hồi và giao việc xử lý.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/news"><span>Tin tức</span><h3>Quản lý tin tức</h3><p>Thêm, sửa, xóa các chương trình khuyến mãi.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/feedbacks"><span>Đánh giá</span><h3>Đánh giá khách hàng</h3><p>Xem phản hồi khách hàng, quản lý hiển thị và chuyển tiếp sự cố.</p></a>
         <% } %>
         <% if (canAdminUsers) { %>
             <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/users">

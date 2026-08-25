@@ -87,7 +87,6 @@
             <a class="<%= isPathActive(request, "/manager/policies", "/manager/policy") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>
             <a class="<%= isPathActive(request, "/manager/news") ? "active" : "" %>" href="<%= cp %>/manager/news"><span>NW</span>Tin tức</a>
             <a class="<%= isPathActive(request, "/manager/feedbacks") ? "active" : "" %>" href="<%= cp %>/manager/feedbacks"><span>FB</span>Đánh giá khách hàng</a>
-            <a class="<%= isPathActive(request, "/manager/staff") ? "active" : "" %>" href="<%= cp %>/manager/staff"><span>ST</span>Nhân sự</a>
         <% } %>
 
         <% if (isAdmin || canAdminUsers || canAdminRoles || canAdminLogs) { %>
