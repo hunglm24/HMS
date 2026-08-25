@@ -46,6 +46,53 @@
                 <a class="action-card" href="${pageContext.request.contextPath}/admin/logs"><strong>Nhật ký hệ thống</strong><span>Kiểm tra lịch sử thao tác và sự kiện.</span></a>
             <% } %>
         </section>
+<<<<<<< Updated upstream
     </main>
+=======
+    <% } %>
+
+    <section class="dashboard-grid">
+        <% if ("RECEPTIONIST".equalsIgnoreCase(role)) { %>
+            <a class="preview-card" href="${pageContext.request.contextPath}/reception/bookings"><span>Lễ tân</span><h3>Booking</h3><p>Quản lý đặt phòng, check-in và check-out.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/reception/room-map"><span>Phòng</span><h3>Sơ đồ phòng</h3><p>Xem nhanh tình trạng phòng theo tầng.</p></a>
+        <% } else if ("HOUSEKEEPING".equalsIgnoreCase(role)) { %>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; grid-column: 1 / -1;">
+                <a class="btn btn-primary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/tasks">Nhận task phòng</a>
+                <a class="btn btn-secondary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/issues">Báo cáo &amp; quản lý sự cố</a>
+            </div>
+        <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(role)) { %>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/bookings"><span>Booking</span><h3>Quản lý booking</h3><p>Theo dõi, xác nhận, hủy booking và tạo yêu cầu hoàn tiền.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo</h3><p>Theo dõi doanh thu, công suất phòng và nhân sự.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/room-types"><span>Loại phòng</span><h3>Quản lý loại phòng</h3><p>Quản lý hạng phòng, giá và sức chứa.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Buồng phòng</span><h3>Nhiệm vụ dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/news"><span>Tin tức</span><h3>Quản lý tin tức</h3><p>Thêm, sửa, xóa các chương trình khuyến mãi.</p></a>
+        <% } %>
+        <% if (canAdminUsers) { %>
+            <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/users">
+                <span>Admin</span>
+                <h3>Người dùng</h3>
+                <p>Quản lý tài khoản nội bộ, trạng thái hoạt động và phân role cho user.</p>
+            </a>
+        <% } %>
+        <% if (canAdminRoles) { %>
+            <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/roles">
+                <span>Phân quyền</span>
+                <h3>Vai trò và quyền</h3>
+                <p>Quản lý các role ngoài ADMIN và cập nhật quyền khi cần chỉnh sửa.</p>
+            </a>
+        <% } %>
+        <% if (canAdminLogs) { %>
+            <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/logs">
+                <span>Kiểm tra</span>
+                <h3>Nhật ký hệ thống</h3>
+                <p>Theo dõi các thao tác quản trị quan trọng trong hệ thống.</p>
+            </a>
+        <% } %>
+    </section>
+</main>
+<% } %>
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />
+>>>>>>> Stashed changes
 </body>
 </html>
