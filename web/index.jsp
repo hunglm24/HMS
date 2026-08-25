@@ -73,6 +73,10 @@
 
     java.util.List<model.RoomType> featuredRoomTypes = java.util.Collections.emptyList();
     java.util.List<model.News> latestNews = java.util.Collections.emptyList();
+    if (internal) {
+        response.sendRedirect(request.getContextPath() + "/dashboard");
+        return;
+    }
     if (!internal) {
         dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
         featuredRoomTypes = roomTypeDao.findFeaturedAvailable(4);

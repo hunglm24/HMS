@@ -33,10 +33,14 @@
     boolean canAdminUsers = isAdmin || hasPermission(sidebarPermissions, "ADMIN_USERS");
     boolean canAdminRoles = isAdmin || hasPermission(sidebarPermissions, "ADMIN_ROLES");
     boolean canAdminLogs = isAdmin || hasPermission(sidebarPermissions, "ADMIN_LOGS");
+    boolean isInternal = isReception || isHousekeeping || isManager || isAdmin || canAdminUsers || canAdminRoles || canAdminLogs;
 %>
 <aside class="internal-sidebar" aria-label="Internal navigation">
     <div class="sidebar-section">
         <p class="sidebar-label">Vận hành</p>
+        <% if (isInternal) { %>
+            <a class="<%= activePath(uri, "/dashboard") ? "active" : "" %>" href="<%= cp %>/dashboard"><span>DB</span>Dashboard</a>
+        <% } %>
         <% if (isReception) { %>
             <a class="<%= activePath(uri, "/reception/bookings") ? "active" : "" %>" href="<%= cp %>/reception/bookings"><span>BK</span>Danh sách booking</a>
             <a class="<%= activePath(uri, "/reception/walk-in") ? "active" : "" %>" href="<%= cp %>/reception/walk-in"><span>WI</span>Đặt tại quầy</a>
@@ -65,9 +69,6 @@
             <a class="<%= activePath(uri, "/manager/staff") ? "active" : "" %>" href="<%= cp %>/manager/staff"><span>ST</span>Nhân sự</a>
         <% } %>
 
-        <% if (isAdmin || canAdminUsers || canAdminRoles || canAdminLogs) { %>
-            <a class="<%= uri != null && (uri.endsWith(cp + "/") || uri.endsWith(cp)) ? "active" : "" %>" href="<%= cp %>/"><span>DB</span>Dashboard</a>
-        <% } %>
         <% if (canAdminUsers) { %>
             <a class="<%= activePath(uri, "/admin/users") ? "active" : "" %>" href="<%= cp %>/admin/users"><span>US</span>Người dùng</a>
         <% } %>

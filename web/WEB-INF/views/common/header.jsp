@@ -38,6 +38,7 @@
     boolean housekeeping = "HOUSEKEEPING".equalsIgnoreCase(roleName);
     boolean manager = "HOTEL_MANAGER".equalsIgnoreCase(roleName);
     boolean internal = signedIn && !customer && !hideSidebar;
+    String brandHref = internal ? contextPath + "/dashboard" : contextPath + "/";
     String currentPath = request.getServletPath();
     String fullName = escapeHtml(beanString(headerUser, "getFullName"));
     String avatar = fullName.isEmpty() ? "U" : fullName.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
@@ -49,7 +50,7 @@
 %>
 <header class="site-header <%= internal ? "site-header--internal" : "" %>">
     <div class="header-container">
-        <a class="brand" href="<%= contextPath %>/" aria-label="<%= escapeHtml(hotelName) %> home">
+        <a class="brand" href="<%= brandHref %>" aria-label="<%= escapeHtml(hotelName) %> home">
             <span class="brand-mark" aria-hidden="true"><%= escapeHtml(hotelName.substring(0, 1).toUpperCase(java.util.Locale.ROOT)) %></span>
             <span class="brand-copy"><strong><%= escapeHtml(hotelName) %></strong><small><%= escapeHtml(hotelTagline) %></small></span>
         </a>

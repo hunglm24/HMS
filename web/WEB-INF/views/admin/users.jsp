@@ -137,6 +137,7 @@
             </div>
             <button class="button button-secondary" type="submit">Filter</button>
         </form>
+        <a class="button button-primary" href="${pageContext.request.contextPath}/admin/users/create">Create user</a>
     </div>
 
     <table class="data-table">
