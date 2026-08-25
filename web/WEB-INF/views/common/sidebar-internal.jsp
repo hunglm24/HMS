@@ -48,7 +48,6 @@
     boolean canAdminUsers = isAdmin || hasPermission(sidebarPermissions, "ADMIN_USERS");
     boolean canAdminRoles = isAdmin || hasPermission(sidebarPermissions, "ADMIN_ROLES");
     boolean canAdminLogs = isAdmin || hasPermission(sidebarPermissions, "ADMIN_LOGS");
-<<<<<<< HEAD
 
     // Xử lý active tab cho Housekeeping & Manager
     String currentView = request.getParameter("view");
