@@ -191,16 +191,27 @@
     <% } %>
 
     <% if (housekeeping || manager) { %>
-        <section class="dashboard-panel">
-            <div class="dashboard-panel__head"><h2>Task ưu tiên</h2><a href="${pageContext.request.contextPath}<%= housekeeping ? "/housekeeping/tasks?view=mine" : "/manager/housekeeping" %>">Xem task</a></div>
+        <section class="dashboard-panel" style="<%= (reception || manager) ? "margin-top: 24px;" : "" %>">
+            <div class="dashboard-panel__head">
+                <h2>Task ưu tiên</h2>
+                <a href="${pageContext.request.contextPath}<%= housekeeping ? "/housekeeping/tasks?view=mine" : "/manager/housekeeping" %>"><%= housekeeping ? "Xem tất cả" : "Xem task" %></a>
+            </div>
             <% if (stats.getUrgentTasks().isEmpty()) { %>
-                <p>Không có task đang mở.</p>
+                <p style="color: var(--color-text-secondary); margin: 16px 0;">Không có task nào cần xử lý gấp.</p>
             <% } else { %>
                 <div class="dashboard-list">
                     <% for (DashboardStats.UrgentTask task : stats.getUrgentTasks()) { %>
                         <div class="dashboard-list__row">
-                            <div><strong>Phòng <%= h(task.getRoomNumber()) %></strong><span><%= h(taskLabel(task.getTaskType())) %></span></div>
-                            <div><span><%= h(task.getPriority()) %></span><span><%= h(statusLabel(task.getStatus())) %> - <%= h(task.getStaffName()) %></span></div>
+                            <div>
+                                <strong>Phòng <%= h(task.getRoomNumber()) %></strong>
+                                <span><%= h(taskLabel(task.getTaskType())) %> · <%= h(task.getStaffName() != null && !task.getStaffName().isBlank() ? task.getStaffName() : "Chưa phân công") %></span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 700; color: <%= "URGENT".equalsIgnoreCase(task.getPriority()) ? "#dc2626" : ("HIGH".equalsIgnoreCase(task.getPriority()) ? "#ea580c" : "#2563eb") %>;">
+                                    <%= "URGENT".equalsIgnoreCase(task.getPriority()) ? "🔥 Khẩn cấp" : ("HIGH".equalsIgnoreCase(task.getPriority()) ? "⚡ Ưu tiên cao" : "● Bình thường") %>
+                                </span>
+                                <span><%= h(statusLabel(task.getStatus())) %></span>
+                            </div>
                         </div>
                     <% } %>
                 </div>
