@@ -80,6 +80,8 @@
 
         <% if (isManager) { %>
             <a class="<%= isPathActive(request, "/manager/reports") ? "active" : "" %>" href="<%= cp %>/manager/reports"><span>RP</span>Báo cáo</a>
+            <a class="<%= isPathActive(request, "/manager/bookings", "/manager/booking-detail") ? "active" : "" %>" href="<%= cp %>/manager/bookings"><span>BK</span>Quản lý booking</a>
+            <a class="<%= isPathActive(request, "/manager/refunds") ? "active" : "" %>" href="<%= cp %>/manager/refunds"><span>RF</span>Yêu cầu hoàn tiền</a>
             <a class="<%= isPathActive(request, "/manager/rooms", "/manager/room-form") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng</a>
             <a class="<%= isPathActive(request, "/manager/room-map") ? "active" : "" %>" href="<%= cp %>/manager/room-map"><span>MP</span>Sơ đồ phòng</a>
             <a class="<%= isPathActive(request, "/manager/room-types", "/manager/room-type") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
