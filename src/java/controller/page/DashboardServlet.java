@@ -30,7 +30,14 @@ public class DashboardServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        if (session == null || !(session.getAttribute("currentUser") instanceof User user)) {
+        User user = null;
+        if (session != null) {
+            Object currentUser = session.getAttribute("currentUser");
+            if (currentUser instanceof User) {
+                user = (User) currentUser;
+            }
+        }
+        if (user == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
