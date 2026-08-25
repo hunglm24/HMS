@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/reception/booking-detail", "/reception/walk-in"})
+@WebServlet(urlPatterns = {"/reception/booking-detail", "/reception/walk-in", "/manager/booking-detail"})
 public class ReceptionBookingServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -16,7 +16,10 @@ public class ReceptionBookingServlet extends HttpServlet {
         String path = request.getServletPath();
         String view = "/WEB-INF/views/reception/booking-list.jsp";
 
-        if ("/reception/booking-detail".equals(path)) {
+        if ("/reception/booking-detail".equals(path) || "/manager/booking-detail".equals(path)) {
+            boolean managerView = path.startsWith("/manager/");
+            request.setAttribute("managerView", managerView);
+            request.setAttribute("bookingBasePath", managerView ? "/manager/bookings" : "/reception/bookings");
             String idStr = request.getParameter("id");
             if (idStr != null && !idStr.isBlank()) {
                 try {

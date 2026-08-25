@@ -11,17 +11,18 @@ import dao.BookingDao;
 import model.CheckInBookingSummary;
 import java.util.List;
 import java.sql.SQLException;
-import service.AuditLogService;
 
-@WebServlet(name = "ManageBookingServlet", urlPatterns = {"/reception/bookings"})
+@WebServlet(name = "ManageBookingServlet", urlPatterns = {"/reception/bookings", "/manager/bookings"})
 public class ManageBookingServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private BookingDao bookingDao = new BookingDao();
-    private AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        boolean managerView = request.getServletPath().startsWith("/manager/");
+        request.setAttribute("managerView", managerView);
+        request.setAttribute("bookingBasePath", managerView ? "/manager/bookings" : "/reception/bookings");
         try {
             String keyword = request.getParameter("keyword");
             String status = request.getParameter("status");
@@ -64,6 +65,7 @@ public class ManageBookingServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        boolean managerView = request.getServletPath().startsWith("/manager/");
         String action = request.getParameter("action");
         String idStr = request.getParameter("id");
         if (idStr != null && action != null) {
@@ -72,7 +74,6 @@ public class ManageBookingServlet extends HttpServlet {
                 
                 if ("CONFIRM".equals(action)) {
                     bookingDao.updateBookingStatus(bookingId, "CONFIRMED");
-                    auditLogService.log(request, "CONFIRM_BOOKING", "BOOKING", bookingId, "Confirmed booking " + bookingId);
                     request.getSession().setAttribute("toastMessage", "Đã xác nhận đặt phòng.");
                     request.getSession().setAttribute("toastType", "toast-success");
                 } else if ("REJECT".equals(action)) {
@@ -83,7 +84,6 @@ public class ManageBookingServlet extends HttpServlet {
                         reason = "Lễ tân từ chối: " + reason;
                     }
                     bookingDao.cancelBooking(bookingId, reason);
-                    auditLogService.log(request, "CANCEL_BOOKING", "BOOKING", bookingId, reason);
                     request.getSession().setAttribute("toastMessage", "Đã hủy đặt phòng.");
                     request.getSession().setAttribute("toastType", "toast-success");
                 } else if ("CHECK_IN".equals(action)) {
@@ -173,7 +173,6 @@ public class ManageBookingServlet extends HttpServlet {
                                     ps.executeUpdate();
                                 }
                                 conn.commit();
-                                auditLogService.log(request, "CHECK_IN_BOOKING", "BOOKING", bookingId, "Checked in booking " + bookingId);
                                 request.getSession().setAttribute("toastMessage", "Check-in thành công.");
                                 request.getSession().setAttribute("toastType", "toast-success");
                             } else {
@@ -241,7 +240,6 @@ public class ManageBookingServlet extends HttpServlet {
                             }
 
                             conn.commit();
-                            auditLogService.log(request, "REQUEST_CHECKOUT", "BOOKING", bookingId, "Requested checkout for booking " + bookingId);
                             request.getSession().setAttribute("toastMessage", "Đã gửi yêu cầu kiểm tra phòng sang Nhân viên dọn dẹp. Phòng đang ở trạng thái Kiểm tra (Inspection).");
                             request.getSession().setAttribute("toastType", "toast-success");
                         } catch (Exception e) {
@@ -368,47 +366,20 @@ public class ManageBookingServlet extends HttpServlet {
                                 }
                             }
 
-                            // Update charge_status to PAID for all non-waived reports
-                            try (java.sql.PreparedStatement updateDmgPs = conn.prepareStatement("UPDATE damage_reports SET charge_status = 'PAID', updated_at = CURRENT_TIMESTAMP WHERE booking_id = ? AND charge_status IN ('PENDING', 'CHARGED')")) {
+                            // Update charge_status to PAID
+                            try (java.sql.PreparedStatement updateDmgPs = conn.prepareStatement("UPDATE damage_reports SET charge_status = 'PAID', updated_at = CURRENT_TIMESTAMP WHERE booking_id = ? AND charge_status = 'PENDING'")) {
                                 updateDmgPs.setLong(1, bookingId);
                                 updateDmgPs.executeUpdate();
                             }
 
-                            // Update invoice status to PAID
-                            try (java.sql.PreparedStatement updateInvPs = conn.prepareStatement("UPDATE invoices SET status = 'PAID', updated_at = CURRENT_TIMESTAMP WHERE booking_id = ?")) {
-                                updateInvPs.setLong(1, bookingId);
-                                updateInvPs.executeUpdate();
-                            }
-
-                            // Calculate room remaining
-                            java.math.BigDecimal roomRemaining = java.math.BigDecimal.ZERO;
-                            String checkRoomSql = "SELECT COALESCE(b.total_room_amount, b.total_amount - COALESCE(b.total_damage_amount, 0)) AS room_base, " +
-                                                  "COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.booking_id = b.id AND p.status = 'SUCCESS'), 0) AS paid_amount " +
-                                                  "FROM bookings b WHERE b.id = ?";
-                            try (java.sql.PreparedStatement rPs = conn.prepareStatement(checkRoomSql)) {
-                                rPs.setLong(1, bookingId);
-                                try (java.sql.ResultSet rRs = rPs.executeQuery()) {
-                                    if (rRs.next()) {
-                                        java.math.BigDecimal roomBase = rRs.getBigDecimal("room_base");
-                                        java.math.BigDecimal paidAmount = rRs.getBigDecimal("paid_amount");
-                                        if (roomBase == null) roomBase = java.math.BigDecimal.ZERO;
-                                        if (paidAmount == null) paidAmount = java.math.BigDecimal.ZERO;
-                                        roomRemaining = roomBase.subtract(paidAmount);
-                                        if (roomRemaining.compareTo(java.math.BigDecimal.ZERO) < 0) {
-                                            roomRemaining = java.math.BigDecimal.ZERO;
-                                        }
-                                    }
-                                }
-                            }
-
-                            java.math.BigDecimal totalPaymentAtCheckout = roomRemaining.add(damageAmount).add(surcharge);
+                            java.math.BigDecimal totalExtra = surcharge.add(damageAmount);
 
                             // Record extra payment if applicable
-                            if (totalPaymentAtCheckout.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                            if (totalExtra.compareTo(java.math.BigDecimal.ZERO) > 0) {
                                 String insertPayment = "INSERT INTO payments (booking_id, amount, payment_method, payment_type, status, processed_by, paid_at, created_at) VALUES (?, ?, ?, 'FINAL_PAYMENT', 'SUCCESS', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
                                 try (java.sql.PreparedStatement payPs = conn.prepareStatement(insertPayment)) {
                                     payPs.setLong(1, bookingId);
-                                    payPs.setBigDecimal(2, totalPaymentAtCheckout);
+                                    payPs.setBigDecimal(2, totalExtra);
                                     payPs.setString(3, paymentMethod);
                                     if (staffId != null) payPs.setLong(4, staffId); else payPs.setNull(4, java.sql.Types.BIGINT);
                                     payPs.executeUpdate();
@@ -416,8 +387,6 @@ public class ManageBookingServlet extends HttpServlet {
                             }
 
                             conn.commit();
-                            auditLogService.log(request, "CHECK_OUT_BOOKING", "BOOKING", bookingId,
-                                    "Completed checkout for booking " + bookingId + ", payment=" + totalPaymentAtCheckout);
                             request.getSession().setAttribute("toastMessage", "Check-out hoàn tất thành công. Phòng đã chuyển sang trạng thái chờ dọn dẹp (Cleaning).");
                             request.getSession().setAttribute("toastType", "toast-success");
                         } catch (Exception e) {
@@ -435,7 +404,8 @@ public class ManageBookingServlet extends HttpServlet {
         if (redirect != null && !redirect.trim().isEmpty()) {
             response.sendRedirect(request.getContextPath() + redirect);
         } else {
-            response.sendRedirect(request.getContextPath() + "/reception/bookings");
+            response.sendRedirect(request.getContextPath()
+                    + (managerView ? "/manager/bookings" : "/reception/bookings"));
         }
     }
 

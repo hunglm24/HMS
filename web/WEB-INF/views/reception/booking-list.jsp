@@ -7,7 +7,7 @@
     a .metric-card.active { border-color: var(--primary); background-color: #f0f7ff; }
 </style>
 </head>
-<body><jsp:include page="/WEB-INF/views/common/header.jsp" /><main class="page-container"><section class="section-head"><div><p class="section-kicker">Lễ tân</p><h1>Danh sách booking</h1><p>Theo dõi booking chờ xác nhận, sắp check-in và đang lưu trú.</p></div><a class="btn" href="${pageContext.request.contextPath}/receptionist/walk-in">Đặt tại quầy</a></section>
+<body><jsp:include page="/WEB-INF/views/common/header.jsp" /><main class="page-container"><section class="section-head"><div><p class="section-kicker">${managerView ? 'Manager' : 'Lễ tân'}</p><h1>Danh sách booking</h1><p>Theo dõi booking chờ xác nhận, sắp check-in và đang lưu trú.</p></div><c:if test="${!managerView}"><a class="btn" href="${pageContext.request.contextPath}/receptionist/walk-in">Đặt tại quầy</a></c:if></section>
 <section class="kpi-grid">
     <a href="?status=" style="text-decoration: none; color: inherit; display: block;">
         <div class="metric-card ${empty param.status && empty param.scope ? 'active' : ''}">
@@ -35,7 +35,7 @@
         </div>
     </a>
 </section>
-<form class="toolbar-card" method="get" action="${pageContext.request.contextPath}/reception/bookings">
+<form class="toolbar-card" method="get" action="${pageContext.request.contextPath}${bookingBasePath}">
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; align-items: end;">
         <label style="grid-column: 1 / -1;">Tìm kiếm<input type="text" name="keyword" value="${param.keyword}" placeholder="Mã booking, tên khách..."></label>
         
@@ -46,6 +46,7 @@
             <option value="CHECKED_IN" ${param.status == 'CHECKED_IN' ? 'selected' : ''}>Đang lưu trú (Checked-in)</option>
             <option value="CHECKOUT_PENDING" ${param.status == 'CHECKOUT_PENDING' ? 'selected' : ''}>Chờ kiểm phòng (Checkout Pending)</option>
             <option value="CHECKED_OUT" ${param.status == 'CHECKED_OUT' ? 'selected' : ''}>Đã trả phòng (Checked-out)</option>
+            <option value="CANCELLATION_PENDING" ${param.status == 'CANCELLATION_PENDING' ? 'selected' : ''}>Đang chờ hủy</option>
             <option value="CANCELLED" ${param.status == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
         </select></label>
         
@@ -87,26 +88,29 @@
         <td>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <c:if test="${b.status == 'PENDING_PAYMENT'}">
-                    <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
+                    <form method="post" action="${pageContext.request.contextPath}${bookingBasePath}" style="display:inline;" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
                         <input type="hidden" name="action" value="CONFIRM">
                         <input type="hidden" name="id" value="${b.bookingId}">
                         <button class="btn btn-secondary" type="submit">Duyệt</button>
                     </form>
-                    <button class="btn btn-secondary" type="button" style="color:var(--color-error-600);" onclick="openRejectModal('${b.bookingId}')">Từ chối</button>
+                    <c:if test="${!managerView}"><button class="btn btn-secondary" type="button" style="color:var(--color-error-600);" onclick="openRejectModal('${b.bookingId}')">Từ chối</button></c:if>
                 </c:if>
-                <c:if test="${b.status == 'CONFIRMED'}">
+                <c:if test="${!managerView && b.status == 'CONFIRMED'}">
                     <a class="btn btn-primary" href="${pageContext.request.contextPath}/reception/check-in?bookingId=${b.bookingId}">Check-in</a>
                 </c:if>
-                <c:if test="${b.status == 'CHECKED_IN'}">
+                <c:if test="${!managerView && b.status == 'CHECKED_IN'}">
                     <a class="btn btn-primary" style="background-color: var(--color-warning-600);" href="${pageContext.request.contextPath}/reception/check-out?bookingId=${b.bookingId}#selected-booking">Trả phòng</a>
                 </c:if>
-                <c:if test="${b.status == 'CHECKOUT_PENDING'}">
+                <c:if test="${!managerView && b.status == 'CHECKOUT_PENDING'}">
                     <a class="btn btn-primary" style="background-color: #d97706;" href="${pageContext.request.contextPath}/reception/check-out?bookingId=${b.bookingId}#selected-booking">Hoàn tất Check-out</a>
                 </c:if>
                 <c:if test="${b.status != 'PENDING_PAYMENT'}">
-                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/booking-detail?id=${b.bookingId}">Chi tiết</a>
+                    <a class="btn btn-secondary" href="${pageContext.request.contextPath}${managerView ? '/manager/booking-detail' : '/reception/booking-detail'}?id=${b.bookingId}">Chi tiết</a>
                 </c:if>
-                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/receptionist/edit-booking?id=${b.bookingId}">Sửa</a>
+                <c:if test="${!managerView}"><a class="btn btn-secondary" href="${pageContext.request.contextPath}/receptionist/edit-booking?id=${b.bookingId}">Sửa</a></c:if>
+                <c:if test="${managerView && (b.status == 'PENDING_PAYMENT' || b.status == 'CONFIRMED')}">
+                    <a class="btn btn-secondary" style="color:var(--color-error-600)" href="${pageContext.request.contextPath}/manager/bookings/refund?id=${b.bookingId}">Hủy / Refund</a>
+                </c:if>
             </div>
         </td>
     </tr>
@@ -116,15 +120,15 @@
 <c:if test="${totalPages > 1}">
     <div style="display: flex; justify-content: center; gap: 8px; margin-top: 24px;">
         <c:if test="${currentPage > 1}">
-            <a href="${pageContext.request.contextPath}/reception/bookings?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${currentPage - 1}" class="btn btn-secondary">&laquo; Trước</a>
+            <a href="${pageContext.request.contextPath}${bookingBasePath}?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${currentPage - 1}" class="btn btn-secondary">&laquo; Trước</a>
         </c:if>
         
         <c:forEach begin="1" end="${totalPages}" var="p">
-            <a href="${pageContext.request.contextPath}/reception/bookings?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${p}" class="btn ${p == currentPage ? 'btn-primary' : 'btn-secondary'}">${p}</a>
+            <a href="${pageContext.request.contextPath}${bookingBasePath}?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${p}" class="btn ${p == currentPage ? 'btn-primary' : 'btn-secondary'}">${p}</a>
         </c:forEach>
         
         <c:if test="${currentPage < totalPages}">
-            <a href="${pageContext.request.contextPath}/reception/bookings?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${currentPage + 1}" class="btn btn-secondary">Sau &raquo;</a>
+            <a href="${pageContext.request.contextPath}${bookingBasePath}?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${currentPage + 1}" class="btn btn-secondary">Sau &raquo;</a>
         </c:if>
     </div>
 </c:if>
@@ -133,7 +137,7 @@
 <div id="rejectModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:white; padding:24px; border-radius:8px; width:400px; max-width:90%;">
         <h3 style="margin-top:0;">Từ chối Đặt phòng</h3>
-        <form method="post" action="${pageContext.request.contextPath}/reception/bookings" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
+        <form method="post" action="${pageContext.request.contextPath}${bookingBasePath}" onsubmit="if(this.dataset.submitted) return false; this.dataset.submitted = true;">
             <input type="hidden" name="action" value="REJECT">
             <input type="hidden" id="rejectBookingId" name="id" value="">
             <div class="form-group" style="margin-bottom: 16px;">

@@ -9,7 +9,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Booking của tôi | HMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/feedback.css?v=20260824-1">
     <style>
         .tabs { display: flex; gap: var(--space-4); border-bottom: 1px solid var(--border-color); margin-bottom: var(--space-6); overflow-x: auto; }
         .tab-item { padding: var(--space-3) var(--space-4); color: var(--text-muted); font-weight: 600; text-decoration: none; white-space: nowrap; border-bottom: 2px solid transparent; }
@@ -60,6 +59,7 @@
             <a href="?status=UPCOMING" class="tab-item ${param.status == 'UPCOMING' ? 'active' : ''}">Sắp tới</a>
             <a href="?status=CHECKED_IN" class="tab-item ${param.status == 'CHECKED_IN' ? 'active' : ''}">Đang ở</a>
             <a href="?status=CHECKED_OUT" class="tab-item ${param.status == 'CHECKED_OUT' ? 'active' : ''}">Đã hoàn thành</a>
+            <a href="?status=CANCELLATION_PENDING" class="tab-item ${param.status == 'CANCELLATION_PENDING' ? 'active' : ''}">Đang chờ hủy</a>
             <a href="?status=CANCELLED" class="tab-item ${param.status == 'CANCELLED' ? 'active' : ''}">Đã hủy</a>
         </div>
 
@@ -79,7 +79,8 @@
                                     <c:when test="${b.status == 'CONFIRMED'}"><span class="badge badge-confirmed">Đã xác nhận</span></c:when>
                                     <c:when test="${b.status == 'CHECKED_IN'}"><span class="badge badge-checkedin">Đang ở</span></c:when>
                                     <c:when test="${b.status == 'CHECKED_OUT'}"><span class="badge badge-checkedout">Đã hoàn thành</span></c:when>
-                                    <c:when test="${b.status == 'CANCELLED'}"><span class="badge badge-cancelled">Đã hủy</span></c:when>
+                                    <c:when test="${b.status == 'CANCELLATION_PENDING'}"><span class="badge badge-pending">Đang chờ hủy</span></c:when>
+                                    <c:when test="${b.status == 'CANCELLED'}"><span class="badge badge-cancelled">Đã hủy thành công</span></c:when>
                                     <c:otherwise><span class="badge">${b.status}</span></c:otherwise>
                                 </c:choose>
                             </div>
@@ -102,13 +103,13 @@
                                 
                                 <c:if test="${b.status == 'PENDING_PAYMENT' || b.status == 'CONFIRMED'}">
                                     <button class="btn btn-secondary btn-sm" onclick="alert('Tính năng đang được phát triển!')">Yêu cầu đổi ngày</button>
-                                    <button class="btn btn-sm" style="background: var(--color-error-100); color: var(--color-error-700); border: 1px solid var(--color-error-200);" onclick="alert('Tính năng Hủy phòng đang được nâng cấp, vui lòng liên hệ lễ tân.')">Hủy phòng</button>
+                                    <a class="btn btn-sm" style="background: var(--color-error-100); color: var(--color-error-700); border: 1px solid var(--color-error-200);" href="${pageContext.request.contextPath}/user/cancel-booking?bookingId=${b.id}">Hủy phòng</a>
                                 </c:if>
                                 
                                 <c:if test="${b.status == 'CHECKED_OUT'}">
                                     <c:choose>
                                         <c:when test="${hasFeedbackMap[b.id]}">
-                                            <button class="btn btn-secondary btn-sm btn-reviewed" disabled>Đã đánh giá</button>
+                                            <button class="btn btn-secondary btn-sm" disabled style="opacity: 0.6; cursor: not-allowed;">Đã đánh giá</button>
                                         </c:when>
                                         <c:otherwise>
                                             <a href="${pageContext.request.contextPath}/customer/feedback?bookingId=${b.id}" class="btn btn-secondary btn-sm">Đánh giá</a>

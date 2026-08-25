@@ -1,88 +1,91 @@
 package controller.user;
 
-import java.io.IOException;
+import dao.BookingDao;
+import dao.BookingRefundDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import service.AuditLogService;
+import java.io.IOException;
+import java.time.LocalDate;
+import model.Booking;
+import model.User;
 import service.CancellationPolicyService;
 
 @WebServlet(name = "CancelBookingServlet", urlPatterns = {"/user/cancel-booking"})
 public class CancelBookingServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-    private final AuditLogService auditLogService = new AuditLogService();
+    private final BookingDao bookingDao = new BookingDao();
+    private final BookingRefundDao refundDao = new BookingRefundDao();
+    private final CancellationPolicyService policyService = new CancellationPolicyService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO: Xu ly hien thi trang JSP.
-
-        request.getRequestDispatcher("/WEB-INF/views/public/booking-detail-guest.jsp").forward(request, response);
+        try {
+            Booking booking = ownedCancellableBooking(request);
+            request.setAttribute("booking", booking);
+            request.setAttribute("refund", policyService.calculateRefund(booking, LocalDate.now()));
+            request.getRequestDispatcher("/WEB-INF/views/public/refund-request.jsp").forward(request, response);
+        } catch (Exception ex) {
+            request.getSession().setAttribute("error", ex.getMessage());
+            response.sendRedirect(request.getContextPath() + "/my-bookings");
+        }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        model.User user = (model.User) request.getSession().getAttribute("currentUser");
-        if (user == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-
-        String bookingIdStr = request.getParameter("bookingId");
-        String reason = request.getParameter("reason");
-
-        if (bookingIdStr == null || bookingIdStr.isBlank() || reason == null || reason.trim().isEmpty()) {
-            request.getSession().setAttribute("error", "Vui long nhap ly do huy phong.");
-            response.sendRedirect(request.getContextPath() + "/my-bookings");
-            return;
-        }
-
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            long bookingId = Long.parseLong(bookingIdStr);
-            dao.BookingDao bookingDao = new dao.BookingDao();
-            model.Booking booking = bookingDao.findById(bookingId).orElse(null);
+            Booking booking = ownedCancellableBooking(request);
+            String bankName = required(request, "bankName", "Ngân hàng", 100);
+            String accountHolder = required(request, "accountHolder", "Chủ tài khoản", 150)
+                    .toUpperCase(java.util.Locale.ROOT);
+            String accountNumber = required(request, "accountNumber", "Số tài khoản", 40)
+                    .replaceAll("\\s+", "");
+            String reason = required(request, "reason", "Lý do hủy", 500);
+            if (!accountNumber.matches("[0-9]{6,30}"))
+                throw new IllegalArgumentException("Số tài khoản phải gồm 6 đến 30 chữ số.");
 
-            if (booking == null || booking.getCustomerId() == null || booking.getCustomerId() != user.getId()) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Khong co quyen huy dat phong nay.");
-                return;
-            }
-
-            if (!"PENDING_PAYMENT".equals(booking.getStatus()) && !"CONFIRMED".equals(booking.getStatus())) {
-                request.getSession().setAttribute("error", "Chi co the huy phong khi dang cho thanh toan hoac da xac nhan.");
-                response.sendRedirect(request.getContextPath() + "/booking-detail?id=" + bookingId);
-                return;
-            }
-
-            CancellationPolicyService policyService = new CancellationPolicyService();
             CancellationPolicyService.RefundResult refund =
-                    policyService.calculateRefund(booking, java.time.LocalDate.now());
-
-            String fullReason = reason
-                    + " | Ty le hoan: " + refund.getRefundRate().stripTrailingZeros().toPlainString() + "%"
-                    + " | So tien hoan du kien: " + refund.getRefundAmount() + " VND"
-                    + " | Phi huy du kien: " + refund.getCancellationFee() + " VND"
-                    + " | Nguon chinh sach: " + (refund.isFromPolicy() ? "Manager" : "Mac dinh he thong");
-
-            boolean success = bookingDao.cancelBooking(bookingId, fullReason);
-            if (success) {
-                auditLogService.log(request, "CANCEL_BOOKING", "BOOKING", bookingId,
-                        "Customer canceled booking " + bookingId + ". " + fullReason);
-                request.getSession().setAttribute("message",
-                        "Huy phong thanh cong. Ty le hoan "
-                                + refund.getRefundRate().stripTrailingZeros().toPlainString()
-                                + "%, so tien hoan du kien: " + refund.getRefundAmount()
-                                + " VND, phi huy: " + refund.getCancellationFee() + " VND.");
-            } else {
-                request.getSession().setAttribute("error", "He thong ban, vui long thu lai sau.");
-            }
-
-            response.sendRedirect(request.getContextPath() + "/booking-detail?id=" + bookingId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    policyService.calculateRefund(booking, LocalDate.now());
+            User user = currentUser(request);
+            refundDao.createPendingRefund(booking.getId(), bankName, accountNumber,
+                    accountHolder, refund.getRefundAmount(), user.getId(), reason);
+            request.getSession().setAttribute("message",
+                    "Đã gửi yêu cầu hoàn tiền cho Manager. Số tiền dự kiến: "
+                            + refund.getRefundAmount() + " VND.");
+        } catch (Exception ex) {
+            request.getSession().setAttribute("error", ex.getMessage());
         }
+        response.sendRedirect(request.getContextPath() + "/my-bookings");
+    }
+
+    private Booking ownedCancellableBooking(HttpServletRequest request) throws Exception {
+        User user = currentUser(request);
+        String rawId = request.getParameter("bookingId");
+        long bookingId;
+        try { bookingId = Long.parseLong(rawId); }
+        catch (Exception ex) { throw new IllegalArgumentException("Booking không hợp lệ."); }
+        Booking booking = bookingDao.findById(bookingId).orElseThrow(
+                () -> new IllegalArgumentException("Không tìm thấy booking."));
+        if (booking.getCustomerId() == null || booking.getCustomerId().longValue() != user.getId())
+            throw new SecurityException("Bạn không có quyền hủy booking này.");
+        if (!("PENDING_PAYMENT".equals(booking.getStatus()) || "CONFIRMED".equals(booking.getStatus())))
+            throw new IllegalArgumentException("Booking ở trạng thái này không thể hủy.");
+        return booking;
+    }
+
+    private User currentUser(HttpServletRequest request) {
+        Object value = request.getSession().getAttribute("currentUser");
+        if (!(value instanceof User)) throw new SecurityException("Vui lòng đăng nhập.");
+        return (User) value;
+    }
+
+    private String required(HttpServletRequest request, String name, String label, int max) {
+        String value = request.getParameter(name);
+        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(label + " là bắt buộc.");
+        value = value.trim();
+        if (value.length() > max) throw new IllegalArgumentException(label + " quá dài.");
+        return value;
     }
 }

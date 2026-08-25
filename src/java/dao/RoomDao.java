@@ -32,7 +32,7 @@ public class RoomDao {
                   FROM booking_rooms br
                   JOIN bookings b ON br.booking_id = b.id
                   WHERE br.room_id = r.id
-                    AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                    AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN', 'CANCELLATION_PENDING')
                     AND b.check_in_date < ? AND b.check_out_date > ?
                     %s
               )
