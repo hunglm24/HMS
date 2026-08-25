@@ -12,40 +12,16 @@ import java.util.List;
 import java.util.Optional;
 
 public class HotelPolicyDao {
-    private static volatile boolean tableChecked = false;
-
-    private void ensureTableExists(Connection conn) {
-        if (tableChecked) return;
-        String sql = """
-            CREATE TABLE IF NOT EXISTS hotel_policies (
-              id BIGINT AUTO_INCREMENT PRIMARY KEY,
-              title VARCHAR(255) NOT NULL,
-              category VARCHAR(100) DEFAULT NULL,
-              content TEXT DEFAULT NULL,
-              status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
-              created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-              updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-        """;
-        try (java.sql.Statement st = conn.createStatement()) {
-            st.execute(sql);
-            tableChecked = true;
-        } catch (Exception ignored) {
-        }
-    }
-
     public List<HotelPolicy> findAll() throws SQLException {
-        try (Connection conn = DBConnectionUtil.getConnection()) {
-            ensureTableExists(conn);
-            String sql = "SELECT * FROM hotel_policies ORDER BY created_at DESC";
-            try (PreparedStatement ps = conn.prepareStatement(sql);
-                 ResultSet rs = ps.executeQuery()) {
-                List<HotelPolicy> policies = new ArrayList<>();
-                while (rs.next()) {
-                    policies.add(mapRow(rs));
-                }
-                return policies;
+        String sql = "SELECT * FROM hotel_policies ORDER BY created_at DESC";
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            List<HotelPolicy> policies = new ArrayList<>();
+            while (rs.next()) {
+                policies.add(mapRow(rs));
             }
+            return policies;
         }
     }
 
