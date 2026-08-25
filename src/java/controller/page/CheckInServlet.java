@@ -53,23 +53,17 @@ public class CheckInServlet extends HttpServlet {
                 try (java.sql.Connection conn = util.DBConnectionUtil.getConnection()) {
                                 // Fetch all available rooms across all room types
                                 java.util.Map<Long, java.util.List<model.Room>> availableRoomsByTypeId = new java.util.HashMap<>();
-                                String sqlAllAvail = "SELECT r.* FROM rooms r WHERE r.status != 'MAINTENANCE' " +
-                                                  "AND r.id NOT IN (SELECT br2.room_id FROM booking_rooms br2 JOIN bookings b ON br2.booking_id = b.id " +
-                                                  "WHERE b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN') " +
-                                                  "AND b.check_in_date < ? AND b.check_out_date > ? AND b.id != ?)";
-                                try (java.sql.PreparedStatement psAvail = conn.prepareStatement(sqlAllAvail)) {
-                                    psAvail.setDate(1, new java.sql.Date(selectedBooking.getCheckOutDate().getTime()));
-                                    psAvail.setDate(2, new java.sql.Date(selectedBooking.getCheckInDate().getTime()));
-                                    psAvail.setInt(3, bookingId);
-                                    try (java.sql.ResultSet rsAvail = psAvail.executeQuery()) {
-                                        while (rsAvail.next()) {
-                                            model.Room r = new model.Room();
-                                            r.setId(rsAvail.getLong("id"));
-                                            r.setRoomNumber(rsAvail.getString("room_number"));
-                                            r.setRoomTypeId(rsAvail.getLong("room_type_id"));
-                                            availableRoomsByTypeId.computeIfAbsent(r.getRoomTypeId(), k -> new java.util.ArrayList<>()).add(r);
-                                        }
-                                    }
+                                
+                                // Gọi chung hàm từ RoomDao để tránh duplicate code SQL (DRY Principle)
+                                dao.RoomDao roomDao = new dao.RoomDao();
+                                java.time.LocalDate checkIn = new java.sql.Date(selectedBooking.getCheckInDate().getTime()).toLocalDate();
+                                java.time.LocalDate checkOut = new java.sql.Date(selectedBooking.getCheckOutDate().getTime()).toLocalDate();
+                                
+                                // Truyền null cho tham số roomTypeId để lấy TẤT CẢ các hạng phòng
+                                java.util.List<model.Room> allAvailRooms = roomDao.findAvailablePhysicalRooms(checkIn, checkOut, null, (long)bookingId);
+                                
+                                for(model.Room r : allAvailRooms) {
+                                    availableRoomsByTypeId.computeIfAbsent(r.getRoomTypeId(), k -> new java.util.ArrayList<>()).add(r);
                                 }
                                 request.setAttribute("availableRoomsByTypeId", availableRoomsByTypeId);
 

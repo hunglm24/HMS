@@ -8,6 +8,19 @@
 </style>
 </head>
 <body><jsp:include page="/WEB-INF/views/common/header.jsp" /><main class="page-container"><section class="section-head"><div><p class="section-kicker">${managerView ? 'Manager' : 'Lễ tân'}</p><h1>Danh sách booking</h1><p>Theo dõi booking chờ xác nhận, sắp check-in và đang lưu trú.</p></div><c:if test="${!managerView}"><a class="btn" href="${pageContext.request.contextPath}/receptionist/walk-in">Đặt tại quầy</a></c:if></section>
+<c:if test="${not empty sessionScope.toastMessage}">
+    <div style="padding: 15px; margin: 20px 0; border-radius: 4px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; font-weight: bold;">
+        ✅ ${sessionScope.toastMessage}
+    </div>
+    <c:remove var="toastMessage" scope="session" />
+    <c:remove var="toastType" scope="session" />
+</c:if>
+<c:if test="${not empty sessionScope.error}">
+    <div style="padding: 15px; margin: 20px 0; border-radius: 4px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; font-weight: bold;">
+        ❌ ${sessionScope.error}
+    </div>
+    <c:remove var="error" scope="session" />
+</c:if>
 <section class="kpi-grid">
     <a href="?status=" style="text-decoration: none; color: inherit; display: block;">
         <div class="metric-card ${empty param.status && empty param.scope ? 'active' : ''}">
@@ -124,7 +137,17 @@
         </c:if>
         
         <c:forEach begin="1" end="${totalPages}" var="p">
-            <a href="${pageContext.request.contextPath}${bookingBasePath}?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${p}" class="btn ${p == currentPage ? 'btn-primary' : 'btn-secondary'}">${p}</a>
+            <c:choose>
+                <c:when test="${p == 1 || p == totalPages || (p >= currentPage - 1 && p <= currentPage + 1)}">
+                    <a href="${pageContext.request.contextPath}${bookingBasePath}?keyword=${param.keyword}&status=${param.status}&fromDate=${param.fromDate}&toDate=${param.toDate}&source=${param.source}&page=${p}" class="btn ${p == currentPage ? 'btn-primary' : 'btn-secondary'}">${p}</a>
+                </c:when>
+                <c:when test="${p == 2 && currentPage > 3}">
+                    <span class="btn btn-secondary" style="pointer-events: none; border: none; background: transparent;">...</span>
+                </c:when>
+                <c:when test="${p == totalPages - 1 && currentPage < totalPages - 2}">
+                    <span class="btn btn-secondary" style="pointer-events: none; border: none; background: transparent;">...</span>
+                </c:when>
+            </c:choose>
         </c:forEach>
         
         <c:if test="${currentPage < totalPages}">

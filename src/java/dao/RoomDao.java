@@ -47,6 +47,16 @@ public class RoomDao {
         
         sql.append(" ORDER BY r.room_number ASC");
 
+        // --- BẮT ĐẦU IN LOG RA CONSOLE ĐỂ BẢO VỆ ĐỒ ÁN ---
+        System.out.println("==================================================");
+        System.out.println("[DEBUG-HMS] ĐANG TÌM PHÒNG TRỐNG CHO LỄ TÂN (RoomDao)");
+        System.out.println("[DEBUG-HMS] Check-in Mới (Vào): " + checkIn);
+        System.out.println("[DEBUG-HMS] Check-out Mới (Ra): " + checkOut);
+        System.out.println("[DEBUG-HMS] CÂU SQL (CHỨA NOT EXISTS) SẮP CHẠY:");
+        System.out.println(sql.toString());
+        System.out.println("==================================================");
+        // --- KẾT THÚC IN LOG ---
+
         try (Connection conn = DBConnectionUtil.getConnection(); 
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             
