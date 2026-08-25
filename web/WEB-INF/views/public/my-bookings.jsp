@@ -9,6 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Booking của tôi | HMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/feedback.css?v=20260824-1">
     <style>
         .tabs { display: flex; gap: var(--space-4); border-bottom: 1px solid var(--border-color); margin-bottom: var(--space-6); overflow-x: auto; }
         .tab-item { padding: var(--space-3) var(--space-4); color: var(--text-muted); font-weight: 600; text-decoration: none; white-space: nowrap; border-bottom: 2px solid transparent; }
@@ -107,7 +108,7 @@
                                 <c:if test="${b.status == 'CHECKED_OUT'}">
                                     <c:choose>
                                         <c:when test="${hasFeedbackMap[b.id]}">
-                                            <button class="btn btn-secondary btn-sm" disabled style="opacity: 0.6; cursor: not-allowed;">Đã đánh giá</button>
+                                            <button class="btn btn-secondary btn-sm btn-reviewed" disabled>Đã đánh giá</button>
                                         </c:when>
                                         <c:otherwise>
                                             <a href="${pageContext.request.contextPath}/customer/feedback?bookingId=${b.id}" class="btn btn-secondary btn-sm">Đánh giá</a>

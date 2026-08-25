@@ -26,11 +26,12 @@
     <title>Phòng <%= HousekeepingTask.esc(task.getRoomNumber()) %> | <%= isManager ? "Chi tiết công việc phòng" : "Dọn phòng" %></title>
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260820-7">
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260820-7">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260820-7">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260825-1">
 </head>
-<body>
+<body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<main class="hk-page">
+<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
+<main class="page-container hk-page">
     <a class="hk-back" href="<%= backUrl %>">← <%= backLabel %></a>
     <section class="hk-detail-heading">
         <div>

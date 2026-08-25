@@ -12,10 +12,12 @@
     <title>Quản lý tiện nghi | HMS</title>
     <link rel="stylesheet" href="${cp}/assets/css/main.css?v=20260820-7" />
     <link rel="stylesheet" href="${cp}/assets/css/rooms.css?v=20260820-7" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="${cp}/assets/css/amenities.css?v=20260825-1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   </head>
   <body class="room-management-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
+    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
     <main class="page-container room-management-page">
       <section class="room-management-hero panel">
@@ -25,7 +27,7 @@
           <p>Quản lý danh mục tiện ích, biểu tượng và gán tiện nghi vào từng loại phòng.</p>
         </div>
 
-        <div class="room-management-hero__actions">
+        <div class="room-management-hero__actions amenity-hero-actions">
           <a class="btn btn-secondary" href="${cp}/manager/room-types">
             Quản lý loại phòng
           </a>
@@ -46,7 +48,7 @@
       <section class="room-management-content">
         <section class="room-management-panel panel">
           <div class="room-management-toolbar">
-            <form class="room-management-filters" method="get" action="${cp}/manager/amenities" style="grid-template-columns: minmax(260px, 2fr) minmax(180px, 1fr) auto auto; gap: var(--space-3); align-items: end;">
+            <form class="room-management-filters amenity-filters" method="get" action="${cp}/manager/amenities">
               <div class="room-management-filters__search">
                 <input type="search" name="keyword" value="${keyword}" placeholder="Tìm tiện nghi, mô tả..." />
               </div>
@@ -57,8 +59,10 @@
                   <option value="INACTIVE" ${status eq 'INACTIVE' ? 'selected' : ''}>Ngừng hoạt động</option>
                 </select>
               </div>
-              <button class="btn btn-primary" type="submit">Lọc</button>
-              <a class="btn btn-secondary" href="${cp}/manager/amenities" style="text-decoration: none; text-align: center;">Đặt lại</a>
+              <div class="amenity-filter-actions">
+                <button class="btn btn-primary" type="submit">Lọc</button>
+                <a class="btn btn-secondary" href="${cp}/manager/amenities">Đặt lại</a>
+              </div>
             </form>
           </div>
 
@@ -66,12 +70,12 @@
             <table class="room-management-table">
               <thead>
                 <tr>
-                  <th style="width: 80px; text-align: center;">Icon</th>
+                  <th class="table-col-icon">Icon</th>
                   <th>Tên tiện nghi</th>
                   <th>Mô tả</th>
                   <th>Trạng thái</th>
                   <th>Ngày cập nhật</th>
-                  <th style="text-align: right;">Thao tác</th>
+                  <th class="text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -89,19 +93,19 @@
                   <c:otherwise>
                     <c:forEach var="amenity" items="${amenities}">
                       <tr data-pagination-item>
-                        <td style="text-align: center;">
-                          <div style="width: 38px; height: 38px; border-radius: 8px; background: #eff6ff; color: #2563eb; font-size: 17px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dbeafe;">
+                        <td class="text-center">
+                          <div class="amenity-icon-box">
                             <i class="<c:out value='${not empty amenity.icon ? amenity.icon : "fa-solid fa-star"}' />"></i>
                           </div>
                         </td>
                         <td>
-                          <div class="room-number-pill" style="display: inline-block;">
+                          <div class="room-number-pill">
                             <strong><c:out value="${amenity.name}" /></strong>
                           </div>
-                          <small style="color: #64748b; margin-left: 6px;">#<c:out value="${amenity.id}" /></small>
+                          <span class="amenity-id-tag">#<c:out value="${amenity.id}" /></span>
                         </td>
                         <td>
-                          <span style="color: #475569; font-size: 13.5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                          <span class="amenity-desc-clamp">
                             <c:out value="${empty amenity.description ? '-' : amenity.description}" />
                           </span>
                         </td>
@@ -118,8 +122,8 @@
                         <td>
                           <fmt:formatDate value="${amenity.updatedAt}" pattern="dd/MM/yyyy HH:mm" />
                         </td>
-                        <td style="text-align: right;">
-                          <div class="room-management-actions" style="justify-content: flex-end;">
+                        <td class="text-right">
+                          <div class="room-management-actions">
                             <a class="btn btn-secondary btn-sm" href="${cp}/manager/amenity/edit?id=${amenity.id}">
                               Sửa
                             </a>
@@ -137,13 +141,13 @@
             <c:forEach var="amenity" items="${amenities}">
               <article class="room-management-card" data-pagination-item>
                 <div class="room-management-card__head">
-                  <div style="display: flex; gap: 12px; align-items: center;">
-                    <div style="width: 38px; height: 38px; border-radius: 8px; background: #eff6ff; color: #2563eb; font-size: 17px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dbeafe; flex-shrink: 0;">
+                  <div class="flex-align-center">
+                    <div class="amenity-icon-box">
                       <i class="<c:out value='${not empty amenity.icon ? amenity.icon : "fa-solid fa-star"}' />"></i>
                     </div>
                     <div>
-                      <h3 style="margin: 0;"><c:out value="${amenity.name}" /></h3>
-                      <small style="color: #64748b;">#<c:out value="${amenity.id}" /></small>
+                      <h3><c:out value="${amenity.name}" /></h3>
+                      <span class="amenity-id-tag">#<c:out value="${amenity.id}" /></span>
                     </div>
                   </div>
                   <c:choose>

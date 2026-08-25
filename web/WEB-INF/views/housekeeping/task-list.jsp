@@ -47,11 +47,12 @@
     <title><%= pageTitle %> | HMS</title>
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260821-1">
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260821-1">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260821-1">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260825-1">
 </head>
-<body>
+<body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<main class="hk-page">
+<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
+<main class="page-container hk-page">
     <section class="hk-hero">
         <div>
             <p class="hk-eyebrow"><%= isManager ? "Quản lý khách sạn" : "Vận hành phòng" %></p>

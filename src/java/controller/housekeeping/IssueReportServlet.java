@@ -91,13 +91,14 @@ public class IssueReportServlet extends HttpServlet {
                 maintenanceService.reportIssue(roomId, null, null, note);
             }
 
+            boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
             session.setAttribute("successMessage", "Báo cáo sự cố thành công.");
-                        boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
             response.sendRedirect(request.getContextPath() + (isMgr ? "/manager/issues" : "/housekeeping/issues"));
         } catch (Exception ex) {
+            boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
             session.setAttribute("errorMessage", ex.getMessage());
             Long roomId = parsePositiveLong(request.getParameter("roomId"));
-            response.sendRedirect(request.getContextPath() + "/housekeeping/issues/report"
+            response.sendRedirect(request.getContextPath() + (isMgr ? "/manager/issues/report" : "/housekeeping/issues/report")
                     + (roomId == null ? "" : "?roomId=" + roomId));
         }
     }
