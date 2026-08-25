@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import service.AuditLogService;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -19,10 +20,12 @@ import java.util.Optional;
 public class NewsManagementServlet extends HttpServlet {
 
     private NewsDao newsDao;
+    private AuditLogService auditLogService;
 
     @Override
     public void init() throws ServletException {
         newsDao = new NewsDao();
+        auditLogService = new AuditLogService();
     }
 
     @Override
@@ -131,6 +134,7 @@ public class NewsManagementServlet extends HttpServlet {
                     long id = Long.parseLong(idStr);
                     boolean deleted = newsDao.deleteNews(id);
                     if (deleted) {
+                        auditLogService.log(request, "DELETE_NEWS", "NEWS", id, "Deleted news " + id);
                         session.setAttribute("toastMessage", "Đã xóa bài viết thành công.");
                         session.setAttribute("toastType", "toast-success");
                     } else {
@@ -197,6 +201,7 @@ public class NewsManagementServlet extends HttpServlet {
 
                 success = newsDao.updateNews(news);
                 if (success) {
+                    auditLogService.log(request, "UPDATE_NEWS", "NEWS", news.getId(), "Updated news " + news.getTitle());
                     session.setAttribute("toastMessage", "Cập nhật bài viết thành công!");
                     session.setAttribute("toastType", "toast-success");
                 }
@@ -211,6 +216,7 @@ public class NewsManagementServlet extends HttpServlet {
             news = newsDao.insertNews(news);
             success = news.getId() != null && news.getId() > 0;
             if (success) {
+                auditLogService.log(request, "CREATE_NEWS", "NEWS", news.getId(), "Created news " + news.getTitle());
                 session.setAttribute("toastMessage", "Thêm bài viết mới thành công!");
                 session.setAttribute("toastType", "toast-success");
             }

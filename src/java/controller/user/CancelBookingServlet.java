@@ -6,11 +6,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import service.AuditLogService;
 import service.CancellationPolicyService;
 
 @WebServlet(name = "CancelBookingServlet", urlPatterns = {"/user/cancel-booking"})
 public class CancelBookingServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -66,6 +68,8 @@ public class CancelBookingServlet extends HttpServlet {
 
             boolean success = bookingDao.cancelBooking(bookingId, fullReason);
             if (success) {
+                auditLogService.log(request, "CANCEL_BOOKING", "BOOKING", bookingId,
+                        "Customer canceled booking " + bookingId + ". " + fullReason);
                 request.getSession().setAttribute("message",
                         "Huy phong thanh cong. Ty le hoan "
                                 + refund.getRefundRate().stripTrailingZeros().toPlainString()

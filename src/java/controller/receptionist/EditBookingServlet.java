@@ -12,6 +12,7 @@ import model.Booking;
 import model.Room;
 import model.RoomType;
 import util.DBConnectionUtil;
+import service.AuditLogService;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -31,6 +32,7 @@ public class EditBookingServlet extends HttpServlet {
     private final BookingDao bookingDao = new BookingDao();
     private final RoomTypeDao roomTypeDao = new RoomTypeDao();
     private final RoomDao roomDao = new RoomDao();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -349,6 +351,8 @@ public class EditBookingServlet extends HttpServlet {
                     }
 
                     conn.commit();
+                    auditLogService.log(request, "UPDATE_BOOKING", "BOOKING", bookingId,
+                            "Edited booking " + bookingId + ". Reason: " + reason);
                     request.getSession().setAttribute("toastMessage", "Cap nhat Reservation thanh cong!");
                     request.getSession().setAttribute("toastType", "toast-success");
                     response.sendRedirect(request.getContextPath() + "/reception/bookings");

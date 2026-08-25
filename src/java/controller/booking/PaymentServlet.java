@@ -12,6 +12,7 @@ public class PaymentServlet extends HttpServlet {
     private service.VNPayService vnPayService = new service.VNPayService();
     private dao.PromotionDao promotionDao = new dao.PromotionDao();
     private dao.SeasonalPriceRuleDao priceRuleDao = new dao.SeasonalPriceRuleDao();
+    private final service.AuditLogService auditLogService = new service.AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -176,6 +177,8 @@ public class PaymentServlet extends HttpServlet {
                 }
 
                 conn.commit();
+                auditLogService.log(request, "CREATE_BOOKING", "BOOKING", bookingId,
+                        "Created booking " + bookingCode + " total=" + finalAmount);
 
                 if (config.VNPayConfig.isPaymentTestMode()) {
                     session.setAttribute("pendingBookingId", bookingId);
@@ -188,6 +191,8 @@ public class PaymentServlet extends HttpServlet {
                 session.setAttribute("pendingBookingId", bookingId);
                 session.setAttribute("pendingBookingCode", bookingCode);
                 session.setAttribute("pendingPaymentAmount", finalAmount);
+                auditLogService.log(request, "INIT_BOOKING_PAYMENT", "PAYMENT", bookingId,
+                        "Initiated online payment for " + bookingCode + " amount=" + finalAmount);
 
                 String returnUrl = request.getScheme() + "://" + request.getServerName()
                         + ((request.getServerPort() == 80 || request.getServerPort() == 443)

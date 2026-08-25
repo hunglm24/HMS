@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
     'use strict';
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -55,7 +55,7 @@
             }
             if (input) {
                 input.setAttribute('aria-invalid', 'true');
-                input.setCustomValidity(message || 'Invalid value');
+                input.setCustomValidity(message || 'Giá trị không hợp lệ');
             }
             if (errorEl) {
                 errorEl.textContent = message || '';
@@ -131,10 +131,35 @@
             }
         }
 
-        function getSelectedStatusRadio() {
-            return statusRadios.find(function (input) {
-                return input.checked;
-            });
+        function getStatusValue() {
+            return statusInput ? String(statusInput.value || '').toUpperCase() : '';
+        }
+
+        function renderStatusToggle() {
+            if (!statusToggle || !statusInput) {
+                return;
+            }
+
+            var isActive = getStatusValue() === 'ACTIVE';
+            statusToggle.classList.toggle('is-active', isActive);
+            statusToggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            if (statusLabel) {
+                statusLabel.textContent = isActive ? 'Đang hoạt động' : 'Ngừng hoạt động';
+            }
+        }
+
+        function setStatusValue(nextValue) {
+            if (!statusInput) {
+                return;
+            }
+
+            statusInput.value = nextValue === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE';
+            renderStatusToggle();
+            clearFieldError(statusInput);
+        }
+
+        function toggleStatusValue() {
+            setStatusValue(getStatusValue() === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE');
         }
 
         function validateName() {
@@ -222,16 +247,14 @@
         }
 
         function validateStatus() {
-            var checked = getSelectedStatusRadio();
+            var value = getStatusValue();
 
-            if (!checked) {
-                setFieldError(statusRadios[0], 'Vui lòng chọn trạng thái.');
+            if (value !== 'ACTIVE' && value !== 'INACTIVE') {
+                setFieldError(statusInput || statusToggle, 'Vui lòng chọn trạng thái.');
                 return false;
             }
 
-            statusRadios.forEach(function (input) {
-                clearFieldError(input);
-            });
+            clearFieldError(statusInput || statusToggle);
             return true;
         }
 
@@ -258,7 +281,7 @@
             }
 
             if (allowedExtensions.indexOf(extension) === -1 || (file.type && allowedMimeTypes.indexOf(file.type) === -1)) {
-                setFieldError(coverInput, 'Ảnh đại diện phải là JPG, JPEG, PNG hoặc WEBP.');
+                setFieldError(coverInput, 'Ảnh đại diện phải có định dạng JPG, JPEG, PNG hoặc WEBP.');
                 coverInput.value = '';
                 resetCoverPreview();
                 return false;

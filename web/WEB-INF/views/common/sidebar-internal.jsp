@@ -77,6 +77,7 @@
         <% if (isManager) { %>
             <a class="<%= isPathActive(request, "/manager/reports") ? "active" : "" %>" href="<%= cp %>/manager/reports"><span>RP</span>Báo cáo</a>
             <a class="<%= isPathActive(request, "/manager/rooms", "/manager/room-form") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng</a>
+            <a class="<%= isPathActive(request, "/manager/room-map") ? "active" : "" %>" href="<%= cp %>/manager/room-map"><span>MP</span>Sơ đồ phòng</a>
             <a class="<%= isPathActive(request, "/manager/room-types", "/manager/room-type") ? "active" : "" %>" href="<%= cp %>/manager/room-types"><span>RT</span>Loại phòng</a>
             <a class="<%= isPathActive(request, "/manager/equipment") ? "active" : "" %>" href="<%= cp %>/manager/equipment"><span>EQ</span>Thiết bị</a>
             <a class="<%= isPathActive(request, "/manager/amenities", "/manager/amenity") ? "active" : "" %>" href="<%= cp %>/manager/amenities"><span>AM</span>Tiện nghi</a>

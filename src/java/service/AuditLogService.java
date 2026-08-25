@@ -3,7 +3,7 @@ package service;
 import dao.AuditLogDao;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import model.User;
+import model.Account;
 
 public class AuditLogService {
     private final AuditLogDao auditLogDao = new AuditLogDao();
@@ -13,9 +13,8 @@ public class AuditLogService {
         Long actorId = null;
         HttpSession session = request.getSession(false);
         Object currentUser = session == null ? null : session.getAttribute("currentUser");
-        // Use the legacy instanceof style for compatibility with the project source level.
-        if (currentUser instanceof User) {
-            actorId = ((User) currentUser).getId();
+        if (currentUser instanceof Account) {
+            actorId = ((Account) currentUser).getId();
         }
         auditLogDao.log(actorId, action, targetType, targetId, detail, request.getRemoteAddr());
     }

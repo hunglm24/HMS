@@ -15,11 +15,13 @@ import java.sql.ResultSet;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import service.AuditLogService;
 
 /** Server-to-server payment notification. This endpoint must be publicly reachable over HTTPS. */
 @WebServlet(name = "VNPayIpnServlet", urlPatterns = {"/api/vnpay/ipn"})
 public class VNPayIpnServlet extends HttpServlet {
     private final VNPayService vnPayService = new VNPayService();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -78,6 +80,8 @@ public class VNPayIpnServlet extends HttpServlet {
                                 insert.setString(3, fields.get("vnp_TransactionNo"));
                                 insert.executeUpdate();
                             }
+                            auditLogService.log(request, "BOOKING_PAYMENT_SUCCESS", "PAYMENT", bookingId,
+                                    "VNPay IPN confirmed booking " + bookingCode + " amount=" + paidAmount);
                         }
                         conn.commit();
                         reply(response, "00", "Confirm success");

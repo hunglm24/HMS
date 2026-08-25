@@ -262,6 +262,14 @@
             return !firstInvalid;
         }
 
+        function normalizePriceForSubmit() {
+            if (!priceInput) {
+                return;
+            }
+
+            priceInput.value = String(priceInput.value || '').replace(/[^\d]/g, '');
+        }
+
         if (imageInput) {
             imageInput.addEventListener('change', function () {
                 validateImage();
@@ -304,7 +312,10 @@
         form.addEventListener('submit', function (event) {
             if (!validateForm()) {
                 event.preventDefault();
+                return;
             }
+
+            normalizePriceForSubmit();
         });
     });
 })();
