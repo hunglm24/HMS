@@ -42,20 +42,18 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sự cố thiết bị | HMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260821-1">
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260821-1">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260821-1">
-    <style>
-        .btn-verify-action { background: #2563eb; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .btn-verify-action:hover { background: #1d4ed8; }
-        .btn-history-action { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
-        .btn-history-action:hover { background: #e2e8f0; color: #0f172a; }
-    </style>
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260825-1">
 </head>
-<body>
+<body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<main class="hk-page">
+<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
+
+<main class="page-container hk-page">
     <section class="hk-hero">
         <div>
             <p class="hk-eyebrow"><%= isManager ? "Quản lý khách sạn" : "Vận hành phòng" %></p>
@@ -63,7 +61,9 @@
             <p>Theo dõi và cập nhật trạng thái thiết bị cần bảo trì, sửa chữa.</p>
         </div>
         <div>
-            <a href="<%= contextPath %><%= isManager ? "/manager/issues/report" : "/housekeeping/issues/report" %>" class="hk-primary" style="display:inline-block; padding: 10px 20px; text-decoration: none;">Báo cáo sự cố mới</a>
+            <a href="<%= contextPath %><%= isManager ? "/manager/issues/report" : "/housekeeping/issues/report" %>" class="btn btn-primary">
+                + Báo cáo sự cố mới
+            </a>
         </div>
     </section>
         
@@ -155,15 +155,15 @@
                 </c:forEach>
                 <c:if test="${empty tasks}">
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px 16px; color: #64748b;">
-                            <div style="font-size: 32px; margin-bottom: 8px;">🛠️</div>
+                        <td colspan="7" class="table-empty-notice">
+                            <div class="empty-icon-lg">🛠️</div>
                             <c:choose>
                                 <c:when test="${not empty search or not empty floor or not empty taskType or not empty status}">
-                                    <strong style="color: #1e293b; font-size: 15px; display: block; margin-bottom: 4px;">Không tìm thấy sự cố phù hợp</strong>
+                                    <strong class="empty-title">Không tìm thấy sự cố phù hợp</strong>
                                     <span>Không có sự cố thiết bị nào khớp với tiêu chí tìm kiếm hoặc bộ lọc đang chọn.</span>
                                 </c:when>
                                 <c:otherwise>
-                                    <strong style="color: #1e293b; font-size: 15px; display: block; margin-bottom: 4px;">Không có sự cố thiết bị nào</strong>
+                                    <strong class="empty-title">Không có sự cố thiết bị nào</strong>
                                     <span>Hiện tại toàn bộ thiết bị trong các phòng đều đang hoạt động bình thường.</span>
                                 </c:otherwise>
                             </c:choose>

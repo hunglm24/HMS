@@ -228,7 +228,7 @@ public class HousekeepingDao {
     }
     public List<HousekeepingTask.EquipmentCheck> findEquipment(long roomId, Long bookingRoomId) throws SQLException {
         String sql = """
-                SELECT re.id, e.name, re.quantity, re.status,
+                SELECT re.id, e.name, e.is_maintainable, re.quantity, re.status,
                        cis.initial_status, cis.initial_quantity
                 FROM room_equipment re
                 JOIN equipment e ON e.id = re.equipment_id
@@ -248,6 +248,7 @@ public class HousekeepingDao {
                     HousekeepingTask.EquipmentCheck item = new HousekeepingTask.EquipmentCheck();
                     item.setRoomEquipmentId(rs.getLong("id"));
                     item.setEquipmentName(rs.getString("name"));
+                    item.setMaintainable(rs.getBoolean("is_maintainable"));
                     item.setQuantity(rs.getInt("quantity"));
                     item.setCurrentStatus(rs.getString("status"));
                     item.setInitialStatus(rs.getString("initial_status"));
@@ -955,7 +956,7 @@ public class HousekeepingDao {
     }
     public List<HousekeepingTask.EquipmentCheck> findDamagedEquipmentById(long roomEquipmentId) throws SQLException {
         String sql = """
-                SELECT re.id, e.name, re.quantity, re.status,
+                SELECT re.id, e.name, e.is_maintainable, re.quantity, re.status,
                        NULL AS initial_status, NULL AS initial_quantity
                 FROM room_equipment re
                 JOIN equipment e ON e.id = re.equipment_id
@@ -971,6 +972,7 @@ public class HousekeepingDao {
                     HousekeepingTask.EquipmentCheck item = new HousekeepingTask.EquipmentCheck();
                     item.setRoomEquipmentId(rs.getLong("id"));
                     item.setEquipmentName(rs.getString("name"));
+                    item.setMaintainable(rs.getBoolean("is_maintainable"));
                     item.setQuantity(rs.getInt("quantity"));
                     item.setCurrentStatus(rs.getString("status"));
                     result.add(item);
@@ -982,7 +984,7 @@ public class HousekeepingDao {
 
     public List<HousekeepingTask.EquipmentCheck> findDamagedEquipments(long roomId) throws SQLException {
         String sql = """
-                SELECT re.id, e.name, re.quantity, re.status,
+                SELECT re.id, e.name, e.is_maintainable, re.quantity, re.status,
                        NULL AS initial_status, NULL AS initial_quantity
                 FROM room_equipment re
                 JOIN equipment e ON e.id = re.equipment_id
@@ -998,6 +1000,7 @@ public class HousekeepingDao {
                     HousekeepingTask.EquipmentCheck item = new HousekeepingTask.EquipmentCheck();
                     item.setRoomEquipmentId(rs.getLong("id"));
                     item.setEquipmentName(rs.getString("name"));
+                    item.setMaintainable(rs.getBoolean("is_maintainable"));
                     item.setQuantity(rs.getInt("quantity"));
                     item.setCurrentStatus(rs.getString("status"));
                     result.add(item);

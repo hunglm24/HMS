@@ -73,6 +73,7 @@
 
     java.util.List<model.RoomType> featuredRoomTypes = java.util.Collections.emptyList();
     java.util.List<model.News> latestNews = java.util.Collections.emptyList();
+    java.util.List<dao.FeedbackDao.FeedbackDto> featuredFeedbacks = java.util.Collections.emptyList();
     if (!internal) {
         dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
         featuredRoomTypes = roomTypeDao.findFeaturedAvailable(4);
@@ -82,6 +83,12 @@
         } catch (Exception ex) {
             latestNews = java.util.Collections.emptyList();
         }
+        try {
+            dao.FeedbackDao feedbackDao = new dao.FeedbackDao();
+            featuredFeedbacks = feedbackDao.findFeaturedFeedbacks(3);
+        } catch (Exception ex) {
+            featuredFeedbacks = java.util.Collections.emptyList();
+        }
     }
 %>
 <!DOCTYPE html>
@@ -90,7 +97,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%= escapeHtml(indexHotelName) %></title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260820-7">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/feedback.css?v=20260824-1">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -139,12 +148,44 @@
                             <span><%= "-".equals(sizeText) ? "-" : sizeText %> m2</span>
                             <span><%= escapeHtml(bedType) %></span>
                         </div>
-                        <a class="btn" href="<%= request.getContextPath() %>/room-detail?id=<%= roomType.getId() %>">Xem chi tiết</a>
+                        <a class="btn" href="${pageContext.request.contextPath}/room-detail?id=<%= roomType.getId() %>">Xem chi tiết</a>
                     </div>
                 </article>
             <% } %>
         <% } %>
     </section>
+
+    <section class="section-head" style="margin-top: 50px;">
+        <div><p class="section-kicker">Trải nghiệm thực tế</p><h2>Khách hàng nói gì về chúng tôi</h2></div>
+    </section>
+    <% if (featuredFeedbacks.isEmpty()) { %>
+        <div style="text-align: center; padding: 36px 20px; background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color, #e5e7eb); color: #64748b; margin-bottom: 40px;">
+            <i class="far fa-comment-dots" style="font-size: 32px; color: #f59e0b; margin-bottom: 8px; display: block;"></i>
+            <p style="margin: 0; font-size: 15px;">Chưa có đánh giá nào được hiển thị. Hãy trải nghiệm dịch vụ và chia sẻ đánh giá đầu tiên của bạn!</p>
+        </div>
+    <% } else { %>
+    <section class="testimonials-grid">
+        <% for (dao.FeedbackDao.FeedbackDto fb : featuredFeedbacks) { %>
+            <div class="testimonial-card">
+                <div>
+                    <div class="feedback-star-display" style="margin-bottom: 12px;">
+                        <% for (int s = 1; s <= fb.getRating(); s++) { %><i class="fas fa-star"></i><% } %>
+                        <% for (int s = fb.getRating() + 1; s <= 5; s++) { %><i class="far fa-star feedback-star-empty"></i><% } %>
+                    </div>
+                    <p class="testimonial-quote">
+                        "<%= escapeHtml(fb.getComment() != null && !fb.getComment().isBlank() ? fb.getComment() : (fb.getRating() >= 4 ? "Trải nghiệm dịch vụ rất tuyệt vời, phòng ốc sạch sẽ và nhân viên chu đáo!" : "Dịch vụ và tiện nghi phòng tốt.")) %>"
+                    </p>
+                </div>
+                <div class="testimonial-author-row">
+                    <strong class="testimonial-author-name"><%= escapeHtml(fb.getCustomerName() != null ? fb.getCustomerName() : "Khách lưu trú") %></strong>
+                    <% if (fb.getRoomTypeNames() != null && !fb.getRoomTypeNames().isBlank()) { %>
+                        <span class="testimonial-room-tag"><%= escapeHtml(fb.getRoomTypeNames()) %></span>
+                    <% } %>
+                </div>
+            </div>
+        <% } %>
+    </section>
+    <% } %>
 
     <% if (!latestNews.isEmpty()) { %>
     <section class="section-head" style="margin-top: 40px;">
@@ -189,30 +230,34 @@
         <% if ("RECEPTIONIST".equalsIgnoreCase(role)) { %>
             <a class="preview-card" href="${pageContext.request.contextPath}/reception/bookings"><span>Lễ tân</span><h3>Booking</h3><p>Quản lý đặt phòng, check-in và check-out.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/reception/room-map"><span>Phòng</span><h3>Sơ đồ phòng</h3><p>Xem nhanh tình trạng phòng theo tầng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/reception/walk-in"><span>Quầy</span><h3>Đặt tại quầy</h3><p>Tạo đặt phòng trực tiếp cho khách walk-in.</p></a>
         <% } else if ("HOUSEKEEPING".equalsIgnoreCase(role)) { %>
-            <div style="display: flex; gap: 16px; flex-wrap: wrap; grid-column: 1 / -1;">
-                <a class="btn btn-primary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/tasks">Nhận task phòng</a>
-                <a class="btn btn-secondary" style="text-decoration: none; padding: 12px 24px; font-size: 16px;" href="${pageContext.request.contextPath}/housekeeping/issues">Báo cáo &amp; quản lý sự cố</a>
-            </div>
+            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=mine"><span>Nhiệm vụ</span><h3>Công việc của tôi</h3><p>Kiểm tra phòng sau checkout, dọn dẹp và chuẩn bị phòng sạch.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Nhật ký</span><h3>Lịch sử dọn phòng</h3><p>Xem lại các công việc kiểm tra và dọn dẹp đã hoàn tất.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/issues"><span>Bảo trì</span><h3>Sự cố thiết bị</h3><p>Báo cáo hư hỏng và kiểm tra bảo trì thiết bị trong phòng.</p></a>
         <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(role)) { %>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo</h3><p>Theo dõi doanh thu, công suất phòng và nhân sự.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý và trạng thái phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/room-types"><span>Loại phòng</span><h3>Quản lý loại phòng</h3><p>Quản lý hạng phòng, giá và sức chứa.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Buồng phòng</span><h3>Nhiệm vụ dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/equipment"><span>Thiết bị</span><h3>Quản lý thiết bị</h3><p>Danh mục thiết bị và định mức bồi thường.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/amenities"><span>Tiện nghi</span><h3>Quản lý tiện nghi</h3><p>Cấu hình tiện ích gắn theo từng loại phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/housekeeping"><span>Dọn phòng</span><h3>Lịch sử dọn phòng</h3><p>Theo dõi lịch sử và tiến độ dọn phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/issues"><span>Sự cố</span><h3>Sự cố thiết bị</h3><p>Theo dõi và nghiệm thu các thiết bị cần sửa chữa.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/feedbacks"><span>Đánh giá</span><h3>Đánh giá khách hàng</h3><p>Xem đánh giá, quản lý phản hồi và giao việc xử lý.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/news"><span>Tin tức</span><h3>Quản lý tin tức</h3><p>Thêm, sửa, xóa các chương trình khuyến mãi.</p></a>
         <% } %>
         <% if (canAdminUsers) { %>
             <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/users">
                 <span>Admin</span>
                 <h3>Người dùng</h3>
-                <p>Quản lý tài khoản nội bộ, trạng thái hoạt động và phân role cho user.</p>
+                <p>Quản lý tài khoản nội bộ, trạng thái hoạt động và phân quyền cho user.</p>
             </a>
         <% } %>
         <% if (canAdminRoles) { %>
             <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/roles">
                 <span>Phân quyền</span>
                 <h3>Vai trò và quyền</h3>
-                <p>Quản lý các role ngoài ADMIN và cập nhật quyền khi cần chỉnh sửa.</p>
+                <p>Quản lý các vai trò và phân quyền chức năng trong hệ thống.</p>
             </a>
         <% } %>
         <% if (canAdminLogs) { %>

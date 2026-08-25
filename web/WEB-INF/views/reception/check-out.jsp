@@ -180,7 +180,7 @@
                         <input type="hidden" name="id" value="${selectedBooking.bookingId}">
                         <input type="hidden" name="redirect" value="/reception/check-out">
 
-                        <%-- Khối tiến độ kiểm tra của Buồng phòng --%>
+                        <%-- Khối tiến độ kiểm tra của Dọn phòng --%>
                         <div style="background: var(--color-gray-50); padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid var(--color-gray-200);">
                             <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.125rem; display: flex; align-items: center; justify-content: space-between;">
                                 <span>Tiến độ Kiểm phòng của Nhân viên dọn dẹp</span>

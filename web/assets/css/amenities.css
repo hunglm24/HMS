@@ -727,3 +727,111 @@ body > .internal-sidebar ~ main.amenity-management-page {
     font-size: var(--text-body, 14px);
     font-weight: 600;
 }
+
+/* --- Amenity Form & Table Extra Utilities --- */
+.amenity-form-card {
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.amenity-form-group {
+    margin-bottom: 20px;
+}
+
+.amenity-form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #334155;
+}
+
+.amenity-form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-md, 8px);
+    font-family: inherit;
+    font-size: 14.5px;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #ffffff;
+}
+
+.amenity-form-control:focus {
+    border-color: var(--color-primary-600, #2563eb);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.amenity-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dbeafe;
+    flex-shrink: 0;
+}
+
+.amenity-id-tag {
+    color: #64748b;
+    margin-left: 6px;
+    font-size: 12px;
+}
+
+.amenity-desc-clamp {
+    color: #475569;
+    font-size: 13.5px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.amenity-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-primary-600, #2563eb);
+    text-decoration: none;
+    margin-bottom: 12px;
+    transition: color 0.2s;
+}
+
+.amenity-back-link:hover {
+    color: var(--color-primary-800, #1e40af);
+    text-decoration: underline;
+}
+
+.amenity-hero-actions {
+    display: flex !important;
+    gap: 12px !important;
+    align-items: center !important;
+}
+
+.amenity-filters {
+    display: grid !important;
+    grid-template-columns: minmax(280px, 2fr) minmax(180px, 1fr) auto !important;
+    gap: 12px !important;
+    align-items: center !important;
+}
+
+.amenity-filter-actions {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+}
+
+.amenity-filter-actions .btn {
+    min-width: 84px !important;
+    padding: 8px 18px !important;
+    white-space: nowrap !important;
+}
