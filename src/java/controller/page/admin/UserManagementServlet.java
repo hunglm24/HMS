@@ -120,6 +120,7 @@ public class UserManagementServlet extends HttpServlet {
             long id = parseLong(request.getParameter("id"), "Invalid user");
             User user = userDao.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            ensureNotAdminAccount(user);
             request.setAttribute("editUser", user);
             request.setAttribute("roles", roleDao.findAll());
             request.getRequestDispatcher("/WEB-INF/views/admin/user-edit.jsp").forward(request, response);
@@ -159,6 +160,7 @@ public class UserManagementServlet extends HttpServlet {
             long id = parseLong(idValue, "Invalid user");
             User existing = userDao.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            ensureNotAdminAccount(existing);
             Role selectedRole = roleDao.findById(roleId);
             if (selectedRole == null) {
                 throw new IllegalArgumentException("Invalid role");
@@ -197,6 +199,9 @@ public class UserManagementServlet extends HttpServlet {
     private void updateStatus(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
         long id = parseLong(request.getParameter("id"), "Invalid user");
+        User existing = userDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        ensureNotAdminAccount(existing);
         String status = required(request, "status");
         userDao.updateStatus(id, status);
         auditLogService.log(request, "UPDATE_USER_STATUS", "ACCOUNT", id, "Status changed to " + status);
@@ -207,10 +212,19 @@ public class UserManagementServlet extends HttpServlet {
     private void deleteUser(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
         long id = parseLong(request.getParameter("id"), "Invalid user");
+        User existing = userDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        ensureNotAdminAccount(existing);
         userDao.deleteAccount(id);
         auditLogService.log(request, "DELETE_USER", "ACCOUNT", id, "Deleted account");
         flash(request, "User account deleted.", "success");
         response.sendRedirect(request.getContextPath() + "/admin/users");
+    }
+
+    private void ensureNotAdminAccount(User user) {
+        if (user != null && "ADMIN".equalsIgnoreCase(user.getRoleName())) {
+            throw new IllegalArgumentException("ADMIN accounts cannot be edited, blocked, or deleted.");
+        }
     }
 
     private String required(HttpServletRequest request, String name) {
