@@ -24,3 +24,25 @@ hs_err_pid*
 replay_pid*
 /nbproject/private/
 /build/
+/nbproject/build-impl.xml
+/nbproject/genfiles.properties
+
+# IDE / editor settings
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Shared IntelliJ run configurations (including Smart Tomcat) live in .run/.
+!.run/
+!.run/*.run.xml
+
+# Local VNPay credentials (never commit)
+src/java/config/vnpay-local.properties
+
+# Optional: if you do not commit generated war/ear artifacts
+# *.war
+# *.ear
