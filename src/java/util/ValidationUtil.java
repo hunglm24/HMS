@@ -133,13 +133,26 @@ public final class ValidationUtil {
         if (isBlank(value)) {
             throw new IllegalArgumentException(fieldName + " bat buoc.");
         }
+        String raw = value.trim();
         try {
-            BigDecimal result = new BigDecimal(value.trim());
+            BigDecimal result = new BigDecimal(raw);
             if (result.signum() <= 0) {
                 throw new IllegalArgumentException(fieldName + " phai lon hon 0.");
             }
             return result;
         } catch (NumberFormatException ex) {
+            String compact = raw.replaceAll("[,\\s._']", "");
+            if (!compact.isEmpty() && !compact.equals(raw)) {
+                try {
+                    BigDecimal result = new BigDecimal(compact);
+                    if (result.signum() <= 0) {
+                        throw new IllegalArgumentException(fieldName + " phai lon hon 0.");
+                    }
+                    return result;
+                } catch (NumberFormatException ignored) {
+                    // Fall through to the standard error message below.
+                }
+            }
             throw new IllegalArgumentException(fieldName + " phai la so hop le.");
         }
     }
