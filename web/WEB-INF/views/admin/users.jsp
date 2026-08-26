@@ -64,7 +64,7 @@
         .admin-tabs a.active { background:var(--color-primary-100); color:var(--color-primary-600); }
         .toolbar { display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:16px; }
         .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
-        .filters .filter-field { width:190px; }
+        .filters .filter-field { width:210px; }
         .filters .search-field { width:210px; }
         .data-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--color-border); border-radius:8px; overflow:hidden; }
         .data-table th,.data-table td { padding:11px 12px; border-bottom:1px solid var(--color-border); text-align:left; vertical-align:top; }
