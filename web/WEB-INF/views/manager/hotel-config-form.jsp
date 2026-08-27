@@ -112,6 +112,7 @@
     (() => {
         const fields = document.querySelectorAll('[data-refund-rule]');
         const preview = document.querySelector('[data-policy-preview]');
+        // Stop early when the form does not have the live preview fields.
         if (!fields.length || !preview) return;
         const value = (name) => document.querySelector(`[name="${name}"]`)?.value || '0';
         const syncPreview = () => {
@@ -122,6 +123,7 @@
                 + 'Khách hủy phòng trong ngày check-in hoặc sau thời điểm check-in sẽ được hoàn '
                 + value('sameDayRefundRate') + '% số tiền đã thanh toán.';
         };
+        // Rebind the preview each time a refund-rule field changes.
         fields.forEach((field) => field.addEventListener('input', syncPreview));
         if (!preview.value.trim()) syncPreview();
     })();

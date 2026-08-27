@@ -39,7 +39,12 @@
     boolean housekeeping = "HOUSEKEEPING".equalsIgnoreCase(roleName);
     boolean manager = "HOTEL_MANAGER".equalsIgnoreCase(roleName);
     boolean internal = signedIn && !customer && !hideSidebar;
-    String brandHref = internal ? contextPath + "/dashboard" : contextPath + "/";
+    String brandHref;
+    if (internal) {
+        brandHref = contextPath + "/dashboard";
+    } else {
+        brandHref = contextPath + "/";
+    }
     String currentPath = request.getServletPath();
     String fullName = escapeHtml(beanString(headerUser, "getFullName"));
     String avatar = fullName.isEmpty() ? "U" : fullName.substring(0, 1).toUpperCase(java.util.Locale.ROOT);

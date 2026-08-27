@@ -18,6 +18,7 @@ public class CancellationPolicyService {
     public static final String POLICY_CATEGORY = "Hủy phòng";
     public static final String RULE_MARKER = "--- POLICY_RULE:CANCELLATION_REFUND ---";
 
+    // Regex encodes the refund rule metadata stored at the end of policy content.
     private static final Pattern RULE_PATTERN = Pattern.compile(
             "FULL_DAYS=(\\d+);FULL_RATE=(\\d+);PARTIAL_DAYS=(\\d+);PARTIAL_RATE=(\\d+);SAME_DAY_RATE=(\\d+)");
 
@@ -60,14 +61,17 @@ public class CancellationPolicyService {
 
     private Optional<CancellationRule> loadActiveRule() throws SQLException {
         Optional<HotelPolicy> policy = policyDao.findActiveCancellationPolicy();
+        // Fall back to the default rule when no matching policy is active.
         if (policy.isEmpty()) {
             return Optional.empty();
         }
         String content = policy.get().getContent();
+        // Ignore policies that do not carry the cancellation rule marker.
         if (content == null || !content.contains(RULE_MARKER)) {
             return Optional.empty();
         }
         Matcher matcher = RULE_PATTERN.matcher(content);
+        // Return the default rule if the persisted payload does not match the regex.
         if (!matcher.find()) {
             return Optional.empty();
         }
@@ -102,6 +106,7 @@ public class CancellationPolicyService {
             return "";
         }
         int markerIndex = content.indexOf(RULE_MARKER);
+        // Strip the embedded rule metadata before showing the policy text.
         return markerIndex >= 0 ? content.substring(0, markerIndex).trim() : content;
     }
 
@@ -169,7 +174,8 @@ public class CancellationPolicyService {
             return new CancellationRule(3, 100, 1, 50, 0, false);
         }
 
-        private BigDecimal rateFor(long daysUntilCheckIn) {
+    private BigDecimal rateFor(long daysUntilCheckIn) {
+            // Use the most generous refund first, then step down by deadline.
             if (daysUntilCheckIn >= fullRefundDays) {
                 return BigDecimal.valueOf(fullRefundRate);
             }

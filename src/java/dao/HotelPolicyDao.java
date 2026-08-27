@@ -7,8 +7,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class HotelPolicyDao {
@@ -18,6 +20,7 @@ public class HotelPolicyDao {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             List<HotelPolicy> policies = new ArrayList<>();
+            // Read every row and map it into the domain model.
             while (rs.next()) {
                 policies.add(mapRow(rs));
             }
@@ -35,7 +38,35 @@ public class HotelPolicyDao {
         }
     }
 
+    public List<HotelPolicy> findHotelPolicyHistory() throws SQLException {
+        List<HotelPolicy> policies = findAll();
+        List<HotelPolicy> hotelPolicies = new ArrayList<>();
+        for (HotelPolicy policy : policies) {
+            // Keep only records that belong to the shared hotel-policy flow.
+            if (isHotelPolicyRecord(policy)) {
+                hotelPolicies.add(policy);
+            }
+        }
+        return hotelPolicies;
+    }
+
+    public Optional<HotelPolicy> findLatestHotelPolicy() throws SQLException {
+        List<HotelPolicy> policies = findHotelPolicyHistory();
+        HotelPolicy firstMatch = null;
+        for (HotelPolicy policy : policies) {
+            // Prefer the newest active row so the guest page mirrors the manager view.
+            if ("ACTIVE".equalsIgnoreCase(policy.getStatus())) {
+                return Optional.of(policy);
+            }
+            if (firstMatch == null) {
+                firstMatch = policy;
+            }
+        }
+        return Optional.ofNullable(firstMatch);
+    }
+
     public Optional<HotelPolicy> findActiveCancellationPolicy() throws SQLException {
+        // Match the active policy by category/title keywords so the public flow can reuse it.
         String sql = """
                 SELECT *
                 FROM hotel_policies
@@ -106,6 +137,24 @@ public class HotelPolicyDao {
         ps.setString(2, policy.getCategory());
         ps.setString(3, policy.getContent());
         ps.setString(4, policy.getStatus());
+    }
+
+    private boolean isHotelPolicyRecord(HotelPolicy policy) {
+        String haystack = normalize(policy.getTitle()) + " " + normalize(policy.getCategory()) + " " + normalize(policy.getContent());
+        // Regex removes accents so keyword matching works with or without Vietnamese diacritics.
+        return haystack.contains("noi quy")
+                || haystack.contains("quy dinh")
+                || haystack.contains("hotel policy")
+                || haystack.contains("guest policy")
+                || haystack.contains("policy chung");
+    }
+
+    private String normalize(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT);
     }
 
     private HotelPolicy mapRow(ResultSet rs) throws SQLException {

@@ -88,6 +88,7 @@
             <a class="<%= isPathActive(request, "/manager/issues") || (isManager && isPathActive(request, "issue-list", "issue-report", "maintenance-verify")) ? "active" : "" %>" href="<%= cp %>/manager/issues"><span>IS</span>Sự cố thiết bị</a>
             <a class="<%= isPathActive(request, "/manager/pricing", "/manager/promotions") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá, mã giảm giá</a>
             <a class="<%= isPathActive(request, "/manager/hotel-configs", "/manager/policy") ? "active" : "" %>" href="<%= cp %>/manager/hotel-configs"><span>HC</span>Cấu hình khách sạn</a>
+            <a class="<%= isPathActive(request, "/hotel-policy", "/manager/hotel-policy") ? "active" : "" %>" href="<%= isManager ? cp + "/manager/hotel-policy" : cp + "/hotel-policy" %>"><span>NQ</span>Nội quy</a>
             <a class="<%= isPathActive(request, "/manager/news") ? "active" : "" %>" href="<%= cp %>/manager/news"><span>NW</span>Tin tức</a>
             <a class="<%= isPathActive(request, "/manager/feedbacks") ? "active" : "" %>" href="<%= cp %>/manager/feedbacks"><span>FB</span>Đánh giá khách hàng</a>
         <% } %>
