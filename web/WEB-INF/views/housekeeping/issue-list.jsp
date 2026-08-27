@@ -147,7 +147,7 @@
                                     <strong style="color: ${dr.chargeStatus eq 'WAIVED' ? '#475467' : '#b42318'}; font-size: 15px;">
                                         <fmt:formatNumber value="${dr.compensationAmount}" pattern="#,##0"/> đ
                                     </strong>
-                                    <c:if test="${dr.chargeStatus eq 'PENDING'}">
+                                    <c:if test="${dr.chargeStatus eq 'PENDING' && dr.damageType ne 'MISSING'}">
                                         <br><small style="color: #667085;">(Đề xuất 30%: <fmt:formatNumber value="${dr.suggestedAmount}" pattern="#,##0"/> đ)</small>
                                     </c:if>
                                 </td>
@@ -167,7 +167,8 @@
                                                         roomNumber: '${dr.roomNumber}',
                                                         floorNumber: ${dr.floorNumber},
                                                         equipmentName: '${HousekeepingTask.esc(dr.equipmentName)}',
-                                                        damageType: '${dr.damageTypeLabel}',
+                                                        damageType: '${dr.damageType}',
+                                                        damageTypeLabel: '${dr.damageTypeLabel}',
                                                         defaultPrice: ${dr.defaultPrice},
                                                         suggestedAmount: ${dr.suggestedAmount},
                                                         compensationAmount: ${dr.compensationAmount},
@@ -189,7 +190,8 @@
                                                         roomNumber: '${dr.roomNumber}',
                                                         floorNumber: ${dr.floorNumber},
                                                         equipmentName: '${HousekeepingTask.esc(dr.equipmentName)}',
-                                                        damageType: '${dr.damageTypeLabel}',
+                                                        damageType: '${dr.damageType}',
+                                                        damageTypeLabel: '${dr.damageTypeLabel}',
                                                         defaultPrice: ${dr.defaultPrice},
                                                         suggestedAmount: ${dr.suggestedAmount},
                                                         compensationAmount: ${dr.compensationAmount},
@@ -371,8 +373,8 @@
                         <span>Giá niêm yết thiết bị:</span>
                         <strong id="modalDefaultPriceDisplay">0 đ</strong>
                     </div>
-                    <div class="damage-calc-row" style="color: #b42318; border-bottom: 1px dashed #e4e7ec; padding-bottom: 10px;">
-                        <span>Đề xuất hệ thống (30% hư hại / 100% mất):</span>
+                    <div id="modalSuggestedRow" class="damage-calc-row" style="color: #b42318; border-bottom: 1px dashed #e4e7ec; padding-bottom: 10px;">
+                        <span>Đề xuất hệ thống (30% hư hại):</span>
                         <strong id="modalSuggestedPriceDisplay">0 đ</strong>
                     </div>
 
@@ -416,11 +418,18 @@
         document.getElementById('modalBookingCode').innerText = '#' + (data.bookingCode || 'BK' + data.id);
         document.getElementById('modalCustomerName').innerText = data.customerName || 'Khách vãng lai';
         document.getElementById('modalRoomInfo').innerText = 'Phòng ' + data.roomNumber + ' (Tầng ' + data.floorNumber + ')';
-        document.getElementById('modalEquipmentInfo').innerText = data.equipmentName + ' · ' + data.damageType;
+        document.getElementById('modalEquipmentInfo').innerText = data.equipmentName + ' · ' + (data.damageTypeLabel || data.damageType);
         document.getElementById('modalHousekeeperNote').innerText = data.housekeeperNote || data.note || 'Không có ghi chú thêm.';
         
         document.getElementById('modalDefaultPriceDisplay').innerText = formatMoney(data.defaultPrice);
         document.getElementById('modalSuggestedPriceDisplay').innerText = formatMoney(data.suggestedAmount);
+        
+        var suggestedRow = document.getElementById('modalSuggestedRow');
+        if (data.damageType === 'MISSING') {
+            if (suggestedRow) suggestedRow.style.display = 'none';
+        } else {
+            if (suggestedRow) suggestedRow.style.display = 'flex';
+        }
         
         var compInput = document.getElementById('modalCompensationAmount');
         compInput.value = data.compensationAmount !== undefined && data.compensationAmount !== null ? data.compensationAmount : data.suggestedAmount;

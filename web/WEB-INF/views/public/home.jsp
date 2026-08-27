@@ -73,6 +73,7 @@
 
    java.util.List<model.RoomType> featuredRoomTypes = java.util.Collections.emptyList();
    java.util.List<model.News> latestNews = java.util.Collections.emptyList();
+   java.util.List<dao.FeedbackDao.FeedbackDto> featuredFeedbacks = java.util.Collections.emptyList();
    if (!internal) {
        dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
         featuredRoomTypes = roomTypeDao.findActive();
@@ -83,6 +84,12 @@
        } catch (Exception ex) {
            latestNews = java.util.Collections.emptyList();
        }
+       try {
+           dao.FeedbackDao feedbackDao = new dao.FeedbackDao();
+           featuredFeedbacks = feedbackDao.findFeaturedFeedbacks(3);
+       } catch (Exception ex) {
+           featuredFeedbacks = java.util.Collections.emptyList();
+       }
    }
 %>
 <!DOCTYPE html>
@@ -92,6 +99,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><%= escapeHtml(indexHotelName) %></title>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260816-4">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/feedback.css?v=20260824-1">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -149,6 +158,38 @@
 <% } %>
 </section>
 
+    <section class="section-head" style="margin-top: 50px;">
+        <div><p class="section-kicker">Trải nghiệm thực tế</p><h2>Khách hàng nói gì về chúng tôi</h2></div>
+    </section>
+    <% if (featuredFeedbacks.isEmpty()) { %>
+        <div style="text-align: center; padding: 36px 20px; background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color, #e5e7eb); color: #64748b; margin-bottom: 40px;">
+            <i class="far fa-comment-dots" style="font-size: 32px; color: #f59e0b; margin-bottom: 8px; display: block;"></i>
+            <p style="margin: 0; font-size: 15px;">Chưa có đánh giá nào được hiển thị. Hãy trải nghiệm dịch vụ và chia sẻ đánh giá đầu tiên của bạn!</p>
+        </div>
+    <% } else { %>
+    <section class="testimonials-grid">
+        <% for (dao.FeedbackDao.FeedbackDto fb : featuredFeedbacks) { %>
+            <div class="testimonial-card">
+                <div>
+                    <div class="feedback-star-display" style="margin-bottom: 12px;">
+                        <% for (int s = 1; s <= fb.getRating(); s++) { %><i class="fas fa-star"></i><% } %>
+                        <% for (int s = fb.getRating() + 1; s <= 5; s++) { %><i class="far fa-star feedback-star-empty"></i><% } %>
+                    </div>
+                    <p class="testimonial-quote">
+                        "<%= escapeHtml(fb.getComment() != null && !fb.getComment().isBlank() ? fb.getComment() : (fb.getRating() >= 4 ? "Trải nghiệm dịch vụ rất tuyệt vời, phòng ốc sạch sẽ và nhân viên chu đáo!" : "Dịch vụ và tiện nghi phòng tốt.")) %>"
+                    </p>
+                </div>
+                <div class="testimonial-author-row">
+                    <strong class="testimonial-author-name"><%= escapeHtml(fb.getCustomerName() != null ? fb.getCustomerName() : "Khách lưu trú") %></strong>
+                    <% if (fb.getRoomTypeNames() != null && !fb.getRoomTypeNames().isBlank()) { %>
+                        <span class="testimonial-room-tag"><%= escapeHtml(fb.getRoomTypeNames()) %></span>
+                    <% } %>
+                </div>
+            </div>
+        <% } %>
+    </section>
+    <% } %>
+
 <% if (!latestNews.isEmpty()) { %>
 <section class="section-head" style="margin-top: 40px;">
 <div><p class="section-kicker">Tin tức</p><h2>Khuyến mãi &amp; Sự kiện</h2></div>
@@ -156,9 +197,13 @@
 </section>
 <section class="news-card-grid">
 <% for (model.News n : latestNews) {
-           String newsThumb = (n.getThumbnailUrl() != null && !n.getThumbnailUrl().isBlank())
-               ? n.getThumbnailUrl()
-               : "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
+           String rawThumb = n.getThumbnailUrl();
+           String newsThumb;
+           if (rawThumb != null && !rawThumb.isBlank()) {
+               newsThumb = rawThumb.startsWith("/") ? (request.getContextPath() + rawThumb) : rawThumb;
+           } else {
+               newsThumb = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
+           }
        %>
 <article class="room-showcase-card">
 <img src="<%= escapeHtml(newsThumb) %>" alt="<%= escapeHtml(n.getTitle()) %>">
