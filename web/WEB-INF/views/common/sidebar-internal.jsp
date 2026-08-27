@@ -40,7 +40,6 @@
     Object sidebarPermissions = session.getAttribute("permissionCodes");
     String sidebarRole = sideBeanString(sidebarUser, "getRoleName");
     String cp = request.getContextPath();
-    String uri = request.getRequestURI();
     boolean isReception = "RECEPTIONIST".equalsIgnoreCase(sidebarRole);
     boolean isHousekeeping = "HOUSEKEEPING".equalsIgnoreCase(sidebarRole);
     boolean isManager = "HOTEL_MANAGER".equalsIgnoreCase(sidebarRole);
@@ -49,7 +48,6 @@
     boolean canAdminRoles = isAdmin || hasPermission(sidebarPermissions, "ADMIN_ROLES");
     boolean canAdminLogs = isAdmin || hasPermission(sidebarPermissions, "ADMIN_LOGS");
 
-    // Xử lý active tab cho Housekeeping & Manager
     String currentView = request.getParameter("view");
     Object resultObj = request.getAttribute("result");
     if (currentView == null && resultObj instanceof HousekeepingService.TaskPage) {
@@ -79,7 +77,6 @@
         <% } %>
 
         <% if (isManager) { %>
-            <a class="<%= isPathActive(request, "/manager/reports") ? "active" : "" %>" href="<%= cp %>/manager/reports"><span>RP</span>Báo cáo</a>
             <a class="<%= isPathActive(request, "/manager/bookings", "/manager/booking-detail") ? "active" : "" %>" href="<%= cp %>/manager/bookings"><span>BK</span>Quản lý booking</a>
             <a class="<%= isPathActive(request, "/manager/refunds") ? "active" : "" %>" href="<%= cp %>/manager/refunds"><span>RF</span>Yêu cầu hoàn tiền</a>
             <a class="<%= isPathActive(request, "/manager/rooms", "/manager/room-form") ? "active" : "" %>" href="<%= cp %>/manager/rooms"><span>RM</span>Phòng</a>
@@ -90,7 +87,7 @@
             <a class="<%= isPathActive(request, "/manager/housekeeping") || (isManager && isPathActive(request, "task-list", "task-detail")) ? "active" : "" %>" href="<%= cp %>/manager/housekeeping"><span>HK</span>Lịch sử dọn phòng</a>
             <a class="<%= isPathActive(request, "/manager/issues") || (isManager && isPathActive(request, "issue-list", "issue-report", "maintenance-verify")) ? "active" : "" %>" href="<%= cp %>/manager/issues"><span>IS</span>Sự cố thiết bị</a>
             <a class="<%= isPathActive(request, "/manager/pricing", "/manager/promotions") ? "active" : "" %>" href="<%= cp %>/manager/pricing"><span>PR</span>Giá, mã giảm giá</a>
-            <a class="<%= isPathActive(request, "/manager/policies", "/manager/policy") ? "active" : "" %>" href="<%= cp %>/manager/policies"><span>PL</span>Chính sách</a>
+            <a class="<%= isPathActive(request, "/manager/hotel-configs", "/manager/policy") ? "active" : "" %>" href="<%= cp %>/manager/hotel-configs"><span>HC</span>Cấu hình khách sạn</a>
             <a class="<%= isPathActive(request, "/manager/news") ? "active" : "" %>" href="<%= cp %>/manager/news"><span>NW</span>Tin tức</a>
             <a class="<%= isPathActive(request, "/manager/feedbacks") ? "active" : "" %>" href="<%= cp %>/manager/feedbacks"><span>FB</span>Đánh giá khách hàng</a>
         <% } %>
