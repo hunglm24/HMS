@@ -63,6 +63,57 @@
         .map-btn { display: inline-block; padding: 4px 12px; background: #e9ecef; color: #495057; border-radius: 15px; font-size: 0.8rem; text-decoration: none; font-weight: bold; }
         .map-btn:hover { background: #dee2e6; }
 
+        .bill-card-preview {
+            margin-top: 15px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .bill-img-box {
+            margin-top: 10px;
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .bill-img-box img {
+            max-width: 240px;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        .bill-img-box img:hover {
+            transform: scale(1.03);
+            border-color: var(--primary);
+        }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.65);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-backdrop.active {
+            display: flex;
+        }
+        .modal-image-view {
+            max-width: 90vw;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
         @media (max-width: 768px) {
             .detail-grid { grid-template-columns: 1fr; }
             .qr-section { flex-direction: column; text-align: center; }
@@ -94,8 +145,8 @@
                                     <c:when test="${booking.status == 'CONFIRMED'}"><span class="badge-status s-confirmed">Đã xác nhận</span></c:when>
                                     <c:when test="${booking.status == 'CHECKED_IN'}"><span class="badge-status s-checkedin">Đang lưu trú</span></c:when>
                                     <c:when test="${booking.status == 'CHECKED_OUT'}"><span class="badge-status s-checkedout">Đã hoàn thành</span></c:when>
-                                    <c:when test="${booking.status == 'CANCELLATION_PENDING'}"><span class="badge-status s-pending">Đang chờ hủy</span></c:when>
-                                    <c:when test="${booking.status == 'CANCELLED'}"><span class="badge-status s-cancelled">Đã hủy thành công</span></c:when>
+                                    <c:when test="${booking.status == 'CANCELLATION_PENDING'}"><span class="badge-status s-pending">Đang chờ hủy / hoàn tiền</span></c:when>
+                                    <c:when test="${booking.status == 'CANCELLED'}"><span class="badge-status s-cancelled">Đã hủy</span></c:when>
                                     <c:otherwise><span class="badge-status">${booking.status}</span></c:otherwise>
                                 </c:choose>
                             </div>
@@ -133,14 +184,69 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- THÔNG TIN HOÀN TIỀN & BIÊN LAI (NẾU CÓ) -->
+                <c:if test="${not empty refundRequest}">
+                    <div class="detail-card" style="border-left: 4px solid ${refundRequest.status == 'COMPLETED' ? '#16a34a' : (refundRequest.status == 'REJECTED' ? '#dc2626' : '#d97706')};">
+                        <h3>Thông tin hoàn tiền &amp; Biên lai</h3>
+                        <div class="info-row">
+                            <span class="info-label">Trạng thái hoàn tiền:</span>
+                            <c:choose>
+                                <c:when test="${refundRequest.status == 'COMPLETED'}">
+                                    <strong style="color: #16a34a;">✅ Đã hoàn tiền thành công</strong>
+                                </c:when>
+                                <c:when test="${refundRequest.status == 'PENDING'}">
+                                    <strong style="color: #d97706;">⏳ Đang chờ Manager chuyển khoản</strong>
+                                </c:when>
+                                <c:when test="${refundRequest.status == 'REJECTED'}">
+                                    <strong style="color: #dc2626;">❌ Yêu cầu hoàn tiền bị từ chối</strong>
+                                </c:when>
+                                <c:otherwise>
+                                    <strong>${refundRequest.status}</strong>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Số tiền hoàn:</span>
+                            <strong style="color: #16a34a; font-size: 1.1rem;"><fmt:formatNumber value="${refundRequest.refundAmount}" pattern="#,##0"/> ₫</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Tài khoản nhận tiền:</span>
+                            <strong>${refundRequest.bankName} - ${refundRequest.accountNumber} (${refundRequest.accountHolder})</strong>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Lý do:</span>
+                            <strong>${refundRequest.reason}</strong>
+                        </div>
+                        <c:if test="${not empty refundRequest.updatedAt}">
+                            <div class="info-row">
+                                <span class="info-label">Thời gian cập nhật:</span>
+                                <strong><fmt:formatDate value="${refundRequest.updatedAt}" pattern="dd/MM/yyyy HH:mm"/></strong>
+                            </div>
+                        </c:if>
+
+                        <!-- ẢNH BILL CHUYỂN KHOẢN HOÀN TIỀN -->
+                        <c:if test="${not empty refundRequest.billImage}">
+                            <div class="bill-card-preview">
+                                <div style="font-weight: 600; color: #334155; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                    <span>📸 Ảnh biên lai / Bill hoàn tiền từ Manager:</span>
+                                </div>
+                                <div class="bill-img-box" onclick="openBillModal('${pageContext.request.contextPath}${refundRequest.billImage}')">
+                                    <img src="${pageContext.request.contextPath}${refundRequest.billImage}" alt="Bill hoàn tiền">
+                                    <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">(Nhấn vào ảnh để xem kích thước lớn)</div>
+                                </div>
+                            </div>
+                        </c:if>
+                    </div>
+                </c:if>
                 
-                <c:if test="${booking.status == 'CANCELLATION_PENDING'}">
+                <c:if test="${empty refundRequest && booking.status == 'CANCELLATION_PENDING'}">
                     <div class="detail-card" style="border-left: 4px solid var(--color-warning-600);">
                         <h3>Yêu cầu hủy đang chờ Manager</h3>
                         <div class="info-row"><span class="info-label">Thông tin:</span> <strong>${booking.cancellationReason}</strong></div>
                     </div>
                 </c:if>
-                <c:if test="${booking.status == 'CANCELLED'}">
+                <c:if test="${empty refundRequest && booking.status == 'CANCELLED'}">
                     <div class="detail-card" style="border-left: 4px solid var(--color-error-600);">
                         <h3 style="color: var(--color-error-700);">Đã hủy thành công</h3>
                         <div class="info-row"><span class="info-label">Lý do:</span> <strong>${booking.cancellationReason != null ? booking.cancellationReason : 'N/A'}</strong></div>
@@ -189,6 +295,29 @@
             </div>
         </div>
     </main>
+
+    <!-- Modal Phóng To Bill Image -->
+    <div class="modal-backdrop" id="billModal" onclick="closeBillModal()">
+        <div style="position:relative; text-align:center;" onclick="event.stopPropagation();">
+            <h4 style="color:white; margin-bottom:10px;">Ảnh biên lai / Bill hoàn tiền</h4>
+            <img id="billModalImg" src="" alt="Biên lai hoàn tiền" class="modal-image-view">
+            <div style="margin-top:14px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeBillModal()" style="background:white;">Đóng lại</button>
+                <a id="billDownloadLink" href="" target="_blank" class="btn btn-sm" style="background:white; color:var(--primary); margin-left:8px;">Mở ảnh gốc</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openBillModal(imgUrl) {
+            document.getElementById('billModalImg').src = imgUrl;
+            document.getElementById('billDownloadLink').href = imgUrl;
+            document.getElementById('billModal').classList.add('active');
+        }
+        function closeBillModal() {
+            document.getElementById('billModal').classList.remove('active');
+        }
+    </script>
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 </body>
 </html>

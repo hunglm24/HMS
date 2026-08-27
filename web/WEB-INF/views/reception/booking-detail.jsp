@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Chi tiết booking | HMS Lễ tân</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
@@ -19,6 +20,32 @@
     .status-CHECKED_IN { background: #dbeafe; color: #1e40af; }
     .status-CHECKED_OUT { background: #f3f4f6; color: #374151; }
     .status-CANCELLED { background: #fee2e2; color: #991b1b; }
+    .status-CANCELLATION_PENDING { background: #fef3c7; color: #92400e; }
+
+    .modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.65);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .modal-backdrop.active {
+        display: flex;
+    }
+    .modal-image-view {
+        max-width: 90vw;
+        max-height: 80vh;
+        object-fit: contain;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
 </style>
 </head>
 <body><jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -202,7 +229,48 @@
             </table>
         </div>
         
-        <c:if test="${booking.status == 'CANCELLED'}">
+        <!-- 5. Thông tin Hoàn tiền & Bill nếu có -->
+        <c:if test="${not empty refundRequest}">
+            <div class="detail-section" style="border-left: 4px solid ${refundRequest.status == 'COMPLETED' ? '#16a34a' : (refundRequest.status == 'REJECTED' ? '#dc2626' : '#d97706')};">
+                <h2 style="color: ${refundRequest.status == 'COMPLETED' ? '#16a34a' : (refundRequest.status == 'REJECTED' ? '#dc2626' : '#d97706')};">
+                    Thông tin Hoàn tiền &amp; Biên lai
+                </h2>
+                <div class="info-grid" style="margin-top: 10px;">
+                    <div class="info-item">
+                        <label>Trạng thái hoàn tiền</label>
+                        <div><strong>${refundRequest.status == 'COMPLETED' ? 'Đã hoàn tiền' : (refundRequest.status == 'PENDING' ? 'Chờ xử lý' : 'Đã từ chối')}</strong></div>
+                    </div>
+                    <div class="info-item">
+                        <label>Số tiền hoàn</label>
+                        <div style="color: #166534; font-weight: bold;"><fmt:formatNumber value="${refundRequest.refundAmount}" pattern="#,##0"/> ₫</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Ngân hàng &amp; Số TK</label>
+                        <div>${refundRequest.bankName} - ${refundRequest.accountNumber}</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Tên chủ TK</label>
+                        <div>${refundRequest.accountHolder}</div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size:0.85rem; color:#666;">Lý do:</label>
+                    <p style="margin: 4px 0 0 0;">${refundRequest.reason}</p>
+                </div>
+                
+                <c:if test="${not empty refundRequest.billImage}">
+                    <div style="margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <label style="font-size:0.85rem; color:#334155; font-weight:600;">Ảnh bill chuyển khoản:</label>
+                        <div style="margin-top: 8px;">
+                            <img src="${pageContext.request.contextPath}${refundRequest.billImage}" alt="Bill" style="max-height: 150px; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer;"
+                                 onclick="openBillModal('${pageContext.request.contextPath}${refundRequest.billImage}')">
+                        </div>
+                    </div>
+                </c:if>
+            </div>
+        </c:if>
+
+        <c:if test="${empty refundRequest && booking.status == 'CANCELLED'}">
             <div class="detail-section" style="border-left: 4px solid var(--color-error-600);">
                 <h2 style="color: var(--color-error-600);">Chi tiết Hủy Đơn</h2>
                 <p><strong>Lý do:</strong> ${booking.cancellationReason != null ? booking.cancellationReason : 'N/A'}</p>
@@ -217,4 +285,26 @@
         </div>
     </c:if>
 </main>
+
+<!-- Modal Phóng To Bill Image -->
+<div class="modal-backdrop" id="billModal" onclick="closeBillModal()">
+    <div style="position:relative; text-align:center;" onclick="event.stopPropagation();">
+        <img id="billModalImg" src="" alt="Biên lai hoàn tiền" class="modal-image-view">
+        <div style="margin-top:14px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeBillModal()" style="background:white;">Đóng lại</button>
+            <a id="billDownloadLink" href="" target="_blank" class="btn btn-sm" style="background:white; color:var(--primary); margin-left:8px;">Mở ảnh gốc</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openBillModal(imgUrl) {
+        document.getElementById('billModalImg').src = imgUrl;
+        document.getElementById('billDownloadLink').href = imgUrl;
+        document.getElementById('billModal').classList.add('active');
+    }
+    function closeBillModal() {
+        document.getElementById('billModal').classList.remove('active');
+    }
+</script>
 </body></html>

@@ -1,25 +1,33 @@
 package controller.page;
 
+import dao.BookingDao;
+import dao.BookingRefundDao;
+import dao.FeedbackDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Booking;
+import model.CheckInBookingSummary;
+import model.User;
 
 import java.io.IOException;
-
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import model.Booking;
-import dao.BookingDao;
+import java.util.Map;
 
 @WebServlet(urlPatterns = {"/my-bookings", "/booking-detail"})
 public class MyBookingsServlet extends HttpServlet {
-    private BookingDao bookingDao = new BookingDao();
+    private final BookingDao bookingDao = new BookingDao();
+    private final BookingRefundDao refundDao = new BookingRefundDao();
+    private final FeedbackDao feedbackDao = new FeedbackDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        model.User user = (model.User) request.getSession().getAttribute("currentUser");
+        User user = (User) request.getSession().getAttribute("currentUser");
         if (user == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -31,21 +39,23 @@ public class MyBookingsServlet extends HttpServlet {
                 try {
                     long bookingId = Long.parseLong(bookingIdStr);
                     Booking booking = bookingDao.findById(bookingId).orElse(null);
-                    
+
                     if (booking == null) {
                         response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy thông tin đặt phòng.");
                         return;
                     }
-                    
+
                     if (booking.getCustomerId() == null || booking.getCustomerId() != user.getId()) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập thông tin đặt phòng này.");
                         return;
                     }
-                    
-                    model.CheckInBookingSummary summary = bookingDao.findCheckInBookingById((int) bookingId).orElse(null);
-                    
+
+                    CheckInBookingSummary summary = bookingDao.findCheckInBookingById((int) bookingId).orElse(null);
+                    Map<String, Object> refundRequest = refundDao.findByBookingId(bookingId);
+
                     request.setAttribute("booking", booking);
                     request.setAttribute("summary", summary);
+                    request.setAttribute("refundRequest", refundRequest);
                 } catch (Exception e) {
                     e.printStackTrace();
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -71,26 +81,30 @@ public class MyBookingsServlet extends HttpServlet {
 
                 List<Booking> bookings = bookingDao.findBookingsByCustomerId(user.getId(), bookingCode, status, fromDate, toDate, limit, offset);
                 request.setAttribute("bookings", bookings);
-                
+
                 int totalRecords = bookingDao.countBookingsByCustomerId(user.getId(), bookingCode, status, fromDate, toDate);
                 int totalPages = (int) Math.ceil((double) totalRecords / limit);
                 request.setAttribute("currentPage", page);
                 request.setAttribute("totalPages", totalPages);
-                
+
                 try {
-                    java.util.Map<Long, Boolean> hasFeedbackMap = new java.util.HashMap<>();
-                    dao.FeedbackDao feedbackDao = new dao.FeedbackDao();
+                    Map<Long, Boolean> hasFeedbackMap = new HashMap<>();
+                    List<Long> bookingIds = new ArrayList<>();
                     for (Booking b : bookings) {
+                        bookingIds.add(b.getId());
                         if ("CHECKED_OUT".equals(b.getStatus())) {
                             hasFeedbackMap.put(b.getId(), feedbackDao.hasFeedback(b.getId(), user.getId()));
                         }
                     }
                     request.setAttribute("hasFeedbackMap", hasFeedbackMap);
+
+                    Map<Long, Map<String, Object>> refundMap = refundDao.findByBookingIds(bookingIds);
+                    request.setAttribute("refundMap", refundMap);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    request.setAttribute("errorMessage", "Error checking feedback: " + ex.getMessage());
+                    request.setAttribute("errorMessage", "Error checking refund / feedback: " + ex.getMessage());
                 }
-                
+
             } catch (Exception e) {
                 e.printStackTrace();
                 request.setAttribute("errorMessage", "Error loading bookings: " + e.getMessage());

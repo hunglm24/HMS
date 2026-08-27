@@ -9,7 +9,15 @@
     <option name="contextPath" value="/HMS" />
     <option name="docBase" value="$PROJECT_DIR$/web" />
     <option name="envOptions">
-      <map />
+      <map>
+        <entry key="HMS_GOOGLE_CLIENT_ID" value="326441610602-jn9r6pkjr3tes372ql8tv9h8maq1rhj9.apps.googleusercontent.com" />
+        <entry key="HMS_GOOGLE_CLIENT_SECRET" value="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" />
+        <entry key="HMS_SMTP_FROM" value="namndhe171095@fpt.edu.vn" />
+        <entry key="HMS_SMTP_PASSWORD" value="xcwtvklihflydecq" />
+        <entry key="HMS_SMTP_USERNAME" value="namndhe171095@fpt.edu.vn" />
+        <entry key="HMS_VNPAY_HASH_SECRET" value="MAGTURTGRFJBMEULQSEUALYZKASSTBRZ" />
+        <entry key="HMS_VNPAY_TMN_CODE" value="XZ4XD2ON" />
+      </map>
     </option>
     <option name="extraClassPath" value="" />
     <option name="tomcatInfo">
@@ -20,6 +28,7 @@
       </TomcatInfo>
     </option>
     <option name="vmOptions" value="" />
+    <module name="HMS" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
