@@ -95,12 +95,15 @@
 
             <div style="margin-top: 20px; padding: 14px 16px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px;">
               <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0;">
-                <input type="checkbox" name="isMaintainable" value="true" ${form.maintainable or empty form.id ? 'checked' : ''} style="width: 20px; height: 20px; margin-top: 2px; accent-color: #2563eb;" />
+                <input type="checkbox" name="isMaintainable" value="true" ${form.maintainable or empty form.id ? 'checked' : ''} ${isEditMode ? 'disabled' : ''} style="width: 20px; height: 20px; margin-top: 2px; accent-color: #2563eb;" />
                 <div>
                   <strong style="color: #1e293b; font-size: 14.5px; display: block;">Thiết bị có thể bảo trì / sửa chữa (Maintainable)</strong>
                   <span style="color: #64748b; font-size: 13px; display: block; margin-top: 2px;">
                     Tích chọn nếu là thiết bị điện tử, máy móc (Điều hòa, Tivi, Tủ lạnh...). Bỏ chọn nếu là đồ vải/tiêu hao (Khăn tắm - Bath towel, Ga gối, Ly cốc...) chỉ có thể thay mới khi hỏng.
                   </span>
+                  <c:if test="${isEditMode}">
+                    <span style="color: #b42318; font-size: 12px; display: block; margin-top: 4px;">Field này bị khóa khi update.</span>
+                  </c:if>
                 </div>
               </label>
             </div>

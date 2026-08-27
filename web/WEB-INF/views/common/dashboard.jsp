@@ -144,7 +144,7 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/issues"><span>Sự cố</span><h3>Sự cố thiết bị</h3><p>Báo cáo hỏng, mất hoặc cần bảo trì thiết bị.</p></a>
         <% } %>
         <% if (manager) { %>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo vận hành</h3><p>Theo dõi kết quả vận hành và hiệu suất phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/dashboard"><span>Báo cáo</span><h3>Báo cáo vận hành</h3><p>Theo dõi kết quả vận hành và hiệu suất phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý, tầng và trạng thái phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/housekeeping"><span>Dọn phòng</span><h3>Lịch sử dọn phòng</h3><p>Theo dõi tiến độ kiểm tra và công việc dọn dẹp phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/issues"><span>Sự cố</span><h3>Sự cố thiết bị</h3><p>Theo dõi và nghiệm thu các thiết bị cần sửa chữa.</p></a>
@@ -164,7 +164,7 @@
     <% if (reception || manager) { %>
         <section class="dashboard-two-column">
             <article class="dashboard-panel">
-                <div class="dashboard-panel__head"><h2>Booking gần đây</h2><a href="${pageContext.request.contextPath}<%= reception ? "/reception/bookings" : "/manager/reports" %>">Xem tất cả</a></div>
+                <div class="dashboard-panel__head"><h2>Booking gần đây</h2><a href="${pageContext.request.contextPath}<%= reception ? "/reception/bookings" : "/dashboard" %>">Xem tất cả</a></div>
                 <% if (stats.getRecentBookings().isEmpty()) { %>
                     <p>Chưa có booking nào.</p>
                 <% } else { %>

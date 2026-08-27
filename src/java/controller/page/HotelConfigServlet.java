@@ -7,8 +7,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.HotelPolicy;
-import service.CancellationPolicyService;
 import service.AuditLogService;
+import service.CancellationPolicyService;
 import util.ValidationUtil;
 
 import java.io.IOException;
@@ -16,36 +16,40 @@ import java.sql.SQLException;
 import java.util.Set;
 
 @WebServlet(urlPatterns = {
-        "/manager/policies",
-        "/manager/policies/create",
-        "/manager/policies/edit",
-        "/manager/policies/save",
-        "/manager/policies/toggle-status",
-        "/manager/policies/delete"
+        "/manager/hotel-configs",
+        "/manager/hotel-configs/create",
+        "/manager/hotel-configs/edit",
+        "/manager/hotel-configs/save",
+        "/manager/hotel-configs/toggle-status",
+        "/manager/hotel-configs/delete"
 })
-public class PolicyServlet extends HttpServlet {
+public class HotelConfigServlet extends HttpServlet {
     private final HotelPolicyDao policyDao = new HotelPolicyDao();
     private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if ("/manager/policies/create".equals(request.getServletPath())) {
-            request.getRequestDispatcher("/WEB-INF/views/manager/policy-form.jsp").forward(request, response);
+        // Route to the create form.
+        if ("/manager/hotel-configs/create".equals(request.getServletPath())) {
+            request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-form.jsp").forward(request, response);
             return;
         }
-        if ("/manager/policies/edit".equals(request.getServletPath())) {
+
+        // Route to the edit form after loading the selected policy.
+        if ("/manager/hotel-configs/edit".equals(request.getServletPath())) {
             try {
                 prepareEditPage(request);
-                request.getRequestDispatcher("/WEB-INF/views/manager/policy-form.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-form.jsp").forward(request, response);
             } catch (IllegalArgumentException ex) {
                 flash(request, ex.getMessage(), "error");
-                response.sendRedirect(request.getContextPath() + "/manager/policies");
+                response.sendRedirect(request.getContextPath() + "/manager/hotel-configs");
             }
             return;
         }
+
         preparePage(request);
-        request.getRequestDispatcher("/WEB-INF/views/manager/policies.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-list.jsp").forward(request, response);
     }
 
     @Override
@@ -56,21 +60,23 @@ public class PolicyServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+
         try {
-            if ("/manager/policies/save".equals(request.getServletPath())) {
+            // Branch by action so POST stays easy to follow.
+            if ("/manager/hotel-configs/save".equals(request.getServletPath())) {
                 String idRaw = request.getParameter("id");
                 savePolicy(request);
                 auditLogService.log(request, ValidationUtil.isBlank(idRaw) ? "CREATE_POLICY" : "UPDATE_POLICY",
                         "POLICY", ValidationUtil.optionalPositiveLong(idRaw, "Chính sách"),
                         "Saved policy " + request.getParameter("title"));
                 flash(request, "Đã lưu chính sách.", "success");
-            } else if ("/manager/policies/toggle-status".equals(request.getServletPath())) {
+            } else if ("/manager/hotel-configs/toggle-status".equals(request.getServletPath())) {
                 long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
                 togglePolicyStatus(request);
                 auditLogService.log(request, "TOGGLE_POLICY_STATUS", "POLICY", id,
                         "Changed policy status to " + request.getParameter("status"));
                 flash(request, "Đã cập nhật trạng thái chính sách.", "success");
-            } else if ("/manager/policies/delete".equals(request.getServletPath())) {
+            } else if ("/manager/hotel-configs/delete".equals(request.getServletPath())) {
                 long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
                 policyDao.delete(id);
                 auditLogService.log(request, "DELETE_POLICY", "POLICY", id, "Deleted policy");
@@ -79,13 +85,14 @@ public class PolicyServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-            response.sendRedirect(request.getContextPath() + "/manager/policies");
+
+            response.sendRedirect(request.getContextPath() + "/manager/hotel-configs");
         } catch (IllegalArgumentException ex) {
             flash(request, ex.getMessage(), "error");
             String id = request.getParameter("id");
-            String redirectPath = "/manager/policies/save".equals(request.getServletPath())
-                    ? (ValidationUtil.isBlank(id) ? "/manager/policies/create" : "/manager/policies/edit?id=" + id)
-                    : "/manager/policies";
+            String redirectPath = "/manager/hotel-configs/save".equals(request.getServletPath())
+                    ? (ValidationUtil.isBlank(id) ? "/manager/hotel-configs/create" : "/manager/hotel-configs/edit?id=" + id)
+                    : "/manager/hotel-configs";
             response.sendRedirect(request.getContextPath() + redirectPath);
         } catch (SQLException ex) {
             throw new ServletException("Cannot update hotel policy", ex);
@@ -125,13 +132,17 @@ public class PolicyServlet extends HttpServlet {
         if (id != null && id > 0) {
             policy.setId(id);
         }
+
         policy.setTitle(ValidationUtil.requireText(request.getParameter("title"), "Tiêu đề", 2, 150));
         policy.setCategory(ValidationUtil.requireText(request.getParameter("category"), "Nhóm chính sách", 2, 80));
+
+        // Cancellation policies store structured refund rules in the content field.
         if (isCancellationPolicy(policy)) {
             policy.setContent(buildCancellationPolicyContent(request));
         } else {
             policy.setContent(ValidationUtil.requireText(request.getParameter("content"), "Nội dung", 5, 2000));
         }
+
         policy.setStatus(ValidationUtil.requireStatus(request.getParameter("status"), "Trạng thái", Set.of("ACTIVE", "INACTIVE")));
         policyDao.save(policy);
     }
@@ -139,6 +150,8 @@ public class PolicyServlet extends HttpServlet {
     private boolean isCancellationPolicy(HotelPolicy policy) {
         String category = policy.getCategory() == null ? "" : policy.getCategory().toLowerCase(java.util.Locale.ROOT);
         String title = policy.getTitle() == null ? "" : policy.getTitle().toLowerCase(java.util.Locale.ROOT);
+
+        // Detect cancellation-policy records from either title or category keywords.
         return category.contains("hủy") || title.contains("hủy") || category.contains("huy") || title.contains("huy");
     }
 
@@ -148,10 +161,12 @@ public class PolicyServlet extends HttpServlet {
         int partialDays = ValidationUtil.requirePositiveInt(request.getParameter("partialRefundDays"), "Số ngày hoàn một phần");
         int partialRate = requirePercent(request.getParameter("partialRefundRate"), "Tỷ lệ hoàn một phần");
         int sameDayRate = requirePercent(request.getParameter("sameDayRefundRate"), "Tỷ lệ hoàn trong ngày check-in");
+
         ValidationUtil.requireTrue(fullDays > partialDays,
                 "Mốc hoàn cao nhất phải lớn hơn mốc hoàn một phần.");
         ValidationUtil.requireTrue(fullRate >= partialRate && partialRate >= sameDayRate,
                 "Tỷ lệ hoàn tiền phải giảm dần theo thời gian hủy.");
+
         return CancellationPolicyService.buildCancellationContent(
                 fullDays, fullRate, partialDays, partialRate, sameDayRate);
     }

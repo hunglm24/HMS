@@ -108,9 +108,12 @@ public class AuthServlet extends HttpServlet {
             session.setAttribute("permissionCodes", roleDao.findPermissionCodesForRole(currentUser.getRoleId()));
             session.setMaxInactiveInterval(30 * 60);
 
-            String defaultTarget = "CUSTOMER".equalsIgnoreCase(currentUser.getRoleName())
-                    ? request.getContextPath() + "/"
-                    : request.getContextPath() + "/dashboard";
+            String defaultTarget;
+            if ("CUSTOMER".equalsIgnoreCase(currentUser.getRoleName())) {
+                defaultTarget = request.getContextPath() + "/";
+            } else {
+                defaultTarget = request.getContextPath() + "/dashboard";
+            }
             response.sendRedirect(returnUrl == null ? defaultTarget : returnUrl);
         } catch (SQLException ex) {
             getServletContext().log("Đăng nhập thất bại do lỗi cơ sở dữ liệu", ex);

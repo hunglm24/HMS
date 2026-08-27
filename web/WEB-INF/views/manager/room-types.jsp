@@ -220,9 +220,18 @@
                     <input type="hidden" name="id" value="${selectedRoomType.id}" />
                     <c:choose>
                       <c:when test="${selectedRoomType.status eq 'ACTIVE'}">
-                        <button class="room-status-switch room-status-switch--active" type="submit" aria-label="Ngừng hoạt động loại phòng" title="Ngừng hoạt động loại phòng">
-                          <span class="room-status-switch__knob" aria-hidden="true"></span>
-                        </button>
+                        <c:choose>
+                          <c:when test="${selectedRoomTypeHasRooms}">
+                            <button class="room-status-switch room-status-switch--active" type="button" disabled aria-label="Không thể ngừng hoạt động vì loại phòng đang có phòng sử dụng" title="Không thể ngừng hoạt động vì loại phòng đang có phòng sử dụng">
+                              <span class="room-status-switch__knob" aria-hidden="true"></span>
+                            </button>
+                          </c:when>
+                          <c:otherwise>
+                            <button class="room-status-switch room-status-switch--active" type="submit" aria-label="Ngừng hoạt động loại phòng" title="Ngừng hoạt động loại phòng">
+                              <span class="room-status-switch__knob" aria-hidden="true"></span>
+                            </button>
+                          </c:otherwise>
+                        </c:choose>
                       </c:when>
                       <c:otherwise>
                         <button class="room-status-switch room-status-switch--inactive" type="submit" aria-label="Kích hoạt loại phòng" title="Kích hoạt loại phòng">
@@ -321,7 +330,12 @@
                   </span>
                   <span class="room-meta__item">
                     <strong>Trạng thái</strong>
-                    <span><c:out value="${selectedRoomType.status}" /></span>
+                    <span>
+                      <c:out value="${selectedRoomType.status}" />
+                      <c:if test="${selectedRoomType.status eq 'ACTIVE' and selectedRoomTypeHasRooms}">
+                        <small style="display:block; color:#b42318; font-weight:600;">Không thể ngừng hoạt động vì đang có phòng sử dụng loại này.</small>
+                      </c:if>
+                    </span>
                   </span>
                   <span class="room-meta__item">
                     <strong>Mã loại phòng</strong>

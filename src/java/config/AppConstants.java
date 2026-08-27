@@ -19,4 +19,14 @@ public final class AppConstants {
     public static final Pattern PHONE_PATTERN = Pattern.compile(
             "^[0-9+() .-]{8,20}$"
     );
+
+    public static final Pattern POLICY_TITLE_PATTERN = Pattern.compile(
+            "^(?=.*[\\p{L}\\p{N}])[\\p{L}\\p{N}\\s.,;:!?()\\-_/&'\"+@#%]{2,150}$",
+            Pattern.UNICODE_CHARACTER_CLASS
+    );
+
+    public static final Pattern POLICY_CONTENT_PATTERN = Pattern.compile(
+            "^(?=.*[\\p{L}\\p{N}])[\\p{L}\\p{N}\\s.,;:!?()\\-_/&'\"+@#%]{10,5000}$",
+            Pattern.UNICODE_CHARACTER_CLASS
+    );
 }

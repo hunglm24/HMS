@@ -187,13 +187,22 @@
                               onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}', ${empty room.floorNumber ? 0 : room.floorNumber})">
                               Giao việc
                             </button>
-                            <a
-                              class="btn btn-danger btn-sm"
-                              href="${cp}/manager/rooms/deactivate-room?id=${room.id}"
-                              data-room-mgmt-confirm="true"
-                              data-room-mgmt-confirm-message="Bạn có muốn ngừng hoạt động phòng này không?">
-                              Ngừng hoạt động
-                            </a>
+                            <c:choose>
+                              <c:when test="${room.status eq 'OCCUPIED'}">
+                                <button type="button" class="btn btn-danger btn-sm" disabled title="Không thể ngừng hoạt động phòng đang có khách.">
+                                  Ngừng hoạt động
+                                </button>
+                              </c:when>
+                              <c:otherwise>
+                                <a
+                                  class="btn btn-danger btn-sm"
+                                  href="${cp}/manager/rooms/deactivate-room?id=${room.id}"
+                                  data-room-mgmt-confirm="true"
+                                  data-room-mgmt-confirm-message="Bạn có muốn ngừng hoạt động phòng này không?">
+                                  Ngừng hoạt động
+                                </a>
+                              </c:otherwise>
+                            </c:choose>
                           </div>
                         </td>
                       </tr>
@@ -243,13 +252,22 @@
                     onclick="window.RoomManagement && window.RoomManagement.openTaskModal(${room.id}, '${room.roomNumber}', ${empty room.floorNumber ? 0 : room.floorNumber})">
                     Giao việc
                   </button>
-                  <a
-                    class="btn btn-danger btn-sm"
-                    href="${cp}/manager/rooms/deactivate-room?id=${room.id}"
-                    data-room-mgmt-confirm="true"
-                    data-room-mgmt-confirm-message="Bạn có muốn ngừng hoạt động phòng này không?">
-                    Ngừng hoạt động
-                  </a>
+                  <c:choose>
+                    <c:when test="${room.status eq 'OCCUPIED'}">
+                      <button type="button" class="btn btn-danger btn-sm" disabled title="Không thể ngừng hoạt động phòng đang có khách.">
+                        Ngừng hoạt động
+                      </button>
+                    </c:when>
+                    <c:otherwise>
+                      <a
+                        class="btn btn-danger btn-sm"
+                        href="${cp}/manager/rooms/deactivate-room?id=${room.id}"
+                        data-room-mgmt-confirm="true"
+                        data-room-mgmt-confirm-message="Bạn có muốn ngừng hoạt động phòng này không?">
+                        Ngừng hoạt động
+                      </a>
+                    </c:otherwise>
+                  </c:choose>
                 </div>
               </article>
             </c:forEach>

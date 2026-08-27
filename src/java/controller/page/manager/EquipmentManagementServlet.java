@@ -196,6 +196,7 @@ public class EquipmentManagementServlet extends HttpServlet {
                 } else {
                     equipment.setId(existingEquipment.getId());
                     equipment.setImageUrl(existingEquipment.getImageUrl());
+                    equipment.setMaintainable(existingEquipment.isMaintainable());
                 }
             } catch (IllegalArgumentException ex) {
                 errors.put("general", ex.getMessage());
@@ -224,6 +225,11 @@ public class EquipmentManagementServlet extends HttpServlet {
             equipment.setDefaultCompensationPrice(ValidationUtil.requirePositiveBigDecimal(priceRaw, "Compensation price"));
         } catch (IllegalArgumentException ex) {
             errors.put("defaultCompensationPrice", ex.getMessage());
+        }
+
+        if (!updating) {
+            // Checkbox is only present in the request when it is checked.
+            equipment.setMaintainable(req.getParameter("isMaintainable") != null);
         }
 
         try {

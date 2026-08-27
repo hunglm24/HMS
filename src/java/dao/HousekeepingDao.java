@@ -807,7 +807,9 @@ public class HousekeepingDao {
             }
         }
         if (cleaningNote == null || cleaningNote.isBlank()) {
-            cleaningNote = "[===TASKS===]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[===END_TASKS===]\n[===NOTE===]\nDọn phòng sau checkout";
+            cleaningNote = "[CLEANING_TASKS]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[/CLEANING_TASKS]";
+        } else if (!cleaningNote.contains("[CLEANING_TASKS]") && !cleaningNote.contains("[===TASKS===]")) {
+            cleaningNote = "[CLEANING_TASKS]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[/CLEANING_TASKS]\n[INSPECTION_NOTE]\n" + cleaningNote.trim();
         }
         if (bookingRoomId != null && bookingRoomId > 0) {
             String sql = """
