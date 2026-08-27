@@ -105,6 +105,9 @@ public class RoomTypeService {
 
         String currentStatus = ValidationUtil.normalizeUpper(roomType.getStatus());
         String nextStatus = "ACTIVE".equals(currentStatus) ? "INACTIVE" : "ACTIVE";
+        if ("ACTIVE".equals(currentStatus) && roomTypeDao.hasRoomsByRoomTypeId(roomTypeId)) {
+            throw new IllegalArgumentException("Khong the ngung hoat dong loai phong dang co phong thuoc loai nay.");
+        }
         roomType.setStatus(nextStatus);
 
         List<Long> selectedAmenityIds = findAmenitiesByRoomTypeId(roomTypeId).stream()
@@ -142,6 +145,14 @@ public class RoomTypeService {
             return Collections.emptyList();
         }
         return roomTypeAmenityDao.findAmenitiesByRoomTypeId(roomTypeId);
+    }
+
+    // Check whether any physical room currently uses the given room type.
+    public boolean hasRoomsByRoomTypeId(long roomTypeId) {
+        if (roomTypeId <= 0L) {
+            return false;
+        }
+        return roomTypeDao.hasRoomsByRoomTypeId(roomTypeId);
     }
 
     // Prevent duplicate room type names across the catalog.

@@ -90,14 +90,9 @@ public class RoomService {
     // Soft-disable a room by switching its status.
     public boolean deactivateRoom(long id) throws SQLException {
         // Soft-delete by changing the room status rather than removing it.
-        if (id <= 0) {
-            return false;
-        }
-        Optional<Room> room = roomDao.findById(id);
-        if (room.isEmpty()) {
-            return false;
-        }
-        Room value = room.get();
+        ensureRoomCanBeDeactivated(id);
+        Room value = roomDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay phong."));
         value.setStatus("NOT_READY");
         return roomDao.update(value);
     }
@@ -132,6 +127,7 @@ public class RoomService {
         Integer floorNumber = room.getFloorNumber();
         ValidationUtil.requireTrue(floorNumber == null || (floorNumber >= 1 && floorNumber <= 4),
                 "Tang chi duoc trong khoang 1 den 4.");
+        ensureRoomNumberMatchesFloor(roomNumber, floorNumber);
 
         String description = ValidationUtil.optionalText(room.getDescription(), 500);
         String status = ValidationUtil.optionalStatus(room.getStatus(), STATUSES);
@@ -206,11 +202,26 @@ public class RoomService {
         }
     }
 
+    // Keep room numbering aligned with the selected floor, e.g. floor 1 => 1xx.
+    private void ensureRoomNumberMatchesFloor(String roomNumber, Integer floorNumber) {
+        if (floorNumber == null) {
+            return;
+        }
+
+        String expectedPrefix = String.valueOf(floorNumber);
+        ValidationUtil.requireTrue(roomNumber != null
+                        && roomNumber.length() == 3
+                        && roomNumber.startsWith(expectedPrefix),
+                "So phong phai dung dinh dang theo tang. Vi du tang 1 thi so phong phai la 1xx.");
+    }
+
     // Guard the deactivate action until booking-related rules are implemented.
     public void ensureRoomCanBeDeactivated(long id) {
         ValidationUtil.requireTrue(id > 0, "Khong tim thay phong.");
-        ValidationUtil.requireTrue(roomDao.findById(id).isPresent(), "Khong tim thay phong.");
-        // TODO: check active bookings before allowing deactivate.
+        Room room = roomDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay phong."));
+        ValidationUtil.requireTrue(!"OCCUPIED".equalsIgnoreCase(room.getStatus()),
+                "Khong the ngung hoat dong phong dang co khach.");
     }
 
     private boolean matchesKeyword(Room room, String keyword) {

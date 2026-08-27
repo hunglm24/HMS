@@ -21,7 +21,6 @@
                 <h1><c:out value="${pageHeading}" default="Thông tin policy" /></h1>
                 <p><c:out value="${pageSubtitle}" default="Tạo hoặc cập nhật nội quy chung khách sạn." /></p>
             </div>
-            <a class="btn btn-secondary" href="${cp}${backUrl}">Quay lại</a>
         </div>
 
         <c:if test="${not empty sessionScope.toastMessage}">
@@ -32,18 +31,9 @@
             <c:if test="${isEditMode and not empty policy.id}">
                 <input type="hidden" name="id" value="${policy.id}">
             </c:if>
+            <input type="hidden" name="title" value="${empty policy.title ? 'Nội quy khách sạn' : policy.title}">
 
             <div class="policy-form__grid">
-                <label>
-                    Tiêu đề
-                    <input type="text"
-                           name="title"
-                           minlength="2"
-                           maxlength="150"
-                           value="${policy.title}"
-                           placeholder="Nội quy chung khách sạn"
-                           required>
-                </label>
                 <div class="policy-form-field policy-form-field--content">
                     <div class="policy-form-field__head">
                         <label for="policyContent">Nội dung</label>

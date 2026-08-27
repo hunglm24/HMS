@@ -164,6 +164,24 @@ public class RoomTypeDao {
         return bedTypes;
     }
 
+    // Check whether any physical room is using the given room type.
+    public boolean hasRoomsByRoomTypeId(long roomTypeId) {
+        String sql = "SELECT COUNT(*) FROM rooms WHERE room_type_id = ?";
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, roomTypeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public List<RoomType> findAvailableRoomTypes(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int guests, int numRooms, Double minPrice, Double maxPrice, String sort, Long roomTypeId, int limit, int offset) {
         List<RoomType> roomTypes = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""

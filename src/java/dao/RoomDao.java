@@ -192,6 +192,22 @@ public class RoomDao {
         return Optional.empty();
     }
 
+    public boolean hasRoomsByRoomTypeId(long roomTypeId) {
+        String sql = "SELECT COUNT(*) FROM rooms WHERE room_type_id = ?";
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, roomTypeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public boolean insert(Room room) {
         String sql = "INSERT INTO rooms (room_type_id, room_number, floor_number, status, description) "
                 + "VALUES (?, ?, ?, ?, ?)";
