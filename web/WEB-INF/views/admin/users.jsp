@@ -66,6 +66,7 @@
         .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
         .filters .filter-field { width:210px; }
         .filters .search-field { width:210px; }
+        .filters .form-control, .filters input, .filters select { margin-bottom:0; }
         .data-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--color-border); border-radius:8px; overflow:hidden; }
         .data-table th,.data-table td { padding:11px 12px; border-bottom:1px solid var(--color-border); text-align:left; vertical-align:top; }
         .data-table th { background:var(--color-bg-surface); color:var(--color-text-secondary); font-size:13px; }
@@ -135,10 +136,7 @@
                     <option value="BLOCKED" <%= "BLOCKED".equals(selectedStatus) ? "selected" : "" %>>BLOCKED</option>
                 </select>
             </div>
-            <div>
-                <label class="form-label">&nbsp;</label>
-                <button class="button button-secondary" type="submit" style="display: block;">Filter</button>
-            </div>
+            <button class="button button-secondary" type="submit">Filter</button>
         </form>
         <a class="button button-primary" href="${pageContext.request.contextPath}/admin/users/create">Create user</a>
     </div>
