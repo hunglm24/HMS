@@ -131,6 +131,10 @@ public class RoomTypeManagementServlet extends HttpServlet {
             req.getSession().setAttribute("toastMessage", "Đã cập nhật trạng thái loại phòng.");
             req.getSession().setAttribute("toastType", "success");
             resp.sendRedirect(req.getContextPath() + "/manager/room-types?selectedRoomTypeId=" + roomTypeId);
+        } catch (IllegalArgumentException ex) {
+            req.getSession().setAttribute("toastMessage", ex.getMessage());
+            req.getSession().setAttribute("toastType", "error");
+            resp.sendRedirect(req.getContextPath() + "/manager/room-types?selectedRoomTypeId=" + roomTypeId);
         } catch (SQLException ex) {
             throw new ServletException("Không thể cập nhật trạng thái loại phòng", ex);
         }
@@ -412,6 +416,11 @@ public class RoomTypeManagementServlet extends HttpServlet {
         req.setAttribute(
                 "selectedRoomTypeAmenities",
                 selectedRoomType == null ? List.of() : roomTypeService.findAmenitiesByRoomTypeId(selectedRoomType.getId())
+        );
+        req.setAttribute(
+                "selectedRoomTypeHasRooms",
+                selectedRoomType != null && selectedRoomType.getId() != null
+                        && roomTypeService.hasRoomsByRoomTypeId(selectedRoomType.getId())
         );
         req.setAttribute("paginationCurrentPage", currentPage);
         req.setAttribute("paginationTotalPages", totalPages);
