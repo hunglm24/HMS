@@ -135,7 +135,10 @@
                     <option value="BLOCKED" <%= "BLOCKED".equals(selectedStatus) ? "selected" : "" %>>BLOCKED</option>
                 </select>
             </div>
-            <button class="button button-secondary" type="submit">Filter</button>
+            <div>
+                <label class="form-label">&nbsp;</label>
+                <button class="button button-secondary" type="submit" style="display: block;">Filter</button>
+            </div>
         </form>
         <a class="button button-primary" href="${pageContext.request.contextPath}/admin/users/create">Create user</a>
     </div>

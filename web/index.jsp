@@ -197,9 +197,13 @@
     </section>
     <section class="news-card-grid">
         <% for (model.News n : latestNews) { 
-            String newsThumb = (n.getThumbnailUrl() != null && !n.getThumbnailUrl().isBlank()) 
-                ? n.getThumbnailUrl() 
-                : "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
+            String rawThumb = n.getThumbnailUrl();
+            String newsThumb;
+            if (rawThumb != null && !rawThumb.isBlank()) {
+                newsThumb = rawThumb.startsWith("/") ? (request.getContextPath() + rawThumb) : rawThumb;
+            } else {
+                newsThumb = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80";
+            }
         %>
         <article class="room-showcase-card">
             <img src="<%= escapeHtml(newsThumb) %>" alt="<%= escapeHtml(n.getTitle()) %>">

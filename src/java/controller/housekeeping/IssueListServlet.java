@@ -149,12 +149,10 @@ public class IssueListServlet extends HttpServlet {
             if ("CHARGE".equalsIgnoreCase(action)) {
                 damageReportDao.processDamageReport(reportId, "CHARGE", finalAmount, note, account.getId());
                 NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
-                session.setAttribute("toastMessage", "Đã duyệt phạt đền bù " + nf.format(finalAmount) + " đ và tự động cập nhật vào Hóa đơn check-out của khách.");
-                session.setAttribute("toastType", "toast-success");
+                session.setAttribute("message", "Đã duyệt phạt đền bù " + nf.format(finalAmount) + " đ và tự động cập nhật vào Hóa đơn check-out của khách.");
             } else if ("WAIVE".equalsIgnoreCase(action)) {
                 damageReportDao.processDamageReport(reportId, "WAIVE", BigDecimal.ZERO, note, account.getId());
-                session.setAttribute("toastMessage", "Đã xác nhận miễn phạt (Waive) cho sự cố này.");
-                session.setAttribute("toastType", "toast-success");
+                session.setAttribute("message", "Đã xác nhận miễn phạt (Waive) cho sự cố này.");
             } else {
                 throw new IllegalArgumentException("Thao tác không hợp lệ.");
             }
@@ -162,8 +160,7 @@ public class IssueListServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/manager/issues?tab=damage");
         } catch (Exception ex) {
             getServletContext().log("Lỗi xử lý duyệt đền bù", ex);
-            session.setAttribute("toastMessage", "Lỗi: " + ex.getMessage());
-            session.setAttribute("toastType", "toast-error");
+            session.setAttribute("error", "Lỗi: " + ex.getMessage());
             response.sendRedirect(request.getContextPath() + "/manager/issues?tab=damage");
         }
     }

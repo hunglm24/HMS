@@ -20,7 +20,6 @@
 </head>
 <body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
 <main class="page-container hk-page">
     <div class="verify-wrap">
@@ -32,7 +31,7 @@
                 <h1>Phòng <c:out value="${task.roomNumber}"/></h1>
                 <p>
                     <c:out value="${task.roomTypeName}"/> · Tầng <c:out value="${task.floorNumber}"/> · 
-                    Người phụ trách: <strong><c:out value="${task.assignedStaffName != null ? task.assignedStaffName : 'Chưa phân công'}"/></strong> · 
+                    Người kiểm tra: <strong><c:out value="${task.assignedStaffName != null ? task.assignedStaffName : 'Chưa phân công'}"/></strong> · 
                     Thời gian: <strong><fmt:formatDate value="${task.createdAt}" pattern="dd/MM/yyyy HH:mm"/></strong>
                 </p>
             </div>
@@ -54,7 +53,7 @@
                     <strong>${task != null ? task.getStatusLabel() : '--'}</strong>
                 </div>
                 <div class="info-box">
-                    <span>Người phụ trách / Kỹ thuật</span>
+                    <span>Người kiểm tra</span>
                     <strong>${task.assignedStaffName != null ? task.assignedStaffName : 'Chưa phân công'}</strong>
                 </div>
             </div>
@@ -76,7 +75,7 @@
                             <th>Trạng thái cũ</th>
                             <th>Trạng thái mới</th>
                             <th>Ghi chú xử lý</th>
-                            <th>Người thực hiện</th>
+                            <th>Người nghiệm thu</th>
                             <th>Thời gian</th>
                         </tr>
                     </thead>
@@ -135,7 +134,7 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Xác nhận hoàn tất sửa chữa</button>
+                    <button type="submit" class="btn btn-primary">Xác nhận hoàn tất</button>
                 </div>
             </form>
         </div>

@@ -17,7 +17,6 @@
   </head>
   <body class="room-management-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
     <main class="page-container room-management-page">
       <section class="room-management-hero panel">
@@ -36,14 +35,6 @@
           </a>
         </div>
       </section>
-
-      <c:if test="${not empty sessionScope.toastMessage}">
-        <div class="toast ${sessionScope.toastType}">
-          <c:out value="${sessionScope.toastMessage}" />
-        </div>
-        <c:remove var="toastMessage" scope="session" />
-        <c:remove var="toastType" scope="session" />
-      </c:if>
 
       <section class="room-management-content">
         <section class="room-management-panel panel">

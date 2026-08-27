@@ -18,7 +18,6 @@
   </head>
   <body class="room-management-body room-form-body" data-context-path="${cp}">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
     <main class="page-container room-form-page">
       <form class="room-form" action="${cp}${roomFormAction}" method="post" novalidate>
@@ -38,18 +37,6 @@
             <button class="btn" type="submit"><c:out value="${roomSubmitLabel}" /></button>
           </div>
         </section>
-
-        <c:if test="${not empty errors}">
-          <div class="room-form-alert" role="alert" aria-live="polite">
-            <strong>Vui lòng kiểm tra các trường được đánh dấu.</strong>
-            <c:if test="${not empty errors.general}">
-              <p><c:out value="${errors.general}" /></p>
-            </c:if>
-            <c:if test="${not empty errors.roomEquipments}">
-              <p><c:out value="${errors.roomEquipments}" /></p>
-            </c:if>
-          </div>
-        </c:if>
 
         <section class="room-form-layout">
           <article class="panel room-form-card">

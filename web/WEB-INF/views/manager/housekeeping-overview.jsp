@@ -26,7 +26,6 @@
 </head>
 <body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 <main class="page-container room-management-page">
     <section class="room-management-hero panel">
         <div class="room-management-hero__copy">

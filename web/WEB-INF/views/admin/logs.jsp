@@ -86,7 +86,10 @@
             <label class="form-label" for="q">Search</label>
             <input class="form-control" id="q" name="q" value="<%= h(q) %>" placeholder="Action, actor, target, detail">
         </div>
-        <button class="button button-secondary" type="submit">Filter</button>
+        <div>
+            <label class="form-label">&nbsp;</label>
+            <button class="button button-secondary" type="submit" style="display: block;">Filter</button>
+        </div>
     </form>
 
     <table class="data-table">

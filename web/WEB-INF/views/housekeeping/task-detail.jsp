@@ -30,7 +30,6 @@
 </head>
 <body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 <main class="page-container hk-page">
     <a class="hk-back" href="<%= backUrl %>">← <%= backLabel %></a>
     <section class="hk-detail-heading">
@@ -38,7 +37,7 @@
             <p class="hk-eyebrow"><%= isManager ? "Quản lý khách sạn" : "Vận hành phòng" %> · Mã công việc #<%= task.getTaskId() %></p>
             <h1>Phòng <%= HousekeepingTask.esc(task.getRoomNumber()) %></h1>
             <p>
-                <%= HousekeepingTask.esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %> · Người phụ trách: <strong><%= task.getAssignedStaffName() != null ? HousekeepingTask.esc(task.getAssignedStaffName()) : "Chưa phân công" %></strong>
+                <%= HousekeepingTask.esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %> · Người kiểm tra: <strong><%= task.getAssignedStaffName() != null ? HousekeepingTask.esc(task.getAssignedStaffName()) : "Chưa phân công" %></strong>
                 <% if (task.getCreatedAt() != null) { %>
                 · Thời gian: <strong><%= task.getFormattedCreatedAt() %></strong>
                 <% } %>

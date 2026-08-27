@@ -23,7 +23,7 @@ public class MaintenanceLogDao {
 
         String updateEqSql = "UPDATE room_equipment SET status = 'NORMAL' WHERE id = ?";
 
-        String updateTaskSql = "UPDATE housekeeping_tasks SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String updateTaskSql = "UPDATE housekeeping_tasks SET status = 'COMPLETED', assigned_to = COALESCE(assigned_to, ?), completed_at = CURRENT_TIMESTAMP WHERE id = ?";
 
         String checkRoomCompleteSql = """
                 SELECT COUNT(*) FROM room_equipment re
@@ -34,7 +34,14 @@ public class MaintenanceLogDao {
         String restoreRoomSql = """
                 UPDATE rooms rm
                 JOIN housekeeping_tasks ht ON ht.room_id = rm.id
-                SET rm.status = 'AVAILABLE'
+                SET rm.status = CASE
+                    WHEN EXISTS (
+                        SELECT 1 FROM booking_rooms br
+                        JOIN bookings b ON b.id = br.booking_id
+                        WHERE br.room_id = rm.id AND b.status IN ('CHECKED_IN', 'IN_HOUSE')
+                    ) THEN 'OCCUPIED'
+                    ELSE 'AVAILABLE'
+                END
                 WHERE ht.id = ? AND rm.status IN ('NOT_READY', 'MAINTENANCE')
                 """;
 
@@ -60,7 +67,8 @@ public class MaintenanceLogDao {
 
                 // Complete this specific task
                 try (PreparedStatement complete = connection.prepareStatement(updateTaskSql)) {
-                    complete.setLong(1, taskId);
+                    complete.setLong(1, confirmedBy);
+                    complete.setLong(2, taskId);
                     complete.executeUpdate();
                 }
 

@@ -17,7 +17,6 @@
 </head>
 <body class="room-management-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
     <main class="page-container hk-page">
         <!-- Hero Section gọn gàng theo chuẩn Lịch sử dọn phòng -->
@@ -38,14 +37,6 @@
                 </div>
             </div>
         </section>
-
-        <c:if test="${not empty sessionScope.toastMessage}">
-            <div class="toast ${sessionScope.toastType}">
-                <c:out value="${sessionScope.toastMessage}" />
-            </div>
-            <c:remove var="toastMessage" scope="session" />
-            <c:remove var="toastType" scope="session" />
-        </c:if>
 
         <!-- Bộ lọc Form theo đúng cấu trúc Lịch sử dọn phòng (hk-filters feedback-filters) -->
         <form class="hk-filters feedback-filters" method="get" action="${cp}/manager/feedbacks">

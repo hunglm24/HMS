@@ -12,11 +12,15 @@ public class MaintenanceService {
     private final HousekeepingDao housekeepingDao = new HousekeepingDao();
     private final MaintenanceLogDao maintenanceLogDao = new MaintenanceLogDao();
 
-    public void reportIssue(long roomId, Long roomEquipmentId, String newStatus, String note) throws SQLException {
+    public void reportIssue(long roomId, Long roomEquipmentId, String newStatus, String note, Long reportedBy) throws SQLException {
         if (note == null || note.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng nhập mô tả sự cố.");
         }
-        housekeepingDao.reportIssue(roomId, roomEquipmentId, newStatus, note);
+        housekeepingDao.reportIssue(roomId, roomEquipmentId, newStatus, note, reportedBy);
+    }
+
+    public void reportIssue(long roomId, Long roomEquipmentId, String newStatus, String note) throws SQLException {
+        reportIssue(roomId, roomEquipmentId, newStatus, note, null);
     }
 
     public List<HousekeepingTask> findIssueTasks(String keyword, Integer floor, String taskType, String status,

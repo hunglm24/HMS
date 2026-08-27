@@ -21,7 +21,13 @@ public class HousekeepingDao {
                    ht.priority, ht.status, ht.note, ht.created_at,
                    ht.started_at, ht.completed_at, rm.room_number,
                    rm.floor_number, rm.status AS room_status,
-                   rt.name AS room_type_name, a.full_name AS assigned_staff_name,
+                   rt.name AS room_type_name,
+                   COALESCE(
+                       a.full_name,
+                       (SELECT acc.full_name FROM room_inspections ri JOIN accounts acc ON acc.id = ri.inspected_by WHERE ri.housekeeping_task_id = ht.id OR ri.booking_room_id = ht.booking_room_id ORDER BY ri.id DESC LIMIT 1),
+                       (SELECT acc.full_name FROM equipment_maintenance_logs eml JOIN accounts acc ON acc.id = eml.confirmed_by WHERE eml.housekeeping_task_id = ht.id ORDER BY eml.id DESC LIMIT 1),
+                       (SELECT acc.full_name FROM accounts acc JOIN roles r ON r.id = acc.role_id WHERE r.name = 'HOUSEKEEPING' AND acc.status = 'ACTIVE' ORDER BY (CASE WHEN rm.floor_number <= 2 AND acc.email LIKE '%housekeeping1%' THEN 1 WHEN rm.floor_number >= 3 AND acc.email LIKE '%housekeeping2%' THEN 1 ELSE 2 END), acc.id ASC LIMIT 1)
+                   ) AS assigned_staff_name,
                    TRUE AS action_ready
             FROM housekeeping_tasks ht
             JOIN rooms rm ON rm.id = ht.room_id
@@ -400,7 +406,7 @@ public class HousekeepingDao {
                     if (!"NORMAL".equals(check.getConditionStatus())) {
                         damaged = true;
                         long damageReportId = isCheckout ? insertDamageReport(connection, itemId, bookingId, check) : 0;
-                        markEquipmentAndCreateTask(connection, roomId, damageReportId, check);
+                        markEquipmentAndCreateTask(connection, roomId, damageReportId, check, staffId);
                     }
                 }
                 if (isCheckout) {
@@ -430,11 +436,15 @@ public class HousekeepingDao {
                     }
                 } else {
                     try (PreparedStatement updateRoom = connection.prepareStatement("""
-                            UPDATE rooms SET status = CASE 
+                            UPDATE rooms rm SET rm.status = CASE 
                                 WHEN ? THEN 'NOT_READY'
-                                WHEN status = 'OCCUPIED' THEN 'OCCUPIED'
+                                WHEN EXISTS (
+                                    SELECT 1 FROM booking_rooms br
+                                    JOIN bookings b ON b.id = br.booking_id
+                                    WHERE br.room_id = rm.id AND b.status IN ('CHECKED_IN', 'IN_HOUSE')
+                                ) THEN 'OCCUPIED'
                                 ELSE 'AVAILABLE' 
-                            END WHERE id = ?
+                            END WHERE rm.id = ?
                             """)) {
                         updateRoom.setBoolean(1, damaged);
                         updateRoom.setLong(2, roomId);
@@ -610,7 +620,13 @@ public class HousekeepingDao {
                         WHEN EXISTS (
                             SELECT 1 FROM room_equipment re
                             WHERE re.room_id = rm.id AND re.status <> 'NORMAL'
-                        ) THEN 'NOT_READY' ELSE 'AVAILABLE' END
+                        ) THEN 'NOT_READY'
+                        WHEN EXISTS (
+                            SELECT 1 FROM booking_rooms br
+                            JOIN bookings b ON b.id = br.booking_id
+                            WHERE br.room_id = rm.id AND b.status IN ('CHECKED_IN', 'IN_HOUSE')
+                        ) THEN 'OCCUPIED'
+                        ELSE 'AVAILABLE' END
                         WHERE rm.id = ?
                         """)) {
                     updateRoom.setLong(1, roomId); updateRoom.executeUpdate();
@@ -713,7 +729,7 @@ public class HousekeepingDao {
     }
 
     private void markEquipmentAndCreateTask(Connection connection, long roomId, long damageReportId,
-                                            HousekeepingTask.EquipmentCheck check) throws SQLException {
+                                            HousekeepingTask.EquipmentCheck check, Long staffId) throws SQLException {
         boolean missing = "MISSING".equals(check.getConditionStatus());
         String equipmentStatus = missing ? "WAITING_REPLACEMENT" : "WAITING_REPAIR";
         String taskType = missing ? "EQUIPMENT_REPLACEMENT" : "EQUIPMENT_REPAIR";
@@ -727,10 +743,11 @@ public class HousekeepingDao {
             update.setLong(3, check.getRoomEquipmentId()); update.setLong(4, roomId);
             if (update.executeUpdate() == 0) throw new SQLException("Không thể cập nhật trạng thái thiết bị");
         }
+        Long assignedTo = (staffId != null && staffId > 0) ? staffId : getHousekeeperForRoom(connection, roomId);
         String sql = """
                 INSERT INTO housekeeping_tasks
                     (room_id, room_equipment_id, assigned_to, task_type, priority, status, note)
-                SELECT ?, ?, NULL, ?, 'HIGH', 'PENDING', ?
+                SELECT ?, ?, ?, ?, 'HIGH', 'PENDING', ?
                 WHERE NOT EXISTS (
                     SELECT 1 FROM housekeeping_tasks
                     WHERE room_equipment_id = ? AND task_type = ?
@@ -739,12 +756,17 @@ public class HousekeepingDao {
                 """;
         try (PreparedStatement insert = connection.prepareStatement(sql)) {
             insert.setLong(1, roomId); insert.setLong(2, check.getRoomEquipmentId());
-            insert.setString(3, taskType);
-                        String taskNote = (check.getNote() != null && !check.getNote().isBlank()) 
+            if (assignedTo != null && assignedTo > 0) {
+                insert.setLong(3, assignedTo);
+            } else {
+                insert.setNull(3, java.sql.Types.BIGINT);
+            }
+            insert.setString(4, taskType);
+            String taskNote = (check.getNote() != null && !check.getNote().isBlank()) 
                     ? check.getNote().trim() 
                     : (check.getEquipmentName() != null ? check.getEquipmentName() + " - " + check.getCurrentStatusLabel() : "Sự cố thiết bị");
-            insert.setString(4, taskNote);
-            insert.setLong(5, check.getRoomEquipmentId()); insert.setString(6, taskType);
+            insert.setString(5, taskNote);
+            insert.setLong(6, check.getRoomEquipmentId()); insert.setString(7, taskType);
             insert.executeUpdate();
         }
     }
@@ -879,7 +901,7 @@ public class HousekeepingDao {
         return value == null ? null : ((Number) value).longValue();
     }
 
-    public void reportIssue(long roomId, Long roomEquipmentId, String newStatus, String note) throws SQLException {
+    public void reportIssue(long roomId, Long roomEquipmentId, String newStatus, String note, Long reportedBy) throws SQLException {
         String taskType = "EQUIPMENT_REPAIR";
         if ("MISSING".equals(newStatus) || "WAITING_REPLACEMENT".equals(newStatus)) {
             taskType = "EQUIPMENT_REPLACEMENT";
@@ -904,10 +926,11 @@ public class HousekeepingDao {
                     }
                 }
                 
+                Long staffId = (reportedBy != null && reportedBy > 0) ? reportedBy : getHousekeeperForRoom(connection, roomId);
                 String sql = """
                         INSERT INTO housekeeping_tasks
-                            (room_id, room_equipment_id, task_type, priority, status, note)
-                        VALUES (?, ?, ?, 'HIGH', 'PENDING', ?)
+                            (room_id, room_equipment_id, assigned_to, task_type, priority, status, note)
+                        VALUES (?, ?, ?, ?, 'HIGH', 'PENDING', ?)
                         """;
                 try (PreparedStatement insert = connection.prepareStatement(sql)) {
                     insert.setLong(1, roomId);
@@ -917,8 +940,13 @@ public class HousekeepingDao {
                         insert.setNull(2, java.sql.Types.BIGINT);
                         taskType = "MAINTENANCE_CHECK"; 
                     }
-                    insert.setString(3, taskType);
-                    insert.setString(4, note);
+                    if (staffId != null && staffId > 0) {
+                        insert.setLong(3, staffId);
+                    } else {
+                        insert.setNull(3, java.sql.Types.BIGINT);
+                    }
+                    insert.setString(4, taskType);
+                    insert.setString(5, note);
                     insert.executeUpdate();
                 }
                 connection.commit();
@@ -929,6 +957,10 @@ public class HousekeepingDao {
                 connection.setAutoCommit(autoCommit);
             }
         }
+    }
+
+    public void reportIssue(long roomId, Long roomEquipmentId, String newStatus, String note) throws SQLException {
+        reportIssue(roomId, roomEquipmentId, newStatus, note, null);
     }
 
     public List<HousekeepingTask> findIssueTasks(String keyword, Integer floor, String taskType, String status,
@@ -1237,7 +1269,13 @@ public class HousekeepingDao {
                 WHEN EXISTS (
                     SELECT 1 FROM room_equipment re
                     WHERE re.room_id = rm.id AND re.status IN ('DAMAGED', 'MISSING', 'WAITING_REPAIR', 'WAITING_REPLACEMENT', 'MAINTENANCE')
-                ) THEN 'NOT_READY' ELSE 'AVAILABLE' END
+                ) THEN 'NOT_READY'
+                WHEN EXISTS (
+                    SELECT 1 FROM booking_rooms br
+                    JOIN bookings b ON b.id = br.booking_id
+                    WHERE br.room_id = rm.id AND b.status IN ('CHECKED_IN', 'IN_HOUSE')
+                ) THEN 'OCCUPIED'
+                ELSE 'AVAILABLE' END
             WHERE rm.status = 'CLEANING' AND NOT EXISTS (
                 SELECT 1 FROM housekeeping_tasks ht 
                 WHERE ht.room_id = rm.id AND ht.task_type = 'CLEANING' AND ht.status IN ('PENDING', 'IN_PROGRESS')
@@ -1249,7 +1287,13 @@ public class HousekeepingDao {
                 WHEN EXISTS (
                     SELECT 1 FROM room_equipment re
                     WHERE re.room_id = rm.id AND re.status IN ('DAMAGED', 'MISSING', 'WAITING_REPAIR', 'WAITING_REPLACEMENT', 'MAINTENANCE')
-                ) THEN 'NOT_READY' ELSE 'AVAILABLE' END
+                ) THEN 'NOT_READY'
+                WHEN EXISTS (
+                    SELECT 1 FROM booking_rooms br
+                    JOIN bookings b ON b.id = br.booking_id
+                    WHERE br.room_id = rm.id AND b.status IN ('CHECKED_IN', 'IN_HOUSE')
+                ) THEN 'OCCUPIED'
+                ELSE 'AVAILABLE' END
             WHERE rm.status = 'INSPECTION' AND NOT EXISTS (
                 SELECT 1 FROM housekeeping_tasks ht 
                 WHERE ht.room_id = rm.id AND ht.task_type = 'CHECKOUT_INSPECTION' AND ht.status IN ('PENDING', 'IN_PROGRESS')

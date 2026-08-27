@@ -43,13 +43,13 @@
                     <label for="taskAssigneeSelect">Phân công nhân sự Housekeeping</label>
                 </div>
 
-                <!-- Thẻ thông tin người phụ trách mặc định theo tầng -->
+                <!-- Thẻ thông tin người kiểm tra mặc định theo tầng -->
                 <c:set var="firstHk" value="${not empty housekeeperWorkloads ? housekeeperWorkloads[0] : null}" />
                 <div class="task-default-hk-card" id="taskDefaultHkCard">
                     <div class="task-default-hk-info">
                         <div class="task-default-hk-title">
                             <span class="hk-icon">👤</span>
-                            <span class="hk-label">Phụ trách theo tầng:</span>
+                            <span class="hk-label">Người kiểm tra theo tầng:</span>
                             <strong id="taskDefaultHkName">
                                 <c:choose>
                                     <c:when test="${not empty firstHk}">

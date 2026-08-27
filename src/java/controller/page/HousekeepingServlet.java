@@ -86,11 +86,13 @@ public class HousekeepingServlet extends HttpServlet {
             long taskId;
             if (path.endsWith("/claim")) {
                 taskId = service.claimInspection(parseLong(request.getParameter("bookingRoomId")), user.getUserId());
+                request.getSession().setAttribute("message", "Đã nhận công việc kiểm tra phòng.");
                 response.sendRedirect(request.getContextPath() + "/housekeeping/tasks/detail?id=" + taskId);
                 return;
             }
             if (path.endsWith("/claim-cleaning")) {
                 taskId = service.claimCleaning(parseLong(request.getParameter("taskId")), user.getUserId());
+                request.getSession().setAttribute("message", "Đã nhận công việc dọn phòng.");
                 response.sendRedirect(request.getContextPath() + "/housekeeping/tasks/detail?id=" + taskId);
                 return;
             }
@@ -115,12 +117,15 @@ public class HousekeepingServlet extends HttpServlet {
                         parameterValues(request, "cleaningItem"),
                         request.getParameter("customCleaningTasks"),
                         request.getParameter("inspectionNote"));
+                request.getSession().setAttribute("message", "Đã hoàn tất kiểm tra phòng sau checkout.");
             } else if (path.endsWith("/start-cleaning")) {
                 service.startCleaning(taskId, user.getUserId());
+                request.getSession().setAttribute("message", "Bắt đầu dọn phòng.");
                 response.sendRedirect(request.getContextPath() + "/housekeeping/tasks/detail?id=" + taskId);
                 return;
             } else if (path.endsWith("/complete-cleaning")) {
                 service.completeCleaning(taskId, user.getUserId());
+                request.getSession().setAttribute("message", "Hoàn tất dọn phòng thành công.");
             } else {
                 response.sendError(400, "Hành động không hợp lệ.");
                 return;

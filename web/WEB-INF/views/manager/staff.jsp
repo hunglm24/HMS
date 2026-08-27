@@ -9,7 +9,6 @@
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 <main class="page-container">
     <section class="section-head">
         <div>

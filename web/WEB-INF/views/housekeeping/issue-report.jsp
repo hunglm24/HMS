@@ -21,7 +21,6 @@
 </head>
 <body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
 <main class="page-container hk-page">
     <a class="hk-back" href="<%= backUrl %>">← <%= isManager ? "Quản lý sự cố" : "Danh sách sự cố" %></a>
@@ -32,11 +31,6 @@
             <p>Ghi nhận thiết bị hỏng hóc hoặc sự cố cần bảo trì, sửa chữa.</p>
         </div>
     </section>
-        
-    <c:if test="${not empty sessionScope.errorMessage}">
-        <div class="alert alert-danger">${sessionScope.errorMessage}</div>
-        <c:remove var="errorMessage" scope="session"/>
-    </c:if>
 
     <form id="issue-report-form" class="hk-card hk-work-form" action="<%= formAction %>" method="post">
         <div class="hk-section-heading">

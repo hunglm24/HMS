@@ -39,6 +39,7 @@ Thumbs.db
 # Local VNPay credentials (never commit)
 src/java/config/vnpay-local.properties
 
-# Optional: if you do not commit generated war/ear artifacts
-# *.war
-# *.ear
+# Uploaded user files (local only)
+/web/uploads/*
+!/web/uploads/*/.gitkeep
+!/web/uploads/**/.gitkeep

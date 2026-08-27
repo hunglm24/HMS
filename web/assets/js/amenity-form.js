@@ -17,11 +17,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const submitBtn = amenityForm.querySelector('button[type="submit"]');
         amenityForm.addEventListener('submit', function (e) {
             const nameInput = amenityForm.querySelector('input[name="name"]');
+            let nameError = amenityForm.querySelector('.name-client-error');
             if (nameInput && !nameInput.value.trim()) {
                 e.preventDefault();
-                alert('Vui lòng nhập tên tiện nghi.');
+                if (!nameError) {
+                    nameError = document.createElement('small');
+                    nameError.className = 'text-danger name-client-error';
+                    nameError.style.display = 'block';
+                    nameError.style.marginTop = '4px';
+                    nameInput.parentNode.appendChild(nameError);
+                }
+                nameError.textContent = 'Vui lòng nhập tên tiện nghi.';
+                nameInput.style.borderColor = '#ef4444';
                 nameInput.focus();
                 return;
+            } else {
+                if (nameError) nameError.remove();
+                if (nameInput) nameInput.style.borderColor = '';
             }
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -30,3 +42,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+

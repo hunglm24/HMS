@@ -30,10 +30,26 @@ document.addEventListener('DOMContentLoaded', function () {
         // Form submission validation
         feedbackForm.addEventListener('submit', function (e) {
             const ratingChecked = feedbackForm.querySelector('input[name="rating"]:checked');
+            let ratingError = feedbackForm.querySelector('.rating-error-msg');
             if (!ratingChecked) {
                 e.preventDefault();
-                alert('Vui lòng chọn số sao đánh giá (từ 1 đến 5 sao).');
+                if (!ratingError) {
+                    ratingError = document.createElement('div');
+                    ratingError.className = 'rating-error-msg';
+                    ratingError.style.color = '#ef4444';
+                    ratingError.style.fontSize = '13px';
+                    ratingError.style.marginTop = '8px';
+                    ratingError.style.fontWeight = '600';
+                    ratingError.style.textAlign = 'center';
+                    const starsContainer = feedbackForm.querySelector('.rating-stars');
+                    if (starsContainer) {
+                        starsContainer.parentNode.appendChild(ratingError);
+                    }
+                }
+                ratingError.textContent = 'Vui lòng chọn số sao đánh giá (từ 1 đến 5 sao).';
                 return;
+            } else if (ratingError) {
+                ratingError.remove();
             }
 
             if (submitBtn) {

@@ -63,8 +63,7 @@ public class ManagerFeedbackServlet extends HttpServlet {
                 String newStatus = request.getParameter("status");
                 if ("VISIBLE".equals(newStatus) || "HIDDEN".equals(newStatus)) {
                     feedbackDao.updateFeedbackStatus(feedbackId, newStatus);
-                    request.getSession().setAttribute("toastMessage", "Đã cập nhật trạng thái phản hồi.");
-                    request.getSession().setAttribute("toastType", "toast-success");
+                    request.getSession().setAttribute("message", "Đã cập nhật trạng thái phản hồi.");
                 }
             } catch (Exception e) {
                 e.printStackTrace();

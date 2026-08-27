@@ -16,7 +16,6 @@
   </head>
   <body class="room-management-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
     <main class="page-container room-management-page">
       <form class="amenity-form" action="${cp}${amenityFormAction}" method="post" novalidate>
@@ -32,17 +31,6 @@
             <p><c:out value="${amenityPageSubtitle}" /></p>
           </div>
         </section>
-
-        <c:if test="${not empty errors}">
-          <div class="alert alert-danger">
-            <strong>Vui lòng kiểm tra lại các trường thông tin:</strong>
-            <ul>
-              <c:forEach items="${errors}" var="entry">
-                <li><c:out value="${entry.value}" /></li>
-              </c:forEach>
-            </ul>
-          </div>
-        </c:if>
 
         <section class="room-management-content amenity-form-card">
           <section class="room-management-panel panel">

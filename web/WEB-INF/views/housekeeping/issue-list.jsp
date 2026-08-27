@@ -54,7 +54,6 @@
 </head>
 <body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
 <main class="page-container hk-page">
     <section class="hk-hero">
@@ -69,14 +68,6 @@
             </a>
         </div>
     </section>
-        
-    <c:if test="${not empty sessionScope.toastMessage}">
-        <div class="alert ${sessionScope.toastType eq 'toast-error' ? 'alert-danger' : 'alert-success'}">
-            ${sessionScope.toastMessage}
-        </div>
-        <c:remove var="toastMessage" scope="session"/>
-        <c:remove var="toastType" scope="session"/>
-    </c:if>
 
     <% if (isManager) { %>
     <!-- TAB CHUYỂN ĐỔI QUẢN LÝ -->
@@ -120,7 +111,7 @@
                 <table class="hk-table">
                     <thead>
                         <tr>
-                            <th>ID / Booking</th>
+                            <th>Mã Booking</th>
                             <th>Phòng &amp; Khách</th>
                             <th>Thiết bị</th>
                             <th>Tình trạng</th>
@@ -133,9 +124,8 @@
                     <tbody>
                         <c:forEach var="dr" items="${damageReports}">
                             <tr data-pagination-item>
-                                <td data-label="ID / Booking">
-                                    <strong>#DR-${dr.id}</strong><br>
-                                    <small style="color: #667085;">#${dr.bookingCode}</small>
+                                <td data-label="Mã Booking">
+                                    <strong style="color: #155eef;">#${dr.bookingCode}</strong>
                                 </td>
                                 <td data-label="Phòng &amp; Khách">
                                     <span class="hk-room-number">P.${HousekeepingTask.esc(dr.roomNumber)}</span><br>
@@ -274,7 +264,6 @@
                 <table class="hk-table">
                     <thead>
                         <tr>
-                            <th class="<%= sortClass(currentSort, currentDir, "id") %>"><a href="<%= sortUrl(searchStr, floorStr, taskTypeStr, statusStr, currentSort, currentDir, "id", baseUrl) %>">ID</a></th>
                             <th class="<%= sortClass(currentSort, currentDir, "room") %>"><a href="<%= sortUrl(searchStr, floorStr, taskTypeStr, statusStr, currentSort, currentDir, "room", baseUrl) %>">Phòng</a></th>
                             <th class="<%= sortClass(currentSort, currentDir, "type") %>"><a href="<%= sortUrl(searchStr, floorStr, taskTypeStr, statusStr, currentSort, currentDir, "type", baseUrl) %>">Loại Task</a></th>
                             <th>Mô tả</th>
@@ -286,7 +275,6 @@
                     <tbody>
                         <c:forEach var="task" items="${tasks}">
                             <tr data-pagination-item>
-                                <td data-label="ID">#${task.taskId}</td>
                                 <td data-label="Phòng">
                                     <span class="hk-room-number">${HousekeepingTask.esc(task.roomNumber)}</span><br>
                                     <small>Tầng ${task.floorNumber}</small>
@@ -315,7 +303,7 @@
                         </c:forEach>
                         <c:if test="${empty tasks}">
                             <tr>
-                                <td colspan="7" class="table-empty-notice">
+                                <td colspan="6" class="table-empty-notice">
                                     <div class="empty-icon-lg">🛠️</div>
                                     <c:choose>
                                         <c:when test="${not empty search or not empty floor or not empty taskType or not empty status}">
