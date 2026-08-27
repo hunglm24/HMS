@@ -7,8 +7,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.HotelPolicy;
-import service.CancellationPolicyService;
 import service.AuditLogService;
+import service.CancellationPolicyService;
 import util.ValidationUtil;
 
 import java.io.IOException;
@@ -30,10 +30,13 @@ public class HotelConfigServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Route to the create form.
         if ("/manager/hotel-configs/create".equals(request.getServletPath())) {
             request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-form.jsp").forward(request, response);
             return;
         }
+
+        // Route to the edit form after loading the selected policy.
         if ("/manager/hotel-configs/edit".equals(request.getServletPath())) {
             try {
                 prepareEditPage(request);
@@ -44,6 +47,7 @@ public class HotelConfigServlet extends HttpServlet {
             }
             return;
         }
+
         preparePage(request);
         request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-list.jsp").forward(request, response);
     }
@@ -56,29 +60,32 @@ public class HotelConfigServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+
         try {
+            // Branch by action so POST stays easy to follow.
             if ("/manager/hotel-configs/save".equals(request.getServletPath())) {
                 String idRaw = request.getParameter("id");
                 savePolicy(request);
                 auditLogService.log(request, ValidationUtil.isBlank(idRaw) ? "CREATE_POLICY" : "UPDATE_POLICY",
-                        "POLICY", ValidationUtil.optionalPositiveLong(idRaw, "ChÃ­nh sÃ¡ch"),
+                        "POLICY", ValidationUtil.optionalPositiveLong(idRaw, "Chính sách"),
                         "Saved policy " + request.getParameter("title"));
-                flash(request, "ÄÃ£ lÆ°u chÃ­nh sÃ¡ch.", "success");
+                flash(request, "Đã lưu chính sách.", "success");
             } else if ("/manager/hotel-configs/toggle-status".equals(request.getServletPath())) {
-                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
+                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
                 togglePolicyStatus(request);
                 auditLogService.log(request, "TOGGLE_POLICY_STATUS", "POLICY", id,
                         "Changed policy status to " + request.getParameter("status"));
-                flash(request, "ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i chÃ­nh sÃ¡ch.", "success");
+                flash(request, "Đã cập nhật trạng thái chính sách.", "success");
             } else if ("/manager/hotel-configs/delete".equals(request.getServletPath())) {
-                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
+                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
                 policyDao.delete(id);
                 auditLogService.log(request, "DELETE_POLICY", "POLICY", id, "Deleted policy");
-                flash(request, "ÄÃ£ xÃ³a chÃ­nh sÃ¡ch.", "success");
+                flash(request, "Đã xóa chính sách.", "success");
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
+
             response.sendRedirect(request.getContextPath() + "/manager/hotel-configs");
         } catch (IllegalArgumentException ex) {
             flash(request, ex.getMessage(), "error");
@@ -94,9 +101,9 @@ public class HotelConfigServlet extends HttpServlet {
 
     private void prepareEditPage(HttpServletRequest request) throws ServletException {
         try {
-            long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
+            long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
             HotelPolicy policy = policyDao.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y chÃ­nh sÃ¡ch."));
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chính sách."));
             request.setAttribute("policy", policy);
             request.setAttribute("cancellationRule",
                     CancellationPolicyService.parseRuleOrDefault(policy.getContent()));
@@ -121,37 +128,45 @@ public class HotelConfigServlet extends HttpServlet {
 
     private void savePolicy(HttpServletRequest request) throws SQLException {
         HotelPolicy policy = new HotelPolicy();
-        Long id = ValidationUtil.optionalPositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
+        Long id = ValidationUtil.optionalPositiveLong(request.getParameter("id"), "Chính sách");
         if (id != null && id > 0) {
             policy.setId(id);
         }
-        policy.setTitle(ValidationUtil.requireText(request.getParameter("title"), "TiÃªu Ä‘á»", 2, 150));
-        policy.setCategory(ValidationUtil.requireText(request.getParameter("category"), "NhÃ³m chÃ­nh sÃ¡ch", 2, 80));
+
+        policy.setTitle(ValidationUtil.requireText(request.getParameter("title"), "Tiêu đề", 2, 150));
+        policy.setCategory(ValidationUtil.requireText(request.getParameter("category"), "Nhóm chính sách", 2, 80));
+
+        // Cancellation policies store structured refund rules in the content field.
         if (isCancellationPolicy(policy)) {
             policy.setContent(buildCancellationPolicyContent(request));
         } else {
-            policy.setContent(ValidationUtil.requireText(request.getParameter("content"), "Ná»™i dung", 5, 2000));
+            policy.setContent(ValidationUtil.requireText(request.getParameter("content"), "Nội dung", 5, 2000));
         }
-        policy.setStatus(ValidationUtil.requireStatus(request.getParameter("status"), "Tráº¡ng thÃ¡i", Set.of("ACTIVE", "INACTIVE")));
+
+        policy.setStatus(ValidationUtil.requireStatus(request.getParameter("status"), "Trạng thái", Set.of("ACTIVE", "INACTIVE")));
         policyDao.save(policy);
     }
 
     private boolean isCancellationPolicy(HotelPolicy policy) {
         String category = policy.getCategory() == null ? "" : policy.getCategory().toLowerCase(java.util.Locale.ROOT);
         String title = policy.getTitle() == null ? "" : policy.getTitle().toLowerCase(java.util.Locale.ROOT);
-        return category.contains("há»§y") || title.contains("há»§y") || category.contains("huy") || title.contains("huy");
+
+        // Detect cancellation-policy records from either title or category keywords.
+        return category.contains("hủy") || title.contains("hủy") || category.contains("huy") || title.contains("huy");
     }
 
     private String buildCancellationPolicyContent(HttpServletRequest request) {
-        int fullDays = ValidationUtil.requirePositiveInt(request.getParameter("fullRefundDays"), "Sá»‘ ngÃ y hoÃ n 100%");
-        int fullRate = requirePercent(request.getParameter("fullRefundRate"), "Tá»· lá»‡ hoÃ n cao nháº¥t");
-        int partialDays = ValidationUtil.requirePositiveInt(request.getParameter("partialRefundDays"), "Sá»‘ ngÃ y hoÃ n má»™t pháº§n");
-        int partialRate = requirePercent(request.getParameter("partialRefundRate"), "Tá»· lá»‡ hoÃ n má»™t pháº§n");
-        int sameDayRate = requirePercent(request.getParameter("sameDayRefundRate"), "Tá»· lá»‡ hoÃ n trong ngÃ y check-in");
+        int fullDays = ValidationUtil.requirePositiveInt(request.getParameter("fullRefundDays"), "Số ngày hoàn 100%");
+        int fullRate = requirePercent(request.getParameter("fullRefundRate"), "Tỷ lệ hoàn cao nhất");
+        int partialDays = ValidationUtil.requirePositiveInt(request.getParameter("partialRefundDays"), "Số ngày hoàn một phần");
+        int partialRate = requirePercent(request.getParameter("partialRefundRate"), "Tỷ lệ hoàn một phần");
+        int sameDayRate = requirePercent(request.getParameter("sameDayRefundRate"), "Tỷ lệ hoàn trong ngày check-in");
+
         ValidationUtil.requireTrue(fullDays > partialDays,
-                "Má»‘c hoÃ n cao nháº¥t pháº£i lá»›n hÆ¡n má»‘c hoÃ n má»™t pháº§n.");
+                "Mốc hoàn cao nhất phải lớn hơn mốc hoàn một phần.");
         ValidationUtil.requireTrue(fullRate >= partialRate && partialRate >= sameDayRate,
-                "Tá»· lá»‡ hoÃ n tiá»n pháº£i giáº£m dáº§n theo thá»i gian há»§y.");
+                "Tỷ lệ hoàn tiền phải giảm dần theo thời gian hủy.");
+
         return CancellationPolicyService.buildCancellationContent(
                 fullDays, fullRate, partialDays, partialRate, sameDayRate);
     }
@@ -159,15 +174,15 @@ public class HotelConfigServlet extends HttpServlet {
     private int requirePercent(String value, String fieldName) {
         Integer percent = ValidationUtil.optionalPositiveInt(value, fieldName);
         if (percent == null) {
-            throw new IllegalArgumentException(fieldName + " báº¯t buá»™c.");
+            throw new IllegalArgumentException(fieldName + " bắt buộc.");
         }
-        ValidationUtil.requireTrue(percent <= 100, fieldName + " khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ 100%.");
+        ValidationUtil.requireTrue(percent <= 100, fieldName + " không được vượt quá 100%.");
         return percent;
     }
 
     private void togglePolicyStatus(HttpServletRequest request) throws SQLException {
-        long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
-        String status = ValidationUtil.requireStatus(request.getParameter("status"), "Tráº¡ng thÃ¡i", Set.of("ACTIVE", "INACTIVE"));
+        long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
+        String status = ValidationUtil.requireStatus(request.getParameter("status"), "Trạng thái", Set.of("ACTIVE", "INACTIVE"));
         policyDao.updateStatus(id, status);
     }
 

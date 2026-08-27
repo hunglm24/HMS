@@ -7,27 +7,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Nội quy chung khách sạn | HMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260821-1">
-    <style>
-        .public-page { background: #f6f8fb; }
-        .policy-page { max-width: 900px; margin: 0 auto; padding: 24px 0 48px; }
-        .policy-title { margin: 0 0 16px; }
-        .policy-card { background: #fff; border: 1px solid #d9e0ea; border-radius: 12px; padding: 24px; }
-        .policy-content { white-space: pre-line; line-height: 1.9; color: #344054; font-size: 1rem; }
-        .policy-empty { color: #667085; }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/hotel-policy.css?v=20260827-1">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<main class="public-page">
-    <section class="policy-page">
-        <h1 class="policy-title">Nội quy chung khách sạn</h1>
-        <div class="policy-card">
+<main class="policy-guest-page">
+    <section class="policy-guest-shell">
+        <div class="policy-hero policy-hero--public">
+            <div class="policy-hero__overlay"></div>
+            <div class="policy-hero__content">
+                <p class="policy-hero__eyebrow">Privacy Policy</p>
+                <h1>Nội quy chung khách sạn</h1>
+            </div>
+        </div>
+
+        <div class="policy-public-copy">
             <c:choose>
                 <c:when test="${not empty policy}">
-                    <div class="policy-content"><c:out value="${policy.content}" /></div>
+                    <div class="policy-public-intro">
+                        <p class="policy-public-intro__eyebrow">Nội quy</p>
+                        <p class="policy-public-intro__lead">
+                            Đây là bản nội quy chung áp dụng cho toàn khách lưu trú. Vui lòng đọc kỹ trước khi nhận phòng và trong suốt thời gian ở khách sạn.
+                        </p>
+                    </div>
+
+                    <article class="policy-public-article">
+                        <div class="policy-public-article__content">
+                            <c:out value="${policy.displayContent}" />
+                        </div>
+                    </article>
                 </c:when>
                 <c:otherwise>
-                    <div class="policy-empty">Nội quy đang được cập nhật.</div>
+                    <div class="policy-empty policy-empty--public">Nội quy đang được cập nhật.</div>
                 </c:otherwise>
             </c:choose>
         </div>

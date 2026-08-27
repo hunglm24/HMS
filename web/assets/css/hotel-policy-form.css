@@ -1,0 +1,136 @@
+.policy-form-panel {
+    border: 1px solid #d9e0ea;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(20, 38, 70, 0.06);
+    padding: 28px;
+}
+
+.policy-form__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.policy-form__head h1 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.08;
+}
+
+.policy-form__head p {
+    margin: 8px 0 0;
+    color: #526174;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.policy-form {
+    display: grid;
+    gap: 16px;
+}
+
+.policy-form__grid {
+    display: grid;
+    gap: 14px;
+}
+
+.policy-form-field {
+    display: grid;
+    gap: 6px;
+}
+
+.policy-form-field__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.policy-form-field__head label {
+    margin: 0;
+}
+
+.policy-form-quick-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.policy-form-quick-actions .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 14px;
+}
+
+.policy-number-toggle .bi {
+    font-size: 1.65rem;
+    line-height: 1;
+}
+
+.policy-number-toggle[data-state="numbered"]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 18%;
+    width: 64%;
+    height: 3px;
+    border-radius: 999px;
+    background: currentColor;
+    transform: rotate(-40deg);
+    transform-origin: center;
+    pointer-events: none;
+}
+
+.policy-form label {
+    display: grid;
+    gap: 6px;
+    color: #253246;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.policy-form input,
+.policy-form textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #cfd8e3;
+    border-radius: 10px;
+    font: inherit;
+}
+
+.policy-form textarea {
+    min-height: 240px;
+    resize: vertical;
+}
+
+.policy-form__note {
+    margin: 0;
+    color: #6b7a90;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.policy-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 720px) {
+    .policy-form-panel {
+        padding: 18px;
+    }
+
+    .policy-form__head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

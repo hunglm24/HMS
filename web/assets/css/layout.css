@@ -547,6 +547,26 @@ td .placeholder-actions {
     color: var(--color-text-secondary);
 }
 
+.footer-links {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: var(--color-text-secondary);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: var(--color-text-primary);
+    text-decoration: none;
+}
+
 body .internal-sidebar .site-footer {
     margin-left: 260px;
 }
@@ -611,6 +631,10 @@ body .internal-sidebar .site-footer {
     .footer-inner {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .footer-links {
+        justify-content: flex-start;
     }
 
     .tabs {

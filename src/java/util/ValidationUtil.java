@@ -3,6 +3,7 @@ package util;
 import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public final class ValidationUtil {
     // Utility class; do not instantiate.
@@ -40,6 +41,22 @@ public final class ValidationUtil {
         if (text.length() < minLength || text.length() > maxLength) {
             throw new IllegalArgumentException(fieldName + " phai co do dai tu " + minLength
                     + " den " + maxLength + " ky tu.");
+        }
+        return text;
+    }
+
+    // Require a non-empty text value that also matches an allowed regex.
+    public static String requirePatternText(
+            String value,
+            String fieldName,
+            int minLength,
+            int maxLength,
+            Pattern pattern,
+            String invalidMessage
+    ) {
+        String text = requireText(value, fieldName, minLength, maxLength);
+        if (pattern != null && !pattern.matcher(text).matches()) {
+            throw new IllegalArgumentException(invalidMessage);
         }
         return text;
     }
