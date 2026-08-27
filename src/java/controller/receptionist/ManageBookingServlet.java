@@ -155,12 +155,6 @@ public class ManageBookingServlet extends HttpServlet {
                                                 canProceed = false;
                                                 errorMessage = "Không thể Check-in! Một số phòng chưa sẵn sàng (Trạng thái hiện tại: " + physicalStatus + ").";
                                                 break;
-                                            } else {
-                                                // Update room physical status to OCCUPIED
-                                                try (java.sql.PreparedStatement updatePs = conn.prepareStatement("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?")) {
-                                                    updatePs.setLong(1, roomId);
-                                                    updatePs.executeUpdate();
-                                                }
                                             }
                                         }
                                     }
