@@ -249,7 +249,7 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Nhật ký</span><h3>Lịch sử dọn phòng</h3><p>Xem lại các công việc kiểm tra và dọn dẹp đã hoàn tất.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/issues"><span>Bảo trì</span><h3>Sự cố thiết bị</h3><p>Báo cáo hư hỏng và kiểm tra bảo trì thiết bị trong phòng.</p></a>
         <% } else if ("HOTEL_MANAGER".equalsIgnoreCase(role)) { %>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Báo cáo vận hành</h3><p>Theo dõi doanh thu, công suất phòng và hiệu suất hoạt động.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/dashboard"><span>Báo cáo</span><h3>Báo cáo vận hành</h3><p>Theo dõi doanh thu, công suất phòng và hiệu suất hoạt động.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Xem sơ đồ phòng, trạng thái phòng và thiết bị phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/housekeeping"><span>Dọn phòng</span><h3>Lịch sử dọn phòng</h3><p>Theo dõi tiến độ kiểm tra và công việc dọn dẹp phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/issues"><span>Sự cố</span><h3>Sự cố thiết bị</h3><p>Theo dõi và nghiệm thu các thiết bị cần sửa chữa.</p></a>
