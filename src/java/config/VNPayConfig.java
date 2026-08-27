@@ -2,6 +2,8 @@ package config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -119,6 +121,15 @@ public class VNPayConfig {
 
     private static Properties loadLocalProperties() {
         Properties properties = new Properties();
+        String configuredPath = System.getProperty("hms.vnpay.config.file", "").trim();
+        if (!configuredPath.isEmpty()) {
+            try (java.io.InputStream input = Files.newInputStream(Path.of(configuredPath))) {
+                properties.load(input);
+                return properties;
+            } catch (java.io.IOException ignored) {
+                // Fall back to a classpath resource or environment variables.
+            }
+        }
         try (java.io.InputStream input = VNPayConfig.class.getResourceAsStream(
                 "/config/vnpay-local.properties")) {
             if (input != null) properties.load(input);

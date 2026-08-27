@@ -114,6 +114,10 @@ public class GoogleAuthServlet extends HttpServlet {
     }
 
     private String callbackUrl(HttpServletRequest request) {
+        String configured = System.getenv("HMS_GOOGLE_REDIRECT_URI");
+        if (configured != null && !configured.isBlank()) {
+            return configured.trim();
+        }
         int port = request.getServerPort();
         return request.getScheme() + "://" + request.getServerName()
                 + ((port == 80 || port == 443) ? "" : ":" + port)

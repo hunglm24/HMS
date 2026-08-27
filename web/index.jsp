@@ -1,4 +1,10 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    if (request != null) {
+        request.getRequestDispatcher("/WEB-INF/views/public/home.jsp").forward(request, response);
+        return;
+    }
+%>
 <%!
     private String indexBeanString(Object bean, String getterName) {
         if (bean == null) return "";
