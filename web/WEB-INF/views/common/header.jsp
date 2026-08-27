@@ -74,7 +74,7 @@
             <% } %>
 
             <% if (manager) { %>
-                <a href="<%= contextPath %>/manager/reports">Báo cáo</a>
+
                 <a href="<%= contextPath %>/manager/rooms">Phòng</a>
                 <a href="<%= contextPath %>/manager/room-types">Loại phòng</a>
                 <a href="<%= contextPath %>/manager/housekeeping">Lịch sử dọn phòng</a>

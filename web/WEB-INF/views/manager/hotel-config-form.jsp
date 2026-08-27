@@ -57,7 +57,7 @@
             <h1>${isEdit ? 'Sửa chính sách' : 'Tạo chính sách'}</h1>
             <p>${isEdit ? 'Cập nhật nội dung chính sách đang áp dụng.' : 'Nhập chính sách mới do manager quản lý.'}</p>
         </div>
-        <a class="btn btn-secondary" href="${cp}/manager/policies">Quay lại danh sách</a>
+        <a class="btn btn-secondary" href="${cp}/manager/hotel-configs">Quay lại danh sách</a>
     </section>
 
     <section class="manager-section">
@@ -70,7 +70,7 @@
             <p>Có thể tạo các chính sách như hủy phòng, hoàn tiền, check-in, check-out hoặc đặt cọc.</p>
         </div>
 
-        <form class="manager-form" method="post" action="${cp}/manager/policies/save">
+        <form class="manager-form" method="post" action="${cp}/manager/hotel-configs/save">
             <c:if test="${isEdit}">
                 <input type="hidden" name="id" value="${policy.id}">
             </c:if>
@@ -102,7 +102,7 @@
             </div>
             <label class="span-4">Nội dung hiển thị<textarea name="content" maxlength="2000" readonly data-policy-preview>${policy.displayContent}</textarea></label>
             <div class="form-actions span-4">
-                <a class="btn btn-secondary" href="${cp}/manager/policies">Hủy</a>
+                <a class="btn btn-secondary" href="${cp}/manager/hotel-configs">Hủy</a>
                 <button class="btn" type="submit">${isEdit ? 'Lưu thay đổi' : 'Tạo chính sách'}</button>
             </div>
         </form>

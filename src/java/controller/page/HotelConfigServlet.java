@@ -16,36 +16,36 @@ import java.sql.SQLException;
 import java.util.Set;
 
 @WebServlet(urlPatterns = {
-        "/manager/policies",
-        "/manager/policies/create",
-        "/manager/policies/edit",
-        "/manager/policies/save",
-        "/manager/policies/toggle-status",
-        "/manager/policies/delete"
+        "/manager/hotel-configs",
+        "/manager/hotel-configs/create",
+        "/manager/hotel-configs/edit",
+        "/manager/hotel-configs/save",
+        "/manager/hotel-configs/toggle-status",
+        "/manager/hotel-configs/delete"
 })
-public class PolicyServlet extends HttpServlet {
+public class HotelConfigServlet extends HttpServlet {
     private final HotelPolicyDao policyDao = new HotelPolicyDao();
     private final AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if ("/manager/policies/create".equals(request.getServletPath())) {
-            request.getRequestDispatcher("/WEB-INF/views/manager/policy-form.jsp").forward(request, response);
+        if ("/manager/hotel-configs/create".equals(request.getServletPath())) {
+            request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-form.jsp").forward(request, response);
             return;
         }
-        if ("/manager/policies/edit".equals(request.getServletPath())) {
+        if ("/manager/hotel-configs/edit".equals(request.getServletPath())) {
             try {
                 prepareEditPage(request);
-                request.getRequestDispatcher("/WEB-INF/views/manager/policy-form.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-form.jsp").forward(request, response);
             } catch (IllegalArgumentException ex) {
                 flash(request, ex.getMessage(), "error");
-                response.sendRedirect(request.getContextPath() + "/manager/policies");
+                response.sendRedirect(request.getContextPath() + "/manager/hotel-configs");
             }
             return;
         }
         preparePage(request);
-        request.getRequestDispatcher("/WEB-INF/views/manager/policies.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-list.jsp").forward(request, response);
     }
 
     @Override
@@ -57,35 +57,35 @@ public class PolicyServlet extends HttpServlet {
             return;
         }
         try {
-            if ("/manager/policies/save".equals(request.getServletPath())) {
+            if ("/manager/hotel-configs/save".equals(request.getServletPath())) {
                 String idRaw = request.getParameter("id");
                 savePolicy(request);
                 auditLogService.log(request, ValidationUtil.isBlank(idRaw) ? "CREATE_POLICY" : "UPDATE_POLICY",
-                        "POLICY", ValidationUtil.optionalPositiveLong(idRaw, "Chính sách"),
+                        "POLICY", ValidationUtil.optionalPositiveLong(idRaw, "ChÃ­nh sÃ¡ch"),
                         "Saved policy " + request.getParameter("title"));
-                flash(request, "Đã lưu chính sách.", "success");
-            } else if ("/manager/policies/toggle-status".equals(request.getServletPath())) {
-                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
+                flash(request, "ÄÃ£ lÆ°u chÃ­nh sÃ¡ch.", "success");
+            } else if ("/manager/hotel-configs/toggle-status".equals(request.getServletPath())) {
+                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
                 togglePolicyStatus(request);
                 auditLogService.log(request, "TOGGLE_POLICY_STATUS", "POLICY", id,
                         "Changed policy status to " + request.getParameter("status"));
-                flash(request, "Đã cập nhật trạng thái chính sách.", "success");
-            } else if ("/manager/policies/delete".equals(request.getServletPath())) {
-                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
+                flash(request, "ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i chÃ­nh sÃ¡ch.", "success");
+            } else if ("/manager/hotel-configs/delete".equals(request.getServletPath())) {
+                long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
                 policyDao.delete(id);
                 auditLogService.log(request, "DELETE_POLICY", "POLICY", id, "Deleted policy");
-                flash(request, "Đã xóa chính sách.", "success");
+                flash(request, "ÄÃ£ xÃ³a chÃ­nh sÃ¡ch.", "success");
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-            response.sendRedirect(request.getContextPath() + "/manager/policies");
+            response.sendRedirect(request.getContextPath() + "/manager/hotel-configs");
         } catch (IllegalArgumentException ex) {
             flash(request, ex.getMessage(), "error");
             String id = request.getParameter("id");
-            String redirectPath = "/manager/policies/save".equals(request.getServletPath())
-                    ? (ValidationUtil.isBlank(id) ? "/manager/policies/create" : "/manager/policies/edit?id=" + id)
-                    : "/manager/policies";
+            String redirectPath = "/manager/hotel-configs/save".equals(request.getServletPath())
+                    ? (ValidationUtil.isBlank(id) ? "/manager/hotel-configs/create" : "/manager/hotel-configs/edit?id=" + id)
+                    : "/manager/hotel-configs";
             response.sendRedirect(request.getContextPath() + redirectPath);
         } catch (SQLException ex) {
             throw new ServletException("Cannot update hotel policy", ex);
@@ -94,9 +94,9 @@ public class PolicyServlet extends HttpServlet {
 
     private void prepareEditPage(HttpServletRequest request) throws ServletException {
         try {
-            long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
+            long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
             HotelPolicy policy = policyDao.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chính sách."));
+                    .orElseThrow(() -> new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y chÃ­nh sÃ¡ch."));
             request.setAttribute("policy", policy);
             request.setAttribute("cancellationRule",
                     CancellationPolicyService.parseRuleOrDefault(policy.getContent()));
@@ -121,37 +121,37 @@ public class PolicyServlet extends HttpServlet {
 
     private void savePolicy(HttpServletRequest request) throws SQLException {
         HotelPolicy policy = new HotelPolicy();
-        Long id = ValidationUtil.optionalPositiveLong(request.getParameter("id"), "Chính sách");
+        Long id = ValidationUtil.optionalPositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
         if (id != null && id > 0) {
             policy.setId(id);
         }
-        policy.setTitle(ValidationUtil.requireText(request.getParameter("title"), "Tiêu đề", 2, 150));
-        policy.setCategory(ValidationUtil.requireText(request.getParameter("category"), "Nhóm chính sách", 2, 80));
+        policy.setTitle(ValidationUtil.requireText(request.getParameter("title"), "TiÃªu Ä‘á»", 2, 150));
+        policy.setCategory(ValidationUtil.requireText(request.getParameter("category"), "NhÃ³m chÃ­nh sÃ¡ch", 2, 80));
         if (isCancellationPolicy(policy)) {
             policy.setContent(buildCancellationPolicyContent(request));
         } else {
-            policy.setContent(ValidationUtil.requireText(request.getParameter("content"), "Nội dung", 5, 2000));
+            policy.setContent(ValidationUtil.requireText(request.getParameter("content"), "Ná»™i dung", 5, 2000));
         }
-        policy.setStatus(ValidationUtil.requireStatus(request.getParameter("status"), "Trạng thái", Set.of("ACTIVE", "INACTIVE")));
+        policy.setStatus(ValidationUtil.requireStatus(request.getParameter("status"), "Tráº¡ng thÃ¡i", Set.of("ACTIVE", "INACTIVE")));
         policyDao.save(policy);
     }
 
     private boolean isCancellationPolicy(HotelPolicy policy) {
         String category = policy.getCategory() == null ? "" : policy.getCategory().toLowerCase(java.util.Locale.ROOT);
         String title = policy.getTitle() == null ? "" : policy.getTitle().toLowerCase(java.util.Locale.ROOT);
-        return category.contains("hủy") || title.contains("hủy") || category.contains("huy") || title.contains("huy");
+        return category.contains("há»§y") || title.contains("há»§y") || category.contains("huy") || title.contains("huy");
     }
 
     private String buildCancellationPolicyContent(HttpServletRequest request) {
-        int fullDays = ValidationUtil.requirePositiveInt(request.getParameter("fullRefundDays"), "Số ngày hoàn 100%");
-        int fullRate = requirePercent(request.getParameter("fullRefundRate"), "Tỷ lệ hoàn cao nhất");
-        int partialDays = ValidationUtil.requirePositiveInt(request.getParameter("partialRefundDays"), "Số ngày hoàn một phần");
-        int partialRate = requirePercent(request.getParameter("partialRefundRate"), "Tỷ lệ hoàn một phần");
-        int sameDayRate = requirePercent(request.getParameter("sameDayRefundRate"), "Tỷ lệ hoàn trong ngày check-in");
+        int fullDays = ValidationUtil.requirePositiveInt(request.getParameter("fullRefundDays"), "Sá»‘ ngÃ y hoÃ n 100%");
+        int fullRate = requirePercent(request.getParameter("fullRefundRate"), "Tá»· lá»‡ hoÃ n cao nháº¥t");
+        int partialDays = ValidationUtil.requirePositiveInt(request.getParameter("partialRefundDays"), "Sá»‘ ngÃ y hoÃ n má»™t pháº§n");
+        int partialRate = requirePercent(request.getParameter("partialRefundRate"), "Tá»· lá»‡ hoÃ n má»™t pháº§n");
+        int sameDayRate = requirePercent(request.getParameter("sameDayRefundRate"), "Tá»· lá»‡ hoÃ n trong ngÃ y check-in");
         ValidationUtil.requireTrue(fullDays > partialDays,
-                "Mốc hoàn cao nhất phải lớn hơn mốc hoàn một phần.");
+                "Má»‘c hoÃ n cao nháº¥t pháº£i lá»›n hÆ¡n má»‘c hoÃ n má»™t pháº§n.");
         ValidationUtil.requireTrue(fullRate >= partialRate && partialRate >= sameDayRate,
-                "Tỷ lệ hoàn tiền phải giảm dần theo thời gian hủy.");
+                "Tá»· lá»‡ hoÃ n tiá»n pháº£i giáº£m dáº§n theo thá»i gian há»§y.");
         return CancellationPolicyService.buildCancellationContent(
                 fullDays, fullRate, partialDays, partialRate, sameDayRate);
     }
@@ -159,15 +159,15 @@ public class PolicyServlet extends HttpServlet {
     private int requirePercent(String value, String fieldName) {
         Integer percent = ValidationUtil.optionalPositiveInt(value, fieldName);
         if (percent == null) {
-            throw new IllegalArgumentException(fieldName + " bắt buộc.");
+            throw new IllegalArgumentException(fieldName + " báº¯t buá»™c.");
         }
-        ValidationUtil.requireTrue(percent <= 100, fieldName + " không được vượt quá 100%.");
+        ValidationUtil.requireTrue(percent <= 100, fieldName + " khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ 100%.");
         return percent;
     }
 
     private void togglePolicyStatus(HttpServletRequest request) throws SQLException {
-        long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
-        String status = ValidationUtil.requireStatus(request.getParameter("status"), "Trạng thái", Set.of("ACTIVE", "INACTIVE"));
+        long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "ChÃ­nh sÃ¡ch");
+        String status = ValidationUtil.requireStatus(request.getParameter("status"), "Tráº¡ng thÃ¡i", Set.of("ACTIVE", "INACTIVE"));
         policyDao.updateStatus(id, status);
     }
 
