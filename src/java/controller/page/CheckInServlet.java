@@ -51,15 +51,14 @@ public class CheckInServlet extends HttpServlet {
             if (selectedBooking != null) {
                 java.util.List<java.util.Map<String, Object>> assignments = new java.util.ArrayList<>();
                 try (java.sql.Connection conn = util.DBConnectionUtil.getConnection()) {
-                                // Fetch all available rooms across all room types
+                                // in ra tât ca cac phong
                                 java.util.Map<Long, java.util.List<model.Room>> availableRoomsByTypeId = new java.util.HashMap<>();
                                 
-                                // Gọi chung hàm từ RoomDao để tránh duplicate code SQL (DRY Principle)
+                                // Gọi chung hàm từ roomdao
                                 dao.RoomDao roomDao = new dao.RoomDao();
                                 java.time.LocalDate checkIn = new java.sql.Date(selectedBooking.getCheckInDate().getTime()).toLocalDate();
                                 java.time.LocalDate checkOut = new java.sql.Date(selectedBooking.getCheckOutDate().getTime()).toLocalDate();
-                                
-                                // Truyền null cho tham số roomTypeId để lấy TẤT CẢ các hạng phòng
+                                // 
                                 java.util.List<model.Room> allAvailRooms = roomDao.findAvailablePhysicalRooms(checkIn, checkOut, null, (long)bookingId);
                                 
                                 for(model.Room r : allAvailRooms) {
@@ -93,7 +92,11 @@ public class CheckInServlet extends HttpServlet {
                 request.setAttribute("assignments", assignments);
             }
             
-            request.getRequestDispatcher("/WEB-INF/views/reception/check-in.jsp").forward(request, response);
+            if ("true".equals(request.getParameter("modal"))) {
+                request.getRequestDispatcher("/WEB-INF/views/reception/check-in-modal.jsp").forward(request, response);
+            } else {
+                request.getRequestDispatcher("/WEB-INF/views/reception/check-in.jsp").forward(request, response);
+            }
         } catch (SQLException ex) {
             getServletContext().log("Không thể tải danh sách booking check-in", ex);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

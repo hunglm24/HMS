@@ -109,7 +109,7 @@
                     <c:if test="${!managerView}"><button class="btn btn-secondary" type="button" style="color:var(--color-error-600);" onclick="openRejectModal('${b.bookingId}')">Từ chối</button></c:if>
                 </c:if>
                 <c:if test="${!managerView && b.status == 'CONFIRMED'}">
-                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/reception/check-in?bookingId=${b.bookingId}">Check-in</a>
+                    <button class="btn btn-primary" onclick="openCheckInModal(${b.bookingId})">Check-in</button>
                 </c:if>
                 <c:if test="${!managerView && b.status == 'CHECKED_IN'}">
                     <a class="btn btn-primary" style="background-color: var(--color-warning-600);" href="${pageContext.request.contextPath}/reception/check-out?bookingId=${b.bookingId}#selected-booking">Trả phòng</a>
@@ -181,4 +181,18 @@
     }
 </script>
 
-</main></body></html>
+</main><dialog id="checkInDialog" style="width: 1000px; max-width: 95vw; border: none; border-radius: 12px; padding: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+        <h3 style="margin: 0; font-size: 1.125rem;">Thủ tục Check-in</h3>
+        <button onclick="document.getElementById('checkInDialog').close()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+    </div>
+    <iframe id="checkInIframe" src="" style="width: 100%; height: 500px; max-height: 80vh; border: none; display: block;"></iframe>
+</dialog>
+<script>
+function openCheckInModal(bookingId) {
+    document.getElementById('checkInIframe').src = '${pageContext.request.contextPath}/reception/check-in?bookingId=' + bookingId + '&modal=true';
+    document.getElementById('checkInDialog').showModal();
+}
+</script>
+
+</body></html>
