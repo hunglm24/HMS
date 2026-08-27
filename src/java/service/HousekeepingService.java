@@ -134,10 +134,19 @@ public class HousekeepingService {
         String block = note;
         int start = note.indexOf(TASKS_START);
         int end = note.indexOf(TASKS_END);
+        if (start < 0) {
+            start = note.indexOf("[===TASKS===]");
+            if (start >= 0) start += "[===TASKS===]".length();
+            end = note.indexOf("[===END_TASKS===]");
+        } else {
+            start += TASKS_START.length();
+        }
+
         if (start >= 0 && end > start) {
-            block = note.substring(start + TASKS_START.length(), end).trim();
+            block = note.substring(start, end).trim();
         } else {
             int noteMarker = note.indexOf(NOTE_START);
+            if (noteMarker < 0) noteMarker = note.indexOf("[===NOTE===]");
             if (noteMarker >= 0) {
                 block = note.substring(0, noteMarker).trim();
             }
@@ -146,7 +155,7 @@ public class HousekeepingService {
         List<HousekeepingTask.WorkItem> result = new ArrayList<>();
         for (String rawLine : block.split("\\R")) {
             String line = rawLine.trim();
-            if (line.isEmpty() || line.startsWith("[") && line.endsWith("]") && !line.startsWith("[x]") && !line.startsWith("[X]") && !line.startsWith("[ ]")) {
+            if (line.isEmpty() || (line.startsWith("[") && line.endsWith("]") && !line.startsWith("[x]") && !line.startsWith("[X]") && !line.startsWith("[ ]"))) {
                 continue;
             }
 
@@ -169,6 +178,11 @@ public class HousekeepingService {
                 itemName = itemName.substring(2).trim();
             } else if (itemName.startsWith("-") || itemName.startsWith("*") || itemName.startsWith("+") || itemName.startsWith("•")) {
                 itemName = itemName.substring(1).trim();
+            }
+
+            // Exclude fallback labels or dummy headers from becoming work items
+            if ("Dọn phòng sau checkout".equalsIgnoreCase(itemName)) {
+                continue;
             }
 
             if (!itemName.isEmpty()) {
@@ -210,13 +224,25 @@ public class HousekeepingService {
         int marker = note.indexOf(NOTE_START);
         if (marker >= 0) {
             String message = note.substring(marker + NOTE_START.length()).trim();
-            return message.isEmpty() ? null : message;
+            return isMeaningfulNote(message) ? message : null;
+        }
+        marker = note.indexOf("[===NOTE===]");
+        if (marker >= 0) {
+            String message = note.substring(marker + "[===NOTE===]".length()).trim();
+            return isMeaningfulNote(message) ? message : null;
         }
         int start = note.indexOf(TASKS_START);
         int end = note.indexOf(TASKS_END);
-        if (start >= 0 && end > start) {
+        if (start < 0) {
+            start = note.indexOf("[===TASKS===]");
+            end = note.indexOf("[===END_TASKS===]");
+            if (start >= 0 && end > start) {
+                String outside = note.substring(end + "[===END_TASKS===]".length()).trim();
+                return isMeaningfulNote(outside) ? outside : null;
+            }
+        } else if (end > start) {
             String outside = note.substring(end + TASKS_END.length()).trim();
-            return outside.isEmpty() ? null : outside;
+            return isMeaningfulNote(outside) ? outside : null;
         }
         boolean isChecklist = false;
         for (String line : note.split("\\R")) {
@@ -229,7 +255,13 @@ public class HousekeepingService {
         if (isChecklist) {
             return null;
         }
-        return note.trim();
+        return isMeaningfulNote(note.trim()) ? note.trim() : null;
+    }
+
+    private boolean isMeaningfulNote(String message) {
+        if (message == null || message.isBlank()) return false;
+        String clean = message.trim();
+        return !"Dọn phòng sau checkout".equalsIgnoreCase(clean);
     }
 
         private String buildCleaningNote(List<String> selectedItems, String customTasks, String message) {

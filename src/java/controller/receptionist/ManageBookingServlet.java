@@ -338,7 +338,9 @@ public class ManageBookingServlet extends HttpServlet {
                                             }
                                         }
                                         if (cleanNote == null || cleanNote.isBlank()) {
-                                            cleanNote = "[===TASKS===]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[===END_TASKS===]\n[===NOTE===]\nDọn phòng sau checkout";
+                                            cleanNote = "[CLEANING_TASKS]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[/CLEANING_TASKS]";
+                                        } else if (!cleanNote.contains("[CLEANING_TASKS]") && !cleanNote.contains("[===TASKS===]")) {
+                                            cleanNote = "[CLEANING_TASKS]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[/CLEANING_TASKS]\n[INSPECTION_NOTE]\n" + cleanNote.trim();
                                         }
 
                                         String insertCleanTaskSql = "INSERT INTO housekeeping_tasks (room_id, booking_room_id, assigned_to, task_type, priority, status, note, created_at) VALUES (?, ?, ?, 'CLEANING', 'NORMAL', 'PENDING', ?, CURRENT_TIMESTAMP)";
