@@ -11,17 +11,18 @@ import dao.BookingDao;
 import model.CheckInBookingSummary;
 import java.util.List;
 import java.sql.SQLException;
-import service.AuditLogService;
 
-@WebServlet(name = "ManageBookingServlet", urlPatterns = {"/reception/bookings"})
+@WebServlet(name = "ManageBookingServlet", urlPatterns = {"/reception/bookings", "/manager/bookings"})
 public class ManageBookingServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private BookingDao bookingDao = new BookingDao();
-    private AuditLogService auditLogService = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        boolean managerView = request.getServletPath().startsWith("/manager/");
+        request.setAttribute("managerView", managerView);
+        request.setAttribute("bookingBasePath", managerView ? "/manager/bookings" : "/reception/bookings");
         try {
             String keyword = request.getParameter("keyword");
             String status = request.getParameter("status");
@@ -64,6 +65,7 @@ public class ManageBookingServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        boolean managerView = request.getServletPath().startsWith("/manager/");
         String action = request.getParameter("action");
         String idStr = request.getParameter("id");
         if (idStr != null && action != null) {
@@ -72,7 +74,6 @@ public class ManageBookingServlet extends HttpServlet {
                 
                 if ("CONFIRM".equals(action)) {
                     bookingDao.updateBookingStatus(bookingId, "CONFIRMED");
-                    auditLogService.log(request, "CONFIRM_BOOKING", "BOOKING", bookingId, "Confirmed booking " + bookingId);
                     request.getSession().setAttribute("toastMessage", "Đã xác nhận đặt phòng.");
                     request.getSession().setAttribute("toastType", "toast-success");
                 } else if ("REJECT".equals(action)) {
@@ -83,7 +84,6 @@ public class ManageBookingServlet extends HttpServlet {
                         reason = "Lễ tân từ chối: " + reason;
                     }
                     bookingDao.cancelBooking(bookingId, reason);
-                    auditLogService.log(request, "CANCEL_BOOKING", "BOOKING", bookingId, reason);
                     request.getSession().setAttribute("toastMessage", "Đã hủy đặt phòng.");
                     request.getSession().setAttribute("toastType", "toast-success");
                 } else if ("CHECK_IN".equals(action)) {
@@ -155,12 +155,6 @@ public class ManageBookingServlet extends HttpServlet {
                                                 canProceed = false;
                                                 errorMessage = "Không thể Check-in! Một số phòng chưa sẵn sàng (Trạng thái hiện tại: " + physicalStatus + ").";
                                                 break;
-                                            } else {
-                                                // Update room physical status to OCCUPIED
-                                                try (java.sql.PreparedStatement updatePs = conn.prepareStatement("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?")) {
-                                                    updatePs.setLong(1, roomId);
-                                                    updatePs.executeUpdate();
-                                                }
                                             }
                                         }
                                     }
@@ -173,7 +167,6 @@ public class ManageBookingServlet extends HttpServlet {
                                     ps.executeUpdate();
                                 }
                                 conn.commit();
-                                auditLogService.log(request, "CHECK_IN_BOOKING", "BOOKING", bookingId, "Checked in booking " + bookingId);
                                 request.getSession().setAttribute("toastMessage", "Check-in thành công.");
                                 request.getSession().setAttribute("toastType", "toast-success");
                             } else {
@@ -241,7 +234,6 @@ public class ManageBookingServlet extends HttpServlet {
                             }
 
                             conn.commit();
-                            auditLogService.log(request, "REQUEST_CHECKOUT", "BOOKING", bookingId, "Requested checkout for booking " + bookingId);
                             request.getSession().setAttribute("toastMessage", "Đã gửi yêu cầu kiểm tra phòng sang Nhân viên dọn dẹp. Phòng đang ở trạng thái Kiểm tra (Inspection).");
                             request.getSession().setAttribute("toastType", "toast-success");
                         } catch (Exception e) {
@@ -340,7 +332,9 @@ public class ManageBookingServlet extends HttpServlet {
                                             }
                                         }
                                         if (cleanNote == null || cleanNote.isBlank()) {
-                                            cleanNote = "[===TASKS===]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[===END_TASKS===]\n[===NOTE===]\nDọn phòng sau checkout";
+                                            cleanNote = "[CLEANING_TASKS]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[/CLEANING_TASKS]";
+                                        } else if (!cleanNote.contains("[CLEANING_TASKS]") && !cleanNote.contains("[===TASKS===]")) {
+                                            cleanNote = "[CLEANING_TASKS]\n[ ] Dọn vệ sinh tổng quát và kiểm tra lại phòng\n[/CLEANING_TASKS]\n[INSPECTION_NOTE]\n" + cleanNote.trim();
                                         }
 
                                         String insertCleanTaskSql = "INSERT INTO housekeeping_tasks (room_id, booking_room_id, assigned_to, task_type, priority, status, note, created_at) VALUES (?, ?, ?, 'CLEANING', 'NORMAL', 'PENDING', ?, CURRENT_TIMESTAMP)";
@@ -389,8 +383,6 @@ public class ManageBookingServlet extends HttpServlet {
                             }
 
                             conn.commit();
-                            auditLogService.log(request, "CHECK_OUT_BOOKING", "BOOKING", bookingId,
-                                    "Completed checkout for booking " + bookingId + ", extra payment=" + totalExtra);
                             request.getSession().setAttribute("toastMessage", "Check-out hoàn tất thành công. Phòng đã chuyển sang trạng thái chờ dọn dẹp (Cleaning).");
                             request.getSession().setAttribute("toastType", "toast-success");
                         } catch (Exception e) {
@@ -408,7 +400,8 @@ public class ManageBookingServlet extends HttpServlet {
         if (redirect != null && !redirect.trim().isEmpty()) {
             response.sendRedirect(request.getContextPath() + redirect);
         } else {
-            response.sendRedirect(request.getContextPath() + "/reception/bookings");
+            response.sendRedirect(request.getContextPath()
+                    + (managerView ? "/manager/bookings" : "/reception/bookings"));
         }
     }
 

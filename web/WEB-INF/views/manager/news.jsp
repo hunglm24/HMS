@@ -56,14 +56,6 @@
         </div>
       </section>
 
-      <c:if test="${not empty sessionScope.toastMessage}">
-        <div class="toast ${sessionScope.toastType}">
-          <c:out value="${sessionScope.toastMessage}" />
-        </div>
-        <c:remove var="toastMessage" scope="session" />
-        <c:remove var="toastType" scope="session" />
-      </c:if>
-
       <section class="room-management-content">
         <section class="room-management-panel panel">
           <div class="room-management-toolbar">
@@ -114,7 +106,7 @@
                         <td style="text-align: center;">
                           <c:choose>
                             <c:when test="${not empty n.thumbnailUrl}">
-                              <img src="${n.thumbnailUrl}" class="news-thumb-img" alt="Thumbnail">
+                              <img src="${fn:startsWith(n.thumbnailUrl, '/') ? cp.concat(n.thumbnailUrl) : n.thumbnailUrl}" class="news-thumb-img" alt="Thumbnail">
                             </c:when>
                             <c:otherwise>
                               <div class="news-thumb-fallback">No Pic</div>

@@ -47,11 +47,11 @@
     <title><%= pageTitle %> | HMS</title>
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260821-1">
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260821-1">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260821-1">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260825-1">
 </head>
-<body>
+<body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<main class="hk-page">
+<main class="page-container hk-page">
     <section class="hk-hero">
         <div>
             <p class="hk-eyebrow"><%= isManager ? "Quản lý khách sạn" : "Vận hành phòng" %></p>
@@ -130,7 +130,7 @@
                     <th class="<%= sortClass(result,"taskType") %>"><a href="<%= sortUrl(result,"taskType", baseUrl) %>">Công việc</a></th>
                     <th class="<%= sortClass(result,"time") %>"><a href="<%= sortUrl(result,"time", baseUrl) %>">Thời gian</a></th>
                     <% if (isManager) { %>
-                    <th class="<%= sortClass(result,"assigned_to") %>"><a href="<%= sortUrl(result,"assigned_to", baseUrl) %>">Người phụ trách</a></th>
+                    <th class="<%= sortClass(result,"assigned_to") %>"><a href="<%= sortUrl(result,"assigned_to", baseUrl) %>">Người kiểm tra</a></th>
                     <% } %>
                     <th class="<%= sortClass(result,"status") %>"><a href="<%= sortUrl(result,"status", baseUrl) %>">Trạng thái</a></th>
                     <th><span class="sr-only">Thao tác</span></th>
@@ -154,7 +154,7 @@
                         </span>
                     </td>
                     <% if (isManager) { %>
-                    <td data-label="Người phụ trách">
+                    <td data-label="Người kiểm tra">
                         <%= task.getAssignedStaffName() != null ? HousekeepingTask.esc(task.getAssignedStaffName()) : "<span style='color:#94a3b8; font-style:italic;'>Chưa phân công</span>" %>
                     </td>
                     <% } %>

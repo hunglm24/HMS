@@ -139,15 +139,16 @@
             <a class="preview-card" href="${pageContext.request.contextPath}/reception/room-map"><span>Phòng</span><h3>Sơ đồ phòng</h3><p>Xem trạng thái phòng theo tầng để điều phối nhanh.</p></a>
         <% } %>
         <% if (housekeeping) { %>
-            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=mine"><span>Buồng phòng</span><h3>Task của tôi</h3><p>Nhận và cập nhật các việc dọn phòng, kiểm tra checkout.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Lịch sử</span><h3>Đã xử lý</h3><p>Xem lại các task đã hoàn thành hoặc đã hủy.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/issues"><span>Sự cố</span><h3>Thiết bị phòng</h3><p>Báo cáo hỏng, mất hoặc cần bảo trì thiết bị.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=mine"><span>Nhiệm vụ</span><h3>Task của tôi</h3><p>Nhận và cập nhật các việc dọn phòng, kiểm tra checkout.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/tasks?view=history"><span>Lịch sử</span><h3>Lịch sử dọn phòng</h3><p>Xem lại các task đã hoàn thành hoặc đã hủy.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/housekeeping/issues"><span>Sự cố</span><h3>Sự cố thiết bị</h3><p>Báo cáo hỏng, mất hoặc cần bảo trì thiết bị.</p></a>
         <% } %>
         <% if (manager) { %>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/reports"><span>Báo cáo</span><h3>Doanh thu và công suất</h3><p>Theo dõi kết quả vận hành và hiệu suất phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/dashboard"><span>Báo cáo</span><h3>Báo cáo vận hành</h3><p>Theo dõi kết quả vận hành và hiệu suất phòng.</p></a>
             <a class="preview-card" href="${pageContext.request.contextPath}/manager/rooms"><span>Phòng</span><h3>Quản lý phòng</h3><p>Quản lý phòng vật lý, tầng và trạng thái phòng.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/housekeeping"><span>Buồng phòng</span><h3>Điều phối task</h3><p>Theo dõi workload và lịch sử dọn phòng.</p></a>
-            <a class="preview-card" href="${pageContext.request.contextPath}/manager/invoices"><span>Hóa đơn</span><h3>Quản lý hóa đơn</h3><p>Kiểm tra công nợ, thanh toán và hóa đơn gần đây.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/housekeeping"><span>Dọn phòng</span><h3>Lịch sử dọn phòng</h3><p>Theo dõi tiến độ kiểm tra và công việc dọn dẹp phòng.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/issues"><span>Sự cố</span><h3>Sự cố thiết bị</h3><p>Theo dõi và nghiệm thu các thiết bị cần sửa chữa.</p></a>
+            <a class="preview-card" href="${pageContext.request.contextPath}/manager/feedbacks"><span>Đánh giá</span><h3>Đánh giá khách hàng</h3><p>Xem phản hồi khách hàng, quản lý hiển thị và chuyển tiếp sự cố.</p></a>
         <% } %>
         <% if (canAdminUsers) { %>
             <a class="preview-card admin-action-card" href="${pageContext.request.contextPath}/admin/users"><span>Admin</span><h3>Người dùng</h3><p>Quản lý tài khoản nội bộ, role và trạng thái hoạt động.</p></a>
@@ -163,7 +164,7 @@
     <% if (reception || manager) { %>
         <section class="dashboard-two-column">
             <article class="dashboard-panel">
-                <div class="dashboard-panel__head"><h2>Booking gần đây</h2><a href="${pageContext.request.contextPath}<%= reception ? "/reception/bookings" : "/manager/reports" %>">Xem tất cả</a></div>
+                <div class="dashboard-panel__head"><h2>Booking gần đây</h2><a href="${pageContext.request.contextPath}<%= reception ? "/reception/bookings" : "/dashboard" %>">Xem tất cả</a></div>
                 <% if (stats.getRecentBookings().isEmpty()) { %>
                     <p>Chưa có booking nào.</p>
                 <% } else { %>
@@ -190,16 +191,27 @@
     <% } %>
 
     <% if (housekeeping || manager) { %>
-        <section class="dashboard-panel">
-            <div class="dashboard-panel__head"><h2>Task ưu tiên</h2><a href="${pageContext.request.contextPath}<%= housekeeping ? "/housekeeping/tasks?view=mine" : "/manager/housekeeping" %>">Xem task</a></div>
+        <section class="dashboard-panel" style="<%= (reception || manager) ? "margin-top: 24px;" : "" %>">
+            <div class="dashboard-panel__head">
+                <h2>Task ưu tiên</h2>
+                <a href="${pageContext.request.contextPath}<%= housekeeping ? "/housekeeping/tasks?view=mine" : "/manager/housekeeping" %>"><%= housekeeping ? "Xem tất cả" : "Xem task" %></a>
+            </div>
             <% if (stats.getUrgentTasks().isEmpty()) { %>
-                <p>Không có task đang mở.</p>
+                <p style="color: var(--color-text-secondary); margin: 16px 0;">Không có task nào cần xử lý gấp.</p>
             <% } else { %>
                 <div class="dashboard-list">
                     <% for (DashboardStats.UrgentTask task : stats.getUrgentTasks()) { %>
                         <div class="dashboard-list__row">
-                            <div><strong>Phòng <%= h(task.getRoomNumber()) %></strong><span><%= h(taskLabel(task.getTaskType())) %></span></div>
-                            <div><span><%= h(task.getPriority()) %></span><span><%= h(statusLabel(task.getStatus())) %> - <%= h(task.getStaffName()) %></span></div>
+                            <div>
+                                <strong>Phòng <%= h(task.getRoomNumber()) %></strong>
+                                <span><%= h(taskLabel(task.getTaskType())) %> · <%= h(task.getStaffName() != null && !task.getStaffName().isBlank() ? task.getStaffName() : "Chưa phân công") %></span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 700; color: <%= "URGENT".equalsIgnoreCase(task.getPriority()) ? "#dc2626" : ("HIGH".equalsIgnoreCase(task.getPriority()) ? "#ea580c" : "#2563eb") %>;">
+                                    <%= "URGENT".equalsIgnoreCase(task.getPriority()) ? "🔥 Khẩn cấp" : ("HIGH".equalsIgnoreCase(task.getPriority()) ? "⚡ Ưu tiên cao" : "● Bình thường") %>
+                                </span>
+                                <span><%= h(statusLabel(task.getStatus())) %></span>
+                            </div>
                         </div>
                     <% } %>
                 </div>

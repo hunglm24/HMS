@@ -192,8 +192,7 @@ public class AmenityManagementServlet extends HttpServlet {
                         "Created amenity " + amenity.getName());
             }
 
-            req.getSession().setAttribute("toastMessage", updating ? "Cập nhật tiện nghi thành công." : "Thêm tiện nghi mới thành công.");
-            req.getSession().setAttribute("toastType", "success");
+            req.getSession().setAttribute("message", updating ? "Cập nhật tiện nghi thành công." : "Thêm tiện nghi mới thành công.");
             resp.sendRedirect(req.getContextPath() + "/manager/amenities");
         } catch (IllegalArgumentException ex) {
             errors.put("general", ex.getMessage());

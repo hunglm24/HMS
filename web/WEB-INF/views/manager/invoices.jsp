@@ -11,6 +11,7 @@
     <style>
         .toolbar { display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:16px; }
         .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+        .filters .form-control, .filters input, .filters select { margin-bottom:0; }
         .filters .filter-field { width:190px; }
         .filters .search-field { width:250px; }
         .data-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--color-border); border-radius:8px; overflow:hidden; }

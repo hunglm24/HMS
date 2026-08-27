@@ -182,7 +182,7 @@ public class DashboardService {
                 + "LEFT JOIN accounts a ON a.id = ht.assigned_to "
                 + "WHERE ht.status IN ('PENDING', 'IN_PROGRESS') "
                 + (housekeeping ? "AND (ht.assigned_to = ? OR ht.assigned_to IS NULL) " : "")
-                + "ORDER BY IF(ht.priority = 'HIGH', 1, IF(ht.priority = 'NORMAL', 2, 3)), "
+                + "ORDER BY IF(ht.priority IN ('URGENT', 'HIGH'), 1, IF(ht.priority = 'NORMAL', 2, 3)), "
                 + "ht.created_at, ht.id "
                 + "LIMIT 6";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {

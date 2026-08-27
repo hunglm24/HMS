@@ -1,0 +1,473 @@
+/* ==========================================================================
+   FEEDBACK & TESTIMONIALS MODULE STYLES
+   Hotel Management System (HMS)
+   ========================================================================== */
+
+/* --- Feedback Form (Customer) --- */
+.feedback-wrapper {
+    padding: 60px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.feedback-container {
+    width: 100%;
+    max-width: 550px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.feedback-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--primary, #4f46e5), #818cf8);
+}
+
+.feedback-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.feedback-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.feedback-form-group {
+    margin-bottom: 24px;
+}
+
+.feedback-form-label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+.rating-stars {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    gap: 8px;
+    background: #f9fafb;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #f3f4f6;
+}
+
+.rating-stars input {
+    display: none;
+}
+
+.rating-stars label {
+    font-size: 32px;
+    color: #d1d5db;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.rating-stars label:hover {
+    transform: scale(1.15);
+}
+
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label {
+    color: #fbbf24;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.feedback-textarea {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 15px;
+    color: #1f2937;
+    transition: all 0.2s;
+    resize: vertical;
+    background-color: #f9fafb;
+    box-sizing: border-box;
+}
+
+.feedback-textarea:focus {
+    outline: none;
+    border-color: var(--primary, #4f46e5);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.feedback-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.feedback-char-count {
+    font-size: 12px;
+    color: #9ca3af;
+    text-align: right;
+    margin-top: 6px;
+}
+
+.feedback-btn-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.btn-custom {
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-cancel {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.btn-cancel:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+.btn-submit {
+    background: var(--primary, #4f46e5);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}
+
+.btn-submit:hover {
+    background: var(--primary-dark, #4338ca);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(79, 70, 229, 0.3);
+}
+
+/* --- Feedback Management Table (Manager & Reception) --- */
+.feedback-stat-box {
+    padding: 10px 18px;
+    text-align: center;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.feedback-stat-label {
+    font-size: 12px;
+    color: #6b7280;
+    display: block;
+}
+
+.feedback-stat-val-rating {
+    font-size: 20px;
+    color: #f59e0b;
+}
+
+.feedback-stat-val-count {
+    font-size: 20px;
+    color: #111827;
+}
+
+.feedback-table-panel {
+    padding: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.feedback-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.feedback-table th {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 14px 16px;
+    font-weight: 600;
+    color: #475569;
+    text-align: left;
+}
+
+.feedback-table th.text-right {
+    text-align: right;
+}
+
+.feedback-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.feedback-code-cell {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.feedback-guest-cell {
+    color: #334155;
+    font-weight: 500;
+}
+
+.feedback-comment-cell {
+    max-width: 280px;
+    color: #475569;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.feedback-date-cell {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.feedback-star-display {
+    color: #f59e0b;
+    display: flex;
+    gap: 2px;
+}
+
+.feedback-star-empty {
+    color: #cbd5e1;
+}
+
+.badge-visible {
+    background: #dcfce7;
+    color: #166534;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.badge-hidden {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.feedback-actions-cell,
+td.hk-row-action {
+    text-align: center !important;
+}
+
+.feedback-actions-wrap {
+    display: inline-flex !important;
+    gap: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Feedback Filters Layout (Full-width Search & Buttons touching the far right) */
+.feedback-filters {
+    display: grid !important;
+    grid-template-columns: 1fr 190px 190px auto !important;
+    gap: 16px !important;
+    align-items: end !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.feedback-filters .hk-search {
+    width: 100% !important;
+}
+
+.feedback-filters .hk-search input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.feedback-filters .hk-filter-actions {
+    display: flex !important;
+    gap: 10px !important;
+    align-items: center !important;
+    justify-self: end !important;
+    margin-left: auto !important;
+}
+
+.feedback-filters .hk-filter-actions button,
+.feedback-filters .hk-filter-actions a {
+    min-width: 84px !important;
+    text-align: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Feedback Action Buttons (Equal Width & Centered) */
+.btn-fb-report,
+.btn-fb-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.btn-fb-report {
+    background: #175cd3 !important;
+    color: #ffffff !important;
+    border: none !important;
+    text-decoration: none !important;
+}
+
+.btn-fb-report:hover {
+    background: #154fb7 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(23, 92, 211, 0.25) !important;
+}
+
+.btn-fb-toggle-hide {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    border: 1px solid #d0d5dd !important;
+}
+
+.btn-fb-toggle-hide:hover {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #cbd5e1 !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-fb-toggle-show {
+    background: #ecfdf3 !important;
+    color: #027a48 !important;
+    border: 1px solid #a6f4c5 !important;
+}
+
+.btn-fb-toggle-show:hover {
+    background: #d1fadf !important;
+    color: #027a48 !important;
+    transform: translateY(-1px) !important;
+}
+
+.feedback-empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+}
+
+.feedback-empty-icon {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* --- Homepage Testimonials Grid --- */
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.testimonial-card {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.06);
+}
+
+.testimonial-quote {
+    color: #374151;
+    font-size: 15px;
+    line-height: 1.6;
+    font-style: italic;
+    margin-bottom: 16px;
+}
+
+.testimonial-author-row {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.testimonial-author-name {
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.testimonial-room-tag {
+    color: #64748b;
+    font-size: 12px;
+    background: #f8fafc;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-reviewed {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-cancel-booking {
+    background: var(--color-error-100, #fee2e2);
+    color: var(--color-error-700, #b91c1c);
+    border: 1px solid var(--color-error-200, #fecaca);
+}
+

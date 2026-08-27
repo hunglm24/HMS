@@ -94,7 +94,8 @@
                                     <c:when test="${booking.status == 'CONFIRMED'}"><span class="badge-status s-confirmed">Đã xác nhận</span></c:when>
                                     <c:when test="${booking.status == 'CHECKED_IN'}"><span class="badge-status s-checkedin">Đang lưu trú</span></c:when>
                                     <c:when test="${booking.status == 'CHECKED_OUT'}"><span class="badge-status s-checkedout">Đã hoàn thành</span></c:when>
-                                    <c:when test="${booking.status == 'CANCELLED'}"><span class="badge-status s-cancelled">Đã hủy</span></c:when>
+                                    <c:when test="${booking.status == 'CANCELLATION_PENDING'}"><span class="badge-status s-pending">Đang chờ hủy</span></c:when>
+                                    <c:when test="${booking.status == 'CANCELLED'}"><span class="badge-status s-cancelled">Đã hủy thành công</span></c:when>
                                     <c:otherwise><span class="badge-status">${booking.status}</span></c:otherwise>
                                 </c:choose>
                             </div>
@@ -133,9 +134,15 @@
                     </div>
                 </div>
                 
+                <c:if test="${booking.status == 'CANCELLATION_PENDING'}">
+                    <div class="detail-card" style="border-left: 4px solid var(--color-warning-600);">
+                        <h3>Yêu cầu hủy đang chờ Manager</h3>
+                        <div class="info-row"><span class="info-label">Thông tin:</span> <strong>${booking.cancellationReason}</strong></div>
+                    </div>
+                </c:if>
                 <c:if test="${booking.status == 'CANCELLED'}">
                     <div class="detail-card" style="border-left: 4px solid var(--color-error-600);">
-                        <h3 style="color: var(--color-error-700);">Chi tiết Hủy phòng</h3>
+                        <h3 style="color: var(--color-error-700);">Đã hủy thành công</h3>
                         <div class="info-row"><span class="info-label">Lý do:</span> <strong>${booking.cancellationReason != null ? booking.cancellationReason : 'N/A'}</strong></div>
                         <div class="info-row"><span class="info-label">Ngày hủy:</span> <strong><fmt:formatDate value="${booking.cancelledAt}" pattern="dd/MM/yyyy HH:mm"/></strong></div>
                     </div>
@@ -173,11 +180,7 @@
                 <!-- NÚT THAO TÁC -->
                 <div class="detail-card" style="background: transparent; border: none; padding: 0;">
                     <c:if test="${booking.status == 'PENDING_PAYMENT' || booking.status == 'CONFIRMED'}">
-                        <form method="post" action="${pageContext.request.contextPath}/user/cancel-booking" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đặt phòng này?');">
-                            <input type="hidden" name="bookingId" value="${booking.id}">
-                            <input type="hidden" name="reason" value="Khách hàng tự hủy qua Portal">
-                            <button type="submit" class="btn" style="width: 100%; background-color: white; color: var(--color-error-600); border: 1px solid var(--color-error-600);">Hủy phòng</button>
-                        </form>
+                        <a href="${pageContext.request.contextPath}/user/cancel-booking?bookingId=${booking.id}" class="btn" style="width: 100%; background-color: white; color: var(--color-error-600); border: 1px solid var(--color-error-600);">Hủy phòng</a>
                     </c:if>
                     <c:if test="${booking.status == 'CHECKED_OUT'}">
                         <button class="btn" style="width: 100%;" onclick="alert('Tính năng đánh giá đang được cập nhật!')">Đánh giá khách sạn</button>

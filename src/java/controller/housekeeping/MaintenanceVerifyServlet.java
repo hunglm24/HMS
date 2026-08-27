@@ -67,7 +67,7 @@ public class MaintenanceVerifyServlet extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/housekeeping/maintenance-verify.jsp").forward(request, response);
         } catch (Exception ex) {
             boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
-            session.setAttribute("errorMessage", "Lỗi tải thiết bị: " + ex.getMessage());
+            session.setAttribute("error", "Lỗi tải thiết bị: " + ex.getMessage());
             response.sendRedirect(request.getContextPath() + (isMgr ? "/manager/issues" : "/housekeeping/issues"));
         }
     }
@@ -104,10 +104,10 @@ public class MaintenanceVerifyServlet extends HttpServlet {
             }
 
             maintenanceService.verifyMaintenance(taskId, account.getId(), equipmentIds, note);
-            session.setAttribute("successMessage", "Xác nhận thiết bị sửa chữa thành công.");
+            session.setAttribute("message", "Xác nhận thiết bị sửa chữa thành công.");
             response.sendRedirect(targetUrl);
         } catch (Exception ex) {
-            session.setAttribute("errorMessage", ex.getMessage());
+            session.setAttribute("error", ex.getMessage());
             response.sendRedirect(targetUrl);
         }
     }

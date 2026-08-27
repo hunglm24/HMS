@@ -1,0 +1,27 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="HMS Smart Tomcat" type="com.poratu.idea.plugins.tomcat">
+    <predefined_log_file enabled="true" id="Tomcat Localhost Log" />
+    <predefined_log_file enabled="true" id="Tomcat Access Log" />
+    <predefined_log_file id="Tomcat Catalina Log" />
+    <predefined_log_file id="Tomcat Manager Log" />
+    <predefined_log_file id="Tomcat Host Manager Log" />
+    <option name="catalinaBase" value="C:\tools\tomcat-runtime-HMS" />
+    <option name="contextPath" value="/HMS" />
+    <option name="docBase" value="$PROJECT_DIR$/web" />
+    <option name="envOptions">
+      <map />
+    </option>
+    <option name="extraClassPath" value="" />
+    <option name="tomcatInfo">
+      <TomcatInfo>
+        <option name="name" value="Apache Tomcat/10.1.57" />
+        <option name="path" value="$PROJECT_DIR$/../../../../apache-tomcat-10.1.57" />
+        <option name="version" value="10.1.57.0" />
+      </TomcatInfo>
+    </option>
+    <option name="vmOptions" value="" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

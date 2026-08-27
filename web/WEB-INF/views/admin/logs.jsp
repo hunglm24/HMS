@@ -52,6 +52,7 @@
         .admin-tabs a { padding:8px 14px; border-radius:6px; text-decoration:none; font-weight:700; color:#344054; }
         .admin-tabs a.active { background:var(--color-primary-100); color:var(--color-primary-600); }
         .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom:16px; }
+        .filters .form-control, .filters input, .filters select { margin-bottom:0; }
         .data-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--color-border); border-radius:8px; overflow:hidden; }
         .data-table th,.data-table td { padding:11px 12px; border-bottom:1px solid var(--color-border); text-align:left; vertical-align:top; }
         .data-table th { background:var(--color-bg-surface); color:var(--color-text-secondary); font-size:13px; }

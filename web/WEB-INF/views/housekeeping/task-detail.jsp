@@ -26,18 +26,18 @@
     <title>Phòng <%= HousekeepingTask.esc(task.getRoomNumber()) %> | <%= isManager ? "Chi tiết công việc phòng" : "Dọn phòng" %></title>
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/main.css?v=20260820-7">
     <link rel="stylesheet" href="<%= contextPath %>/assets/css/rooms.css?v=20260820-7">
-    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260820-7">
+    <link rel="stylesheet" href="<%= contextPath %>/assets/css/housekeeping.css?v=20260825-1">
 </head>
-<body>
+<body class="room-management-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<main class="hk-page">
+<main class="page-container hk-page">
     <a class="hk-back" href="<%= backUrl %>">← <%= backLabel %></a>
     <section class="hk-detail-heading">
         <div>
             <p class="hk-eyebrow"><%= isManager ? "Quản lý khách sạn" : "Vận hành phòng" %> · Mã công việc #<%= task.getTaskId() %></p>
             <h1>Phòng <%= HousekeepingTask.esc(task.getRoomNumber()) %></h1>
             <p>
-                <%= HousekeepingTask.esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %> · Người phụ trách: <strong><%= task.getAssignedStaffName() != null ? HousekeepingTask.esc(task.getAssignedStaffName()) : "Chưa phân công" %></strong>
+                <%= HousekeepingTask.esc(task.getRoomTypeName()) %> · Tầng <%= task.getFloorNumber() == null ? "--" : task.getFloorNumber() %> · Người kiểm tra: <strong><%= task.getAssignedStaffName() != null ? HousekeepingTask.esc(task.getAssignedStaffName()) : "Chưa phân công" %></strong>
                 <% if (task.getCreatedAt() != null) { %>
                 · Thời gian: <strong><%= task.getFormattedCreatedAt() %></strong>
                 <% } %>

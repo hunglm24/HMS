@@ -74,7 +74,7 @@
             <% } %>
 
             <% if (manager) { %>
-                <a href="<%= contextPath %>/manager/reports">Báo cáo</a>
+
                 <a href="<%= contextPath %>/manager/rooms">Phòng</a>
                 <a href="<%= contextPath %>/manager/room-types">Loại phòng</a>
                 <a href="<%= contextPath %>/manager/housekeeping">Lịch sử dọn phòng</a>
@@ -103,22 +103,58 @@
         </nav>
     </div>
 </header>
-<div class="toast-container" style="position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999;">
-    <c:if test="${not empty sessionScope.message}">
-        <div class="toast toast-success" style="background: #28a745; color: white; padding: 15px 20px; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            ${sessionScope.message}
-        </div>
-        <script>setTimeout(function() { let el = document.querySelector('.toast-success'); if(el) el.style.display = 'none'; }, 5000);</script>
-        <c:remove var="message" scope="session" />
+<div class="toast-container" id="toastContainer" style="position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 99999; max-width: 380px;">
+    <c:set var="reqSuccess" value="${not empty requestScope.message ? requestScope.message : (not empty requestScope.successMessage ? requestScope.successMessage : (not empty requestScope.toastMessage and requestScope.toastType ne 'error' and requestScope.toastType ne 'toast-error' ? requestScope.toastMessage : ''))}" />
+    <c:set var="unifiedSuccessMsg" value="${not empty sessionScope.message ? sessionScope.message : (not empty sessionScope.successMessage ? sessionScope.successMessage : (not empty sessionScope.toastMessage and sessionScope.toastType ne 'error' and sessionScope.toastType ne 'toast-error' ? sessionScope.toastMessage : (not empty reqSuccess ? reqSuccess : '')))}" />
+
+    <c:set var="reqError" value="${not empty requestScope.error ? requestScope.error : (not empty requestScope.errorMessage ? requestScope.errorMessage : (not empty requestScope.toastMessage and (requestScope.toastType eq 'error' or requestScope.toastType eq 'toast-error') ? requestScope.toastMessage : ''))}" />
+    <c:if test="${empty reqError and not empty requestScope.errors}">
+        <c:forEach items="${requestScope.errors}" var="err" varStatus="loop">
+            <c:if test="${loop.first}">
+                <c:set var="reqError" value="${err.value}" />
+            </c:if>
+        </c:forEach>
     </c:if>
-    <c:if test="${not empty sessionScope.error}">
-        <div class="toast toast-error" style="background: #dc3545; color: white; padding: 15px 20px; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            ${sessionScope.error}
+    <c:set var="unifiedErrorMsg" value="${not empty sessionScope.error ? sessionScope.error : (not empty sessionScope.errorMessage ? sessionScope.errorMessage : (not empty sessionScope.toastMessage and (sessionScope.toastType eq 'error' or sessionScope.toastType eq 'toast-error') ? sessionScope.toastMessage : (not empty reqError ? reqError : '')))}" />
+
+    <c:if test="${not empty unifiedSuccessMsg}">
+        <div class="toast toast-success" style="display: flex; align-items: center; gap: 12px; background: #10b981; color: #ffffff; padding: 14px 18px; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1); font-size: 14px; font-weight: 600; cursor: pointer; animation: slideInToast 0.3s ease-out;" onclick="this.remove();">
+            <span style="font-size: 18px; line-height: 1;">✓</span>
+            <span><c:out value="${unifiedSuccessMsg}" /></span>
         </div>
-        <script>setTimeout(function() { let el = document.querySelector('.toast-error'); if(el) el.style.display = 'none'; }, 5000);</script>
+        <c:remove var="message" scope="session" />
+        <c:remove var="successMessage" scope="session" />
+        <c:remove var="toastMessage" scope="session" />
+        <c:remove var="toastType" scope="session" />
+    </c:if>
+
+    <c:if test="${not empty unifiedErrorMsg}">
+        <div class="toast toast-error" style="display: flex; align-items: center; gap: 12px; background: #ef4444; color: #ffffff; padding: 14px 18px; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1); font-size: 14px; font-weight: 600; cursor: pointer; animation: slideInToast 0.3s ease-out;" onclick="this.remove();">
+            <span style="font-size: 18px; line-height: 1;">⚠</span>
+            <span><c:out value="${unifiedErrorMsg}" /></span>
+        </div>
         <c:remove var="error" scope="session" />
+        <c:remove var="errorMessage" scope="session" />
+        <c:remove var="toastMessage" scope="session" />
+        <c:remove var="toastType" scope="session" />
     </c:if>
 </div>
+<style>
+@keyframes slideInToast {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
+<script>
+    setTimeout(function() {
+        document.querySelectorAll('#toastContainer .toast').forEach(function(el) {
+            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(10px)';
+            setTimeout(function() { el.remove(); }, 500);
+        });
+    }, 4000);
+</script>
 <% if (internal) { %>
     <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 <% } %>

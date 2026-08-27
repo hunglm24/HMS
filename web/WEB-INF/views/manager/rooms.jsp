@@ -14,7 +14,6 @@
   </head>
   <body class="room-management-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
     <main class="page-container room-management-page">
       <section class="room-management-hero panel">
@@ -24,19 +23,11 @@
           <p>Danh sách phòng, trạng thái, và thiết bị gắn theo phòng</p>
         </div>
 
-        <div class="room-management-hero__actions" style="display:flex; gap:5px; align-items:center;">
+        <div class="room-management-hero__actions" style="display:flex; gap:12px; align-items:center;">
           <a class="btn btn-secondary" href="${cp}/manager/room-map">Sơ đồ phòng</a>
           <a class="btn" href="${cp}/manager/rooms/new">+ Thêm phòng</a>
         </div>
       </section>
-
-      <c:if test="${not empty sessionScope.toastMessage}">
-        <div class="toast ${sessionScope.toastType}">
-          <c:out value="${sessionScope.toastMessage}" />
-        </div>
-        <c:remove var="toastMessage" scope="session" />
-        <c:remove var="toastType" scope="session" />
-      </c:if>
 
       <section class="room-management-stats-grid">
         <article class="room-management-stat-card">

@@ -16,12 +16,12 @@ import java.sql.SQLException;
 import java.util.Set;
 
 @WebServlet(urlPatterns = {
-        "/manager/policies",
-        "/manager/policies/create",
-        "/manager/policies/edit",
-        "/manager/policies/save",
-        "/manager/policies/toggle-status",
-        "/manager/policies/delete"
+        "/manager/hotel-configs",
+        "/manager/hotel-configs/create",
+        "/manager/hotel-configs/edit",
+        "/manager/hotel-configs/save",
+        "/manager/hotel-configs/toggle-status",
+        "/manager/hotel-configs/delete"
 })
 public class PolicyServlet extends HttpServlet {
     private final HotelPolicyDao policyDao = new HotelPolicyDao();
@@ -30,22 +30,22 @@ public class PolicyServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if ("/manager/policies/create".equals(request.getServletPath())) {
-            request.getRequestDispatcher("/WEB-INF/views/manager/policy-form.jsp").forward(request, response);
+        if ("/manager/hotel-configs/create".equals(request.getServletPath())) {
+            request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-form.jsp").forward(request, response);
             return;
         }
-        if ("/manager/policies/edit".equals(request.getServletPath())) {
+        if ("/manager/hotel-configs/edit".equals(request.getServletPath())) {
             try {
                 prepareEditPage(request);
-                request.getRequestDispatcher("/WEB-INF/views/manager/policy-form.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-form.jsp").forward(request, response);
             } catch (IllegalArgumentException ex) {
                 flash(request, ex.getMessage(), "error");
-                response.sendRedirect(request.getContextPath() + "/manager/policies");
+                response.sendRedirect(request.getContextPath() + "/manager/hotel-configs");
             }
             return;
         }
         preparePage(request);
-        request.getRequestDispatcher("/WEB-INF/views/manager/policies.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/hotel-config-list.jsp").forward(request, response);
     }
 
     @Override
@@ -57,20 +57,20 @@ public class PolicyServlet extends HttpServlet {
             return;
         }
         try {
-            if ("/manager/policies/save".equals(request.getServletPath())) {
+            if ("/manager/hotel-configs/save".equals(request.getServletPath())) {
                 String idRaw = request.getParameter("id");
                 savePolicy(request);
                 auditLogService.log(request, ValidationUtil.isBlank(idRaw) ? "CREATE_POLICY" : "UPDATE_POLICY",
                         "POLICY", ValidationUtil.optionalPositiveLong(idRaw, "Chính sách"),
                         "Saved policy " + request.getParameter("title"));
                 flash(request, "Đã lưu chính sách.", "success");
-            } else if ("/manager/policies/toggle-status".equals(request.getServletPath())) {
+            } else if ("/manager/hotel-configs/toggle-status".equals(request.getServletPath())) {
                 long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
                 togglePolicyStatus(request);
                 auditLogService.log(request, "TOGGLE_POLICY_STATUS", "POLICY", id,
                         "Changed policy status to " + request.getParameter("status"));
                 flash(request, "Đã cập nhật trạng thái chính sách.", "success");
-            } else if ("/manager/policies/delete".equals(request.getServletPath())) {
+            } else if ("/manager/hotel-configs/delete".equals(request.getServletPath())) {
                 long id = ValidationUtil.requirePositiveLong(request.getParameter("id"), "Chính sách");
                 policyDao.delete(id);
                 auditLogService.log(request, "DELETE_POLICY", "POLICY", id, "Deleted policy");
@@ -79,13 +79,13 @@ public class PolicyServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-            response.sendRedirect(request.getContextPath() + "/manager/policies");
+            response.sendRedirect(request.getContextPath() + "/manager/hotel-configs");
         } catch (IllegalArgumentException ex) {
             flash(request, ex.getMessage(), "error");
             String id = request.getParameter("id");
-            String redirectPath = "/manager/policies/save".equals(request.getServletPath())
-                    ? (ValidationUtil.isBlank(id) ? "/manager/policies/create" : "/manager/policies/edit?id=" + id)
-                    : "/manager/policies";
+            String redirectPath = "/manager/hotel-configs/save".equals(request.getServletPath())
+                    ? (ValidationUtil.isBlank(id) ? "/manager/hotel-configs/create" : "/manager/hotel-configs/edit?id=" + id)
+                    : "/manager/hotel-configs";
             response.sendRedirect(request.getContextPath() + redirectPath);
         } catch (SQLException ex) {
             throw new ServletException("Cannot update hotel policy", ex);

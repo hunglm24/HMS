@@ -104,7 +104,7 @@ public class RoomTypeDao {
                                FROM booking_rooms br
                                JOIN bookings b ON b.id = br.booking_id
                                WHERE br.room_id = r.id
-                                 AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                                 AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN', 'CANCELLATION_PENDING')
                                  AND b.check_in_date <= CURRENT_DATE
                                  AND b.check_out_date > CURRENT_DATE
                            ) THEN 1 ELSE 0 END) AS available_quantity
@@ -178,7 +178,7 @@ public class RoomTypeDao {
                              FROM booking_rooms br
                              JOIN bookings b ON br.booking_id = b.id
                              WHERE br.room_id = r.id
-                               AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                               AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN', 'CANCELLATION_PENDING')
                                AND b.check_in_date < ?
                                AND b.check_out_date > ?
                          )
@@ -212,6 +212,17 @@ public class RoomTypeDao {
         }
         
         sql.append(" LIMIT ? OFFSET ?");
+
+        //
+        System.out.println("==================================================");
+        System.out.println("[DEBUG-HMS] KHÁCH HÀNG ĐANG TÌM PHÒNG (RoomTypeDao)");
+        System.out.println("[DEBUG-HMS] Check-in Mới (Vào): " + checkIn);
+        System.out.println("[DEBUG-HMS] Check-out Mới (Ra): " + checkOut);
+        System.out.println("[DEBUG-HMS] Số khách: " + guests + " | Số phòng: " + numRooms);
+        System.out.println("[DEBUG-HMS] CÂU SQL (CHỨA NOT EXISTS) SẮP CHẠY:");
+        System.out.println(sql.toString());
+        System.out.println("==================================================");
+        // 
 
         try (Connection conn = DBConnectionUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int paramIdx = 1;
@@ -262,7 +273,7 @@ public class RoomTypeDao {
                                  FROM booking_rooms br
                                  JOIN bookings b ON br.booking_id = b.id
                                  WHERE br.room_id = r.id
-                                   AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN')
+                                   AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN', 'CANCELLATION_PENDING')
                                    AND b.check_in_date < ?
                                    AND b.check_out_date > ?
                              )

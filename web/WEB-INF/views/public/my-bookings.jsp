@@ -59,6 +59,7 @@
             <a href="?status=UPCOMING" class="tab-item ${param.status == 'UPCOMING' ? 'active' : ''}">Sắp tới</a>
             <a href="?status=CHECKED_IN" class="tab-item ${param.status == 'CHECKED_IN' ? 'active' : ''}">Đang ở</a>
             <a href="?status=CHECKED_OUT" class="tab-item ${param.status == 'CHECKED_OUT' ? 'active' : ''}">Đã hoàn thành</a>
+            <a href="?status=CANCELLATION_PENDING" class="tab-item ${param.status == 'CANCELLATION_PENDING' ? 'active' : ''}">Đang chờ hủy</a>
             <a href="?status=CANCELLED" class="tab-item ${param.status == 'CANCELLED' ? 'active' : ''}">Đã hủy</a>
         </div>
 
@@ -78,7 +79,8 @@
                                     <c:when test="${b.status == 'CONFIRMED'}"><span class="badge badge-confirmed">Đã xác nhận</span></c:when>
                                     <c:when test="${b.status == 'CHECKED_IN'}"><span class="badge badge-checkedin">Đang ở</span></c:when>
                                     <c:when test="${b.status == 'CHECKED_OUT'}"><span class="badge badge-checkedout">Đã hoàn thành</span></c:when>
-                                    <c:when test="${b.status == 'CANCELLED'}"><span class="badge badge-cancelled">Đã hủy</span></c:when>
+                                    <c:when test="${b.status == 'CANCELLATION_PENDING'}"><span class="badge badge-pending">Đang chờ hủy</span></c:when>
+                                    <c:when test="${b.status == 'CANCELLED'}"><span class="badge badge-cancelled">Đã hủy thành công</span></c:when>
                                     <c:otherwise><span class="badge">${b.status}</span></c:otherwise>
                                 </c:choose>
                             </div>
@@ -101,7 +103,7 @@
                                 
                                 <c:if test="${b.status == 'PENDING_PAYMENT' || b.status == 'CONFIRMED'}">
                                     <button class="btn btn-secondary btn-sm" onclick="alert('Tính năng đang được phát triển!')">Yêu cầu đổi ngày</button>
-                                    <button class="btn btn-sm" style="background: var(--color-error-100); color: var(--color-error-700); border: 1px solid var(--color-error-200);" onclick="alert('Tính năng Hủy phòng đang được nâng cấp, vui lòng liên hệ lễ tân.')">Hủy phòng</button>
+                                    <a class="btn btn-sm" style="background: var(--color-error-100); color: var(--color-error-700); border: 1px solid var(--color-error-200);" href="${pageContext.request.contextPath}/user/cancel-booking?bookingId=${b.id}">Hủy phòng</a>
                                 </c:if>
                                 
                                 <c:if test="${b.status == 'CHECKED_OUT'}">

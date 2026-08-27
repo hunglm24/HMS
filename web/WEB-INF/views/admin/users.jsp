@@ -64,8 +64,9 @@
         .admin-tabs a.active { background:var(--color-primary-100); color:var(--color-primary-600); }
         .toolbar { display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:16px; }
         .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
-        .filters .filter-field { width:190px; }
+        .filters .filter-field { width:210px; }
         .filters .search-field { width:210px; }
+        .filters .form-control, .filters input, .filters select { margin-bottom:0; }
         .data-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--color-border); border-radius:8px; overflow:hidden; }
         .data-table th,.data-table td { padding:11px 12px; border-bottom:1px solid var(--color-border); text-align:left; vertical-align:top; }
         .data-table th { background:var(--color-bg-surface); color:var(--color-text-secondary); font-size:13px; }
@@ -154,18 +155,22 @@
                 <td><span class="badge badge-<%= h(user.getStatus().toLowerCase()) %>"><%= h(user.getStatus()) %></span></td>
                 <td><%= h(user.getCreatedAt()) %></td>
                 <td>
-                    <div class="row-actions">
-                        <a class="button button-secondary small-button" href="${pageContext.request.contextPath}/admin/users/edit?id=<%= user.getUserId() %>">Edit</a>
-                        <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/users/status">
-                            <input type="hidden" name="id" value="<%= user.getUserId() %>">
-                            <input type="hidden" name="status" value="<%= "BLOCKED".equals(user.getStatus()) ? "ACTIVE" : "BLOCKED" %>">
-                            <button class="button button-secondary small-button" type="submit"><%= "BLOCKED".equals(user.getStatus()) ? "Unblock" : "Block" %></button>
-                        </form>
-                        <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/users/delete" onsubmit="return confirm('Delete this account?');">
-                            <input type="hidden" name="id" value="<%= user.getUserId() %>">
-                            <button class="button button-secondary small-button" type="submit">Delete</button>
-                        </form>
-                    </div>
+                    <% if ("ADMIN".equalsIgnoreCase(user.getRoleName())) { %>
+                        &nbsp;
+                    <% } else { %>
+                        <div class="row-actions">
+                            <a class="button button-secondary small-button" href="${pageContext.request.contextPath}/admin/users/edit?id=<%= user.getUserId() %>">Edit</a>
+                            <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/users/status">
+                                <input type="hidden" name="id" value="<%= user.getUserId() %>">
+                                <input type="hidden" name="status" value="<%= "BLOCKED".equals(user.getStatus()) ? "ACTIVE" : "BLOCKED" %>">
+                                <button class="button button-secondary small-button" type="submit"><%= "BLOCKED".equals(user.getStatus()) ? "Unblock" : "Block" %></button>
+                            </form>
+                            <form class="inline-form" method="post" action="${pageContext.request.contextPath}/admin/users/delete" onsubmit="return confirm('Delete this account?');">
+                                <input type="hidden" name="id" value="<%= user.getUserId() %>">
+                                <button class="button button-secondary small-button" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    <% } %>
                 </td>
             </tr>
         <% } else { %>

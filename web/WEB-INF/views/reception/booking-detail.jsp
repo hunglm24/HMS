@@ -28,7 +28,7 @@
             <p class="section-kicker">Quản lý Lễ tân</p>
             <h1>Chi tiết Đặt phòng</h1>
         </div>
-        <a class="btn btn-secondary" href="${pageContext.request.contextPath}/reception/bookings">Quay lại danh sách</a>
+        <a class="btn btn-secondary" href="${pageContext.request.contextPath}${bookingBasePath}">Quay lại danh sách</a>
     </section>
     
     <c:if test="${booking != null}">
@@ -55,6 +55,7 @@
             </div>
             
             <div class="action-bar">
+                <c:if test="${!managerView}">
                 <c:if test="${booking.status == 'PENDING_PAYMENT'}">
                     <form method="post" action="${pageContext.request.contextPath}/reception/bookings" style="display:inline;">
                         <input type="hidden" name="action" value="CONFIRM"><input type="hidden" name="id" value="${booking.id}">
@@ -86,6 +87,10 @@
                 </c:if>
 
                 <a class="btn btn-secondary" href="${pageContext.request.contextPath}/receptionist/edit-booking?id=${booking.id}">Đổi phòng / Sửa lịch</a>
+                </c:if>
+                <c:if test="${managerView && (booking.status == 'PENDING_PAYMENT' || booking.status == 'CONFIRMED')}">
+                    <a class="btn btn-secondary" style="color:var(--color-error-600)" href="${pageContext.request.contextPath}/manager/bookings/refund?id=${booking.id}">Hủy booking / Refund</a>
+                </c:if>
                 <button class="btn btn-secondary" onclick="window.print()">In phiếu xác nhận</button>
             </div>
         </div>

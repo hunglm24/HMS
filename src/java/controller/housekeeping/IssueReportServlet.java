@@ -80,7 +80,7 @@ public class IssueReportServlet extends HttpServlet {
                         String newStatus = request.getParameter("status_" + equipId);
                         
                         if (newStatus != null && !newStatus.equals("NORMAL") && !newStatus.equals(currentStatus)) {
-                            maintenanceService.reportIssue(roomId, equipId, newStatus, note);
+                            maintenanceService.reportIssue(roomId, equipId, newStatus, note, account.getId());
                             hasEquipmentIssue = true;
                         }
                     }
@@ -88,16 +88,17 @@ public class IssueReportServlet extends HttpServlet {
             } 
             
             if (!hasEquipmentIssue) {
-                maintenanceService.reportIssue(roomId, null, null, note);
+                maintenanceService.reportIssue(roomId, null, null, note, account.getId());
             }
 
-            session.setAttribute("successMessage", "Báo cáo sự cố thành công.");
-                        boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
+            boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
+            session.setAttribute("message", "Báo cáo sự cố thành công.");
             response.sendRedirect(request.getContextPath() + (isMgr ? "/manager/issues" : "/housekeeping/issues"));
         } catch (Exception ex) {
-            session.setAttribute("errorMessage", ex.getMessage());
+            boolean isMgr = "HOTEL_MANAGER".equals(account.getRoleName()) || request.getServletPath().startsWith("/manager/");
+            session.setAttribute("error", ex.getMessage());
             Long roomId = parsePositiveLong(request.getParameter("roomId"));
-            response.sendRedirect(request.getContextPath() + "/housekeeping/issues/report"
+            response.sendRedirect(request.getContextPath() + (isMgr ? "/manager/issues/report" : "/housekeeping/issues/report")
                     + (roomId == null ? "" : "?roomId=" + roomId));
         }
     }

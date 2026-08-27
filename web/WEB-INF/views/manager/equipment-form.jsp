@@ -14,7 +14,6 @@
   </head>
   <body class="equipment-management-body equipment-form-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <jsp:include page="/WEB-INF/views/common/sidebar-internal.jsp" />
 
     <main class="page-container equipment-form-page">
       <form class="equipment-form" action="${cp}${equipmentFormAction}" method="post" enctype="multipart/form-data" novalidate>
@@ -34,27 +33,6 @@
             <button class="btn btn-warning" type="submit"><c:out value="${equipmentSubmitLabel}" /></button>
           </div>
         </section>
-
-        <c:if test="${not empty errors}">
-          <div class="equipment-form-alert" role="alert" aria-live="polite">
-            <div class="equipment-form-alert__icon" aria-hidden="true">!</div>
-            <div class="equipment-form-alert__content">
-              <strong>Please check the highlighted fields.</strong>
-              <c:if test="${not empty errors.general}">
-                <p class="equipment-form-alert__lead"><c:out value="${errors.general}" /></p>
-              </c:if>
-              <c:if test="${not empty errors}">
-                <ul class="equipment-form-alert__list">
-                  <c:forEach items="${errors}" var="entry">
-                    <c:if test="${entry.key ne 'general'}">
-                      <li><c:out value="${entry.value}" /></li>
-                    </c:if>
-                  </c:forEach>
-                </ul>
-              </c:if>
-            </div>
-          </div>
-        </c:if>
 
         <section class="equipment-form-layout">
           <article class="panel equipment-form-card">

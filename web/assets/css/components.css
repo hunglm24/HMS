@@ -339,3 +339,6 @@ input.form-control:read-only, textarea.form-control:read-only { background: var(
 .alert { padding: 12px 14px; border-radius: var(--radius-md); font-size: 14px; line-height: 20px; }
 .alert-error { background: var(--color-error-100); color: #991b1b; }
 .alert-success { background: var(--color-success-100); color: #166534; }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.filters .form-control, .filters input, .filters select { margin-bottom: 0; }
+
