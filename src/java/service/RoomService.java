@@ -15,8 +15,8 @@ import java.util.Set;
 
 public class RoomService {
     private static final Set<String> STATUSES = Set.of(
-            "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION");
-    private static final Set<String> LOCKED_EDIT_STATUSES = Set.of("OCCUPIED", "NOT_READY");
+            "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION", "INACTIVE");
+    private static final Set<String> LOCKED_EDIT_STATUSES = Set.of("OCCUPIED", "NOT_READY", "INACTIVE");
 
     private final RoomDao roomDao;
     private final RoomTypeDao roomTypeDao;
@@ -93,21 +93,7 @@ public class RoomService {
         ensureRoomCanBeDeactivated(id);
         Room value = roomDao.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Khong tim thay phong."));
-        value.setStatus("NOT_READY");
-        return roomDao.update(value);
-    }
-
-    // Restore a previously inactive room.
-    public boolean reactivateRoom(long id) throws SQLException {
-        if (id <= 0) {
-            return false;
-        }
-        Optional<Room> room = roomDao.findById(id);
-        if (room.isEmpty()) {
-            return false;
-        }
-        Room value = room.get();
-        value.setStatus("AVAILABLE");
+        value.setStatus("INACTIVE");
         return roomDao.update(value);
     }
 
@@ -146,6 +132,10 @@ public class RoomService {
             ValidationUtil.requireTrue(sameStatus, "Trang thai nay khong duoc phep chinh tay.");
             incomingRoom.setStatus(currentStatus);
             return;
+        }
+
+        if ("INACTIVE".equalsIgnoreCase(requestedStatus)) {
+            throw new IllegalArgumentException("Trang thai nay khong duoc phep chinh tay.");
         }
 
         if (requestedStatus != null && LOCKED_EDIT_STATUSES.contains(requestedStatus.toUpperCase())) {
@@ -188,11 +178,12 @@ public class RoomService {
         // Compare room numbers case-insensitively and skip the current row on edit.
         String normalizedRoomNumber = ValidationUtil.requireDigitsText(roomNumber, "So phong", 1, 20);
 
-        // Stop as soon as another room already uses the same number.
+        // Stop as soon as another active room already uses the same number.
         boolean duplicated = roomDao.findAll().stream()
                 .anyMatch(room -> {
                     // Ignore rows without a number or the row currently being edited.
                     if (room.getRoomNumber() == null) return false;
+                    if ("INACTIVE".equalsIgnoreCase(room.getStatus())) return false;
                     boolean sameNumber = room.getRoomNumber().equalsIgnoreCase(normalizedRoomNumber);
                     boolean sameId = excludeId != null && excludeId > 0 && room.getId() == excludeId;
                     return sameNumber && !sameId;

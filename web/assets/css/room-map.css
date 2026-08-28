@@ -284,7 +284,7 @@ body .internal-sidebar .page-container.room-map-page {
 .room-card.CLEANING { background: #fff5ea; border-color: #fde0bc; }
 .room-card.MAINTENANCE { background: #fef2f2; border-color: #fecaca; }
 .room-card.NOT_READY,
-.room-card.INSPECTION { background: #ede9fe; border-color: #ddd6fe; }
+.room-card.INSPECTION { background: #fef2f2; border-color: #fecaca; }
 
 .room-number {
   margin-bottom: 4px;
@@ -315,7 +315,7 @@ body .internal-sidebar .page-container.room-map-page {
 .CLEANING .room-status { color: #f97316; }
 .MAINTENANCE .room-status { color: #dc2626; }
 .NOT_READY .room-status,
-.INSPECTION .room-status { color: #6d28d9; }
+.INSPECTION .room-status { color: #dc2626; }
 
 .drawer-backdrop {
   position: fixed;
@@ -412,6 +412,11 @@ body .internal-sidebar .page-container.room-map-page {
 }
 
 .drawer-chip.maintenance {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.drawer-chip.not-ready {
   background: #fef2f2;
   color: #dc2626;
 }

@@ -68,7 +68,7 @@ public class RoomMapServlet extends HttpServlet {
 
         for (Room room : allRooms) {
             String physicalStatus = room.getStatus() != null ? room.getStatus().toUpperCase() : "";
-            if ("INACTIVE".equals(physicalStatus) || "NOT_READY".equals(physicalStatus)) {
+            if ("INACTIVE".equals(physicalStatus)) {
                 continue;
             }
             

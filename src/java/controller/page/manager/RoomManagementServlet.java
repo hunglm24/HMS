@@ -248,7 +248,7 @@ public class RoomManagementServlet extends HttpServlet {
 
         try {
             room.setStatus(ValidationUtil.requireStatus(req.getParameter("status"), "Status", java.util.Set.of(
-                    "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION")));
+                    "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION", "INACTIVE")));
         } catch (IllegalArgumentException ex) {
             errors.put("status", ex.getMessage());
         }

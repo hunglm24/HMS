@@ -83,14 +83,30 @@
 
               <label class="room-form-field${not empty errors.status ? ' is-error' : ''}">
                 <span>Trạng thái *</span>
-                <select name="status" required>
-                  <option value="AVAILABLE" ${form.status eq 'AVAILABLE' or empty form.status ? 'selected' : ''}>Trống</option>
-                  <option value="CLEANING" ${form.status eq 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
-                  <option value="MAINTENANCE" ${form.status eq 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
-                  <option value="INSPECTION" ${form.status eq 'INSPECTION' ? 'selected' : ''}>Chờ kiểm tra</option>
-                  <option value="OCCUPIED" ${form.status eq 'OCCUPIED' ? 'selected' : ''}>Đang có khách</option>
-                  <option value="NOT_READY" ${form.status eq 'NOT_READY' ? 'selected' : ''}>Chưa sẵn sàng</option>
-                </select>
+                <c:choose>
+                  <c:when test="${form.status eq 'INACTIVE'}">
+                    <input type="hidden" name="status" value="INACTIVE" />
+                    <select disabled>
+                      <option value="AVAILABLE">Trống</option>
+                      <option value="CLEANING">Đang dọn</option>
+                      <option value="MAINTENANCE">Bảo trì</option>
+                      <option value="INSPECTION">Chờ kiểm tra</option>
+                      <option value="OCCUPIED">Đang có khách</option>
+                      <option value="NOT_READY">Chưa sẵn sàng</option>
+                      <option value="INACTIVE" selected>Ngừng khai thác</option>
+                    </select>
+                  </c:when>
+                  <c:otherwise>
+                    <select name="status" required>
+                      <option value="AVAILABLE" ${form.status eq 'AVAILABLE' or empty form.status ? 'selected' : ''}>Trống</option>
+                      <option value="CLEANING" ${form.status eq 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
+                      <option value="MAINTENANCE" ${form.status eq 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
+                      <option value="INSPECTION" ${form.status eq 'INSPECTION' ? 'selected' : ''}>Chờ kiểm tra</option>
+                      <option value="OCCUPIED" ${form.status eq 'OCCUPIED' ? 'selected' : ''}>Đang có khách</option>
+                      <option value="NOT_READY" ${form.status eq 'NOT_READY' ? 'selected' : ''}>Chưa sẵn sàng</option>
+                    </select>
+                  </c:otherwise>
+                </c:choose>
                 <c:if test="${not empty errors.status}">
                   <div class="room-form-field__error"><c:out value="${errors.status}" /></div>
                 </c:if>

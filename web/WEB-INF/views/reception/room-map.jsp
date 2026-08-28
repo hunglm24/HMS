@@ -83,6 +83,7 @@
                                 <option value="INSPECTION" ${param.status == 'INSPECTION' ? 'selected' : ''}>Đang kiểm tra</option>
                                 <option value="CLEANING" ${param.status == 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
                                 <option value="MAINTENANCE" ${param.status == 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
+                                <option value="NOT_READY" ${param.status == 'NOT_READY' ? 'selected' : ''}>Chưa sẵn sàng</option>
                             </select>
                         </div>
                         <div class="room-map-field room-map-field--actions">
