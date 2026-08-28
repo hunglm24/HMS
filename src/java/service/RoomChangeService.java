@@ -64,10 +64,16 @@ public class RoomChangeService {
             if (currentRoom.isEmpty()) {
                 throw new IllegalArgumentException("Phòng hiện tại không tồn tại.");
             }
+            if ("INACTIVE".equalsIgnoreCase(currentRoom.get().getStatus())) {
+                throw new IllegalArgumentException("Phòng hiện tại đã ngừng khai thác.");
+            }
 
             Optional<Room> targetRoom = roomDao.findById(connection, newRoomId);
             if (targetRoom.isEmpty()) {
                 throw new IllegalArgumentException("Phòng mới không tồn tại.");
+            }
+            if ("INACTIVE".equalsIgnoreCase(targetRoom.get().getStatus())) {
+                throw new IllegalArgumentException("Phòng mới đã ngừng khai thác.");
             }
 
             if (!"AVAILABLE".equalsIgnoreCase(targetRoom.get().getStatus())) {

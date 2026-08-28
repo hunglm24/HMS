@@ -147,8 +147,8 @@
                 setFieldError(nameInput, 'Equipment name must be at least 2 characters.');
                 return false;
             }
-            if (value.length > 100) {
-                setFieldError(nameInput, 'Equipment name must not exceed 100 characters.');
+            if (value.length > 60) {
+                setFieldError(nameInput, 'Equipment name must not exceed 60 characters.');
                 return false;
             }
 
@@ -162,8 +162,8 @@
             }
 
             var value = normalizeText(descriptionInput.value);
-            if (value.length > 500) {
-                setFieldError(descriptionInput, 'Description must not exceed 500 characters.');
+            if (value.length > 200) {
+                setFieldError(descriptionInput, 'Description must not exceed 200 characters.');
                 return false;
             }
 
