@@ -89,51 +89,6 @@ public class RoomTypeDao {
         }
         return roomTypes;
     }
-
-    /** Homepage highlights that have at least one physical room free today. */
-    public List<RoomType> findFeaturedAvailable(int limit) {
-        List<RoomType> roomTypes = new ArrayList<>();
-        if (limit <= 0) return roomTypes;
-
-        String sql = """
-                SELECT rt.*,
-                       COUNT(r.id) AS total_quantity,
-                       SUM(CASE WHEN r.status = 'AVAILABLE'
-                           AND NOT EXISTS (
-                               SELECT 1
-                               FROM booking_rooms br
-                               JOIN bookings b ON b.id = br.booking_id
-                               WHERE br.room_id = r.id
-                                 AND b.status IN ('PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN', 'CANCELLATION_PENDING')
-                                 AND b.check_in_date <= CURRENT_DATE
-                                 AND b.check_out_date > CURRENT_DATE
-                           ) THEN 1 ELSE 0 END) AS available_quantity
-                FROM room_types rt
-                JOIN rooms r ON r.room_type_id = rt.id
-                WHERE rt.status = 'ACTIVE'
-                GROUP BY rt.id
-                HAVING available_quantity > 0
-                ORDER BY available_quantity DESC, rt.base_price DESC, rt.id ASC
-                LIMIT ?
-                """;
-
-        try (Connection conn = DBConnectionUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, limit);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    RoomType roomType = mapRow(rs);
-                    roomType.setTotalQuantity(rs.getInt("total_quantity"));
-                    roomType.setAvailableQuantity(rs.getInt("available_quantity"));
-                    roomTypes.add(roomType);
-                }
-            }
-        } catch (SQLException e) {
-            throw new IllegalStateException("Cannot load featured available room types.", e);
-        }
-        return roomTypes;
-    }
-
     // Load distinct room type statuses from the database for form dropdowns.
     public List<String> findDistinctStatuses() {
         List<String> statuses = new ArrayList<>();

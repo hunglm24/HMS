@@ -76,8 +76,8 @@
    java.util.List<dao.FeedbackDao.FeedbackDto> featuredFeedbacks = java.util.Collections.emptyList();
    if (!internal) {
        dao.RoomTypeDao roomTypeDao = new dao.RoomTypeDao();
-        featuredRoomTypes = roomTypeDao.findActive();
-        featuredRoomTypes = roomTypeDao.findFeaturedAvailable(4);
+       // Chỉ lấy 4 phòng nổi bật để quảng cáo
+       featuredRoomTypes = roomTypeDao.findActive(4);
        try {
            dao.NewsDao newsDao = new dao.NewsDao();
            latestNews = newsDao.getLatestNews(3);
