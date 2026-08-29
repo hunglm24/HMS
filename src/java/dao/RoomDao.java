@@ -97,6 +97,28 @@ public class RoomDao {
         return rooms;
     }
 
+    public List<Room> findActiveWithRoomTypeName() {
+        List<Room> rooms = new ArrayList<>();
+        String sql = "SELECT r.*, rt.name AS room_type_name "
+                + "FROM rooms r "
+                + "JOIN room_types rt ON r.room_type_id = rt.id "
+                + "WHERE r.status <> 'INACTIVE' "
+                + "ORDER BY r.room_number ASC";
+
+        try (Connection conn = DBConnectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Room room = mapRow(rs);
+                room.setRoomTypeName(rs.getString("room_type_name"));
+                rooms.add(room);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
     public List<Room> findAllWithRoomTypeNameAndBookingInfo() {
         List<Room> rooms = new ArrayList<>();
         String sql = """
@@ -124,6 +146,7 @@ public class RoomDao {
                 LEFT JOIN bookings b ON b.id = active_br.booking_id
                 LEFT JOIN booking_guests bg ON bg.booking_id = b.id AND bg.is_primary_guest = TRUE
                 LEFT JOIN accounts a ON a.id = b.customer_id
+                WHERE r.status <> 'INACTIVE'
                 ORDER BY r.room_number ASC
                 """;
 

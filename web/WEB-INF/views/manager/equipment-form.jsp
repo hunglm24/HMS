@@ -45,7 +45,7 @@
 
             <label class="equipment-form-field${not empty errors.name ? ' is-error' : ''}">
               <span>Equipment Name <strong class="equipment-form-required">*</strong></span>
-              <input name="name" type="text" value="<c:out value='${form.name}' />" maxlength="100" required placeholder="Enter equipment name" />
+              <input name="name" type="text" value="<c:out value='${form.name}' />" maxlength="60" required placeholder="Enter equipment name" />
               <c:if test="${not empty errors.name}">
                 <div class="equipment-form-field__error"><c:out value="${errors.name}" /></div>
               </c:if>
@@ -53,7 +53,7 @@
 
             <label class="equipment-form-field${not empty errors.description ? ' is-error' : ''}">
               <span>Category / Description</span>
-              <textarea name="description" rows="6" maxlength="500" placeholder="Optional description"><c:out value="${form.description}" /></textarea>
+              <textarea name="description" rows="6" maxlength="200" placeholder="Optional description"><c:out value="${form.description}" /></textarea>
               <c:if test="${not empty errors.description}">
                 <div class="equipment-form-field__error"><c:out value="${errors.description}" /></div>
               </c:if>

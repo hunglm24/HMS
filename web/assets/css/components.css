@@ -185,6 +185,11 @@ form label + textarea,
     color: var(--color-error-700);
 }
 
+.status-inactive {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
 .badge-info,
 .status-cleaning,
 .status-occupied,

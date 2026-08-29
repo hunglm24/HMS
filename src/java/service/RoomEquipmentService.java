@@ -14,12 +14,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class RoomEquipmentService {
     private static final Set<String> STATUSES = Set.of(
             "NORMAL", "DAMAGED", "MISSING", "WAITING_REPAIR", "WAITING_REPLACEMENT", "MAINTENANCE");
     private static final List<String> STATUS_ORDER = List.of(
             "NORMAL", "DAMAGED", "MISSING", "WAITING_REPAIR", "WAITING_REPLACEMENT", "MAINTENANCE");
+    private static final Pattern NOTE_PATTERN = Pattern.compile("(?s)^.{1,50}$");
 
     private final RoomEquipmentDao roomEquipmentDao;
     private final EquipmentDao equipmentDao;
@@ -115,7 +117,17 @@ public class RoomEquipmentService {
             if (status == null) {
                 status = "NORMAL";
             }
-            String note = ValidationUtil.optionalText(assignment.getNote(), 500);
+            String note = ValidationUtil.normalizeText(assignment.getNote());
+            if (!note.isEmpty()) {
+                note = ValidationUtil.requirePatternText(
+                        note,
+                        "Ghi chu thiet bi",
+                        1,
+                        50,
+                        NOTE_PATTERN,
+                        "Ghi chu thiet bi khong duoc qua 50 ky tu."
+                );
+            }
 
             ValidationUtil.requireTrue(!normalized.containsKey(assignment.getEquipmentId()),
                     "Duplicate equipment selected: " + equipment.getName());

@@ -1,12 +1,13 @@
 (function () {
     const EQUIPMENT_STATUS_OPTIONS = [
-        { value: 'NORMAL', label: 'Bình thường' },
-        { value: 'DAMAGED', label: 'Hư hỏng' },
-        { value: 'MISSING', label: 'Thiếu / thất lạc' },
-        { value: 'WAITING_REPAIR', label: 'Chờ sửa chữa' },
-        { value: 'WAITING_REPLACEMENT', label: 'Chờ thay thế' },
-        { value: 'MAINTENANCE', label: 'Bảo trì' }
+        { value: 'NORMAL', label: 'Binh thuong' },
+        { value: 'DAMAGED', label: 'Hu hong' },
+        { value: 'MISSING', label: 'Thieu / that lac' },
+        { value: 'WAITING_REPAIR', label: 'Cho sua chua' },
+        { value: 'WAITING_REPLACEMENT', label: 'Cho thay the' },
+        { value: 'MAINTENANCE', label: 'Bao tri' }
     ];
+    const EQUIPMENT_NOTE_MAX_LENGTH = 50;
 
     const form = document.querySelector('.room-form');
     if (!form) {
@@ -37,8 +38,8 @@
             <tr class="room-equipment-empty-row" data-pagination-item>
                 <td colspan="5">
                     <div class="room-equipment-empty">
-                        <strong>Chưa có thiết bị nào được gán.</strong>
-                        <span>Hãy chọn thiết bị từ danh mục bên dưới.</span>
+                        <strong>Chua co thiet bi nao duoc gan.</strong>
+                        <span>Hay chon thiet bi tu danh muc ben duoi.</span>
                     </div>
                 </td>
             </tr>
@@ -47,7 +48,7 @@
 
     function renderEquipmentRow({ id, name, quantity, status, note }) {
         const normalizedId = String(id || '');
-        const safeName = escapeHtml(name || `Thiết bị #${normalizedId}`);
+        const safeName = escapeHtml(name || `Thiet bi #${normalizedId}`);
         const safeQuantity = Number.isFinite(Number(quantity)) && Number(quantity) > 0 ? String(quantity) : '1';
         const safeStatus = EQUIPMENT_STATUS_OPTIONS.some((option) => option.value === status) ? status : 'NORMAL';
         const safeNote = escapeHtml(note || '');
@@ -70,10 +71,10 @@
                     </select>
                 </td>
                 <td>
-                    <textarea name="equipmentNote" rows="2" maxlength="500" placeholder="Ghi chú tùy chọn">${safeNote}</textarea>
+                    <textarea name="equipmentNote" rows="2" maxlength="${EQUIPMENT_NOTE_MAX_LENGTH}" placeholder="Ghi chu tuy chon">${safeNote}</textarea>
                 </td>
                 <td class="room-equipment-row__actions">
-                    <button type="button" class="btn btn-secondary btn-sm" data-room-equipment-remove>Xóa</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-room-equipment-remove>Xoa</button>
                 </td>
             </tr>
         `;
@@ -92,7 +93,7 @@
 
             return {
                 id: equipmentId,
-                name: row.querySelector('.room-equipment-name strong')?.textContent || `Thiết bị #${equipmentId}`,
+                name: row.querySelector('.room-equipment-name strong')?.textContent || `Thiet bi #${equipmentId}`,
                 quantity: quantityInput ? quantityInput.value : '1',
                 status: statusSelect ? statusSelect.value : 'NORMAL',
                 note: noteInput ? noteInput.value : ''
@@ -112,7 +113,7 @@
             const equipmentId = String(button.dataset.equipmentId || '');
             const isSelected = selectedIds.has(equipmentId);
             button.disabled = isSelected;
-            button.textContent = isSelected ? 'Đã thêm' : 'Thêm';
+            button.textContent = isSelected ? 'Da them' : 'Them';
         });
     }
 
@@ -156,6 +157,15 @@
         syncCatalogButtons();
         refreshPagination();
         notifyChanged();
+    }
+
+    function clampEquipmentNote(target) {
+        if (!target || target.name !== 'equipmentNote' || typeof target.value !== 'string') {
+            return;
+        }
+        if (target.value.length > EQUIPMENT_NOTE_MAX_LENGTH) {
+            target.value = target.value.slice(0, EQUIPMENT_NOTE_MAX_LENGTH);
+        }
     }
 
     function bindCatalogButtons() {
@@ -204,7 +214,10 @@
             notifyChanged();
         });
 
-        selectedBody.addEventListener('input', notifyChanged);
+        selectedBody.addEventListener('input', (event) => {
+            clampEquipmentNote(event.target);
+            notifyChanged();
+        });
         selectedBody.addEventListener('change', notifyChanged);
     }
 

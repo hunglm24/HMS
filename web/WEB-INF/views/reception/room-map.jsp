@@ -1,28 +1,12 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="model.Room" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%
-    Map<Integer, List<Room>> roomsByFloor = (Map<Integer, List<Room>>) request.getAttribute("roomsByFloor");
-    Long availableCount = (Long) request.getAttribute("availableCount");
-    Long occupiedCount = (Long) request.getAttribute("occupiedCount");
-    Long reservedCount = (Long) request.getAttribute("reservedCount");
-    Long inspectionCount = (Long) request.getAttribute("inspectionCount");
-    Long cleaningCount = (Long) request.getAttribute("cleaningCount");
-    Long maintenanceCount = (Long) request.getAttribute("maintenanceCount");
-    Integer totalCount = (Integer) request.getAttribute("totalCount");
-    String roomMapMode = (String) request.getAttribute("roomMapMode");
-    boolean managerMode = "MANAGER".equals(roomMapMode);
-    String roomMapActionUrl = (String) request.getAttribute("roomMapActionUrl");
-%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><%= managerMode ? "Sơ đồ phòng | Manager" : "Sơ đồ phòng" %> - HMS</title>
+    <title><c:out value="${roomMapTitle}" /> - HMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css?v=20260819-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/room-map.css?v=20260822-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/room-change-modal.css?v=20260816-4">
@@ -39,8 +23,8 @@
             <div class="stats-row">
                 <div class="stat-badge stat-available">Trống: ${availableCount}</div>
                 <div class="stat-badge stat-occupied">Đang có khách: ${occupiedCount}</div>
-                <div class="stat-badge stat-reserved" style="background:#ffc107; color:#000;">Đã đặt trước: ${reservedCount}</div>
-                <div class="stat-badge stat-inspection" style="background:#8b5cf6; color:#fff;">Đang kiểm tra: ${inspectionCount}</div>
+                <div class="stat-badge stat-reserved">Đã đặt trước: ${reservedCount}</div>
+                <div class="stat-badge stat-inspection">Đang kiểm tra: ${inspectionCount}</div>
                 <div class="stat-badge stat-cleaning">Đang dọn: ${cleaningCount}</div>
                 <div class="stat-badge stat-maintenance">Bảo trì: ${maintenanceCount}</div>
                 <div class="stat-badge">Tổng: ${totalCount}</div>
@@ -51,7 +35,7 @@
             <section class="room-map-dashboard">
                 <section class="room-map-filter-accordion" aria-label="Bộ lọc nhanh">
                     <div class="room-map-filter-title">Bộ lọc nhanh</div>
-                    <form class="room-map-filter-form" method="get" action="<%= roomMapActionUrl == null ? request.getContextPath() + "/reception/room-map" : roomMapActionUrl %>">
+                    <form class="room-map-filter-form" method="get" action="${roomMapActionUrl}">
                         <div class="room-map-field">
                             <label for="floor">Tầng</label>
                             <select id="floor" name="floor">
@@ -83,13 +67,14 @@
                                 <option value="INSPECTION" ${param.status == 'INSPECTION' ? 'selected' : ''}>Đang kiểm tra</option>
                                 <option value="CLEANING" ${param.status == 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
                                 <option value="MAINTENANCE" ${param.status == 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
+                                <option value="NOT_READY" ${param.status == 'NOT_READY' ? 'selected' : ''}>Chưa sẵn sàng</option>
                             </select>
                         </div>
                         <div class="room-map-field room-map-field--actions">
                             <label aria-hidden="true">&nbsp;</label>
                             <div class="room-map-filter-actions">
-                            <button type="submit" class="btn btn-primary px-4">Áp dụng</button>
-                            <a class="btn btn-outline-primary px-4" href="<%= roomMapActionUrl == null ? request.getContextPath() + "/reception/room-map" : roomMapActionUrl %>">Xóa</a>
+                                <button type="submit" class="btn btn-primary px-4">Áp dụng</button>
+                                <a class="btn btn-outline-primary px-4" href="${roomMapActionUrl}">Xóa</a>
                             </div>
                         </div>
                     </form>

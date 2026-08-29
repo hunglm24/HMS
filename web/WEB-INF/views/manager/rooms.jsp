@@ -98,6 +98,7 @@
                   <option value="MAINTENANCE" ${pageData.roomStatus eq 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
                   <option value="NOT_READY" ${pageData.roomStatus eq 'NOT_READY' ? 'selected' : ''}>Chưa sẵn sàng</option>
                   <option value="INSPECTION" ${pageData.roomStatus eq 'INSPECTION' ? 'selected' : ''}>Chờ kiểm tra</option>
+                  <option value="INACTIVE" ${pageData.roomStatus eq 'INACTIVE' ? 'selected' : ''}>Ngừng khai thác</option>
                 </select>
               </div>
               <div class="room-management-filters__select">
@@ -173,6 +174,9 @@
                             <c:when test="${room.status eq 'MAINTENANCE'}">
                               <span class="status-chip status-maintenance">Bảo trì</span>
                             </c:when>
+                            <c:when test="${room.status eq 'INACTIVE'}">
+                              <span class="status-chip status-inactive">Ngừng khai thác</span>
+                            </c:when>
                             <c:otherwise>
                               <span class="status-chip status-pending"><c:out value="${room.status}" /></span>
                             </c:otherwise>
@@ -189,8 +193,13 @@
                             </button>
                             <c:choose>
                               <c:when test="${room.status eq 'OCCUPIED'}">
-                                <button type="button" class="btn btn-danger btn-sm" disabled title="Không thể ngừng hoạt động phòng đang có khách.">
-                                  Ngừng hoạt động
+                                <button type="button" class="btn btn-danger btn-sm" disabled title="Không thể xóa mềm phòng đang có khách." aria-label="Xóa mềm">
+                                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                                </button>
+                              </c:when>
+                              <c:when test="${room.status eq 'INACTIVE'}">
+                                <button type="button" class="btn btn-danger btn-sm" disabled title="Phòng đã ngừng khai thác.">
+                                  Đã ngừng khai thác
                                 </button>
                               </c:when>
                               <c:otherwise>
@@ -198,8 +207,9 @@
                                   class="btn btn-danger btn-sm"
                                   href="${cp}/manager/rooms/deactivate-room?id=${room.id}"
                                   data-room-mgmt-confirm="true"
-                                  data-room-mgmt-confirm-message="Bạn có muốn ngừng hoạt động phòng này không?">
-                                  Ngừng hoạt động
+                                  data-room-mgmt-confirm-message="Bạn có muốn xóa phòng này không?"
+                                  aria-label="Xóa mềm">
+                                  <i class="bi bi-trash3" aria-hidden="true"></i>
                                 </a>
                               </c:otherwise>
                             </c:choose>
@@ -231,6 +241,9 @@
                     <c:when test="${room.status eq 'CLEANING'}">
                       <span class="status-chip status-cleaning">Đang dọn</span>
                     </c:when>
+                    <c:when test="${room.status eq 'INACTIVE'}">
+                      <span class="status-chip status-inactive">Ngừng khai thác</span>
+                    </c:when>
                     <c:otherwise>
                       <span class="status-chip status-maintenance"><c:out value="${room.status}" /></span>
                     </c:otherwise>
@@ -254,8 +267,13 @@
                   </button>
                   <c:choose>
                     <c:when test="${room.status eq 'OCCUPIED'}">
-                      <button type="button" class="btn btn-danger btn-sm" disabled title="Không thể ngừng hoạt động phòng đang có khách.">
-                        Ngừng hoạt động
+                      <button type="button" class="btn btn-danger btn-sm" disabled title="Không thể xóa mềm phòng đang có khách." aria-label="Xóa mềm">
+                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                      </button>
+                    </c:when>
+                    <c:when test="${room.status eq 'INACTIVE'}">
+                      <button type="button" class="btn btn-danger btn-sm" disabled title="Phòng đã ngừng khai thác.">
+                        Đã ngừng khai thác
                       </button>
                     </c:when>
                     <c:otherwise>
@@ -263,8 +281,9 @@
                         class="btn btn-danger btn-sm"
                         href="${cp}/manager/rooms/deactivate-room?id=${room.id}"
                         data-room-mgmt-confirm="true"
-                        data-room-mgmt-confirm-message="Bạn có muốn ngừng hoạt động phòng này không?">
-                        Ngừng hoạt động
+                        data-room-mgmt-confirm-message="Bạn có muốn xóa mềm phòng này không?"
+                        aria-label="Xóa mềm">
+                        <i class="bi bi-trash3" aria-hidden="true"></i>
                       </a>
                     </c:otherwise>
                   </c:choose>

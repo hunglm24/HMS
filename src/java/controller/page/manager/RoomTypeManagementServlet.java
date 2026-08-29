@@ -172,47 +172,27 @@ public class RoomTypeManagementServlet extends HttpServlet {
         List<Long> amenityIds = parseAmenityIds(req.getParameterValues("amenityIds"), errors);
         Part coverImagePart = null;
 
+        roomType.setName(name);
+        roomType.setDescription(description);
+        roomType.setBedType(bedTypeRaw);
+        roomType.setStatus(statusRaw);
+
         try {
-            roomType.setName(ValidationUtil.requireText(name, "Tên loại phòng", 2, 100));
-        } catch (IllegalArgumentException ex) {
-            errors.put("name", ex.getMessage());
+            roomType.setCapacity(Integer.parseInt(capacityRaw == null ? "" : capacityRaw.trim()));
+        } catch (NumberFormatException ex) {
+            errors.put("capacity", "Sức chứa phải là số nguyên hợp lệ.");
         }
 
         try {
-            roomType.setDescription(ValidationUtil.optionalText(description, 500));
-        } catch (IllegalArgumentException ex) {
-            errors.put("description", ex.getMessage());
-        }
-
-        try {
-            roomType.setSizeM2(ValidationUtil.optionalBigDecimal(sizeM2Raw, "Diện tích phòng"));
-        } catch (IllegalArgumentException ex) {
-            errors.put("sizeM2", ex.getMessage());
-        }
-
-        try {
-            roomType.setBedType(ValidationUtil.optionalText(bedTypeRaw, 100));
-        } catch (IllegalArgumentException ex) {
-            errors.put("bedType", ex.getMessage());
-        }
-
-        try {
-            roomType.setCapacity(ValidationUtil.requirePositiveInt(capacityRaw, "Sức chứa"));
-        } catch (IllegalArgumentException ex) {
-            errors.put("capacity", ex.getMessage());
+            roomType.setSizeM2(ValidationUtil.isBlank(sizeM2Raw) ? null : new java.math.BigDecimal(sizeM2Raw.trim()));
+        } catch (NumberFormatException ex) {
+            errors.put("sizeM2", "Diện tích phải là số hợp lệ.");
         }
 
         try {
             roomType.setBasePrice(MoneyUtil.parseVndMoney(basePriceRaw, "Giá cơ bản"));
         } catch (IllegalArgumentException ex) {
             errors.put("basePrice", ex.getMessage());
-        }
-
-        try {
-            String status = ValidationUtil.optionalStatus(statusRaw, Set.of("ACTIVE", "INACTIVE"));
-            roomType.setStatus(status == null ? ACTIVE_STATUS : status);
-        } catch (IllegalArgumentException ex) {
-            errors.put("status", ex.getMessage());
         }
 
         try {

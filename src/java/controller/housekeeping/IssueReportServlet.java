@@ -48,7 +48,7 @@ public class IssueReportServlet extends HttpServlet {
             return;
         }
 
-        request.setAttribute("rooms", roomService.getAllRooms());
+        request.setAttribute("rooms", roomService.getActiveRooms());
         String preselectedRoomIdStr = request.getParameter("roomId");
         if (preselectedRoomIdStr != null && !preselectedRoomIdStr.isBlank()) {
             try { request.setAttribute("preselectedRoomId", Long.parseLong(preselectedRoomIdStr)); }

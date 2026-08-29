@@ -418,6 +418,7 @@ public class HousekeepingDao {
                 if (isCheckout) {
                     try (PreparedStatement updateRoom = connection.prepareStatement("""
                             UPDATE rooms SET status = CASE 
+                                WHEN status = 'INACTIVE' THEN 'INACTIVE'
                                 WHEN ? THEN 'NOT_READY'
                                 ELSE 'INSPECTION' 
                             END WHERE id = ?
@@ -429,7 +430,7 @@ public class HousekeepingDao {
                 } else if (hasCleaningRequest) {
                     createCleaningTask(connection, roomId, null, staffId, inspectionNote);
                     try (PreparedStatement updateRoom = connection.prepareStatement(
-                            "UPDATE rooms SET status = CASE WHEN ? THEN 'NOT_READY' ELSE 'CLEANING' END WHERE id = ?")) {
+                            "UPDATE rooms SET status = CASE WHEN status = 'INACTIVE' THEN 'INACTIVE' WHEN ? THEN 'NOT_READY' ELSE 'CLEANING' END WHERE id = ?")) {
                         updateRoom.setBoolean(1, damaged);
                         updateRoom.setLong(2, roomId);
                         updateRoom.executeUpdate();
@@ -437,6 +438,7 @@ public class HousekeepingDao {
                 } else {
                     try (PreparedStatement updateRoom = connection.prepareStatement("""
                             UPDATE rooms rm SET rm.status = CASE 
+                                WHEN rm.status = 'INACTIVE' THEN 'INACTIVE'
                                 WHEN ? THEN 'NOT_READY'
                                 WHEN EXISTS (
                                     SELECT 1 FROM booking_rooms br
@@ -616,6 +618,7 @@ public class HousekeepingDao {
                 }
                 try (PreparedStatement updateRoom = connection.prepareStatement("""
                         UPDATE rooms rm SET rm.status = CASE
+                        WHEN rm.status = 'INACTIVE' THEN 'INACTIVE'
                         WHEN rm.status = 'MAINTENANCE' THEN 'MAINTENANCE'
                         WHEN EXISTS (
                             SELECT 1 FROM room_equipment re
@@ -1238,7 +1241,8 @@ public class HousekeepingDao {
                 }
                 
                 String roomStatus = "CLEANING".equals(taskType) ? "CLEANING" : "INSPECTION";
-                try (PreparedStatement statement = connection.prepareStatement("UPDATE rooms SET status = ? WHERE id = ?")) {
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE rooms SET status = CASE WHEN status = 'INACTIVE' THEN status ELSE ? END WHERE id = ?")) {
                     statement.setString(1, roomStatus);
                     statement.setLong(2, roomId);
                     statement.executeUpdate();
@@ -1268,6 +1272,7 @@ public class HousekeepingDao {
     public void syncDatabaseState() throws SQLException {
         String fixCleaningRoomsSql = """
             UPDATE rooms rm SET rm.status = CASE
+                WHEN rm.status = 'INACTIVE' THEN 'INACTIVE'
                 WHEN EXISTS (
                     SELECT 1 FROM room_equipment re
                     WHERE re.room_id = rm.id AND re.status IN ('DAMAGED', 'MISSING', 'WAITING_REPAIR', 'WAITING_REPLACEMENT', 'MAINTENANCE')
@@ -1286,6 +1291,7 @@ public class HousekeepingDao {
 
         String fixInspectionRoomsSql = """
             UPDATE rooms rm SET rm.status = CASE
+                WHEN rm.status = 'INACTIVE' THEN 'INACTIVE'
                 WHEN EXISTS (
                     SELECT 1 FROM room_equipment re
                     WHERE re.room_id = rm.id AND re.status IN ('DAMAGED', 'MISSING', 'WAITING_REPAIR', 'WAITING_REPLACEMENT', 'MAINTENANCE')

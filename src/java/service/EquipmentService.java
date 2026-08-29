@@ -15,6 +15,9 @@ public class EquipmentService {
     private static final Set<String> EQUIPMENT_STATUSES = Set.of("ACTIVE", "INACTIVE");
     private static final Set<String> FILTER_STATUSES = Set.of("ACTIVE", "INACTIVE", "ALL");
     private static final Set<String> FILTER_FLAGS = Set.of("ALL", "YES", "NO");
+    private static final int EQUIPMENT_NAME_MIN_LENGTH = 2;
+    private static final int EQUIPMENT_NAME_MAX_LENGTH = 60;
+    private static final int EQUIPMENT_DESCRIPTION_MAX_LENGTH = 200;
     private final EquipmentDao equipmentDao;
 
     public EquipmentService() {
@@ -95,8 +98,13 @@ public class EquipmentService {
     // Validate the core equipment fields before persistence.
     private void validateEquipmentCoreFields(Equipment equipment) {
         ValidationUtil.requireTrue(equipment != null, "Equipment is required.");
-        equipment.setName(ValidationUtil.requireText(equipment.getName(), "Equipment name", 2, 100));
-        equipment.setDescription(ValidationUtil.optionalText(equipment.getDescription(), 500));
+        equipment.setName(ValidationUtil.requireText(
+                equipment.getName(),
+                "Equipment name",
+                EQUIPMENT_NAME_MIN_LENGTH,
+                EQUIPMENT_NAME_MAX_LENGTH
+        ));
+        equipment.setDescription(ValidationUtil.optionalText(equipment.getDescription(), EQUIPMENT_DESCRIPTION_MAX_LENGTH));
         equipment.setStatus(ValidationUtil.requireStatus(equipment.getStatus(), "Status", EQUIPMENT_STATUSES));
         equipment.setDefaultCompensationPrice(ValidationUtil.requirePositiveBigDecimal(
                 equipment.getDefaultCompensationPrice() == null ? null : equipment.getDefaultCompensationPrice().toPlainString(),
