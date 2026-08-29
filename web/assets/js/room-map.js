@@ -21,6 +21,7 @@
             case 'OCCUPIED': return 'occupied';
             case 'CLEANING': return 'cleaning';
             case 'MAINTENANCE': return 'maintenance';
+            case 'NOT_READY': return 'not-ready';
             default: return 'neutral';
         }
     }

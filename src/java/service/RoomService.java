@@ -12,11 +12,13 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class RoomService {
     private static final Set<String> STATUSES = Set.of(
-            "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION");
-    private static final Set<String> LOCKED_EDIT_STATUSES = Set.of("OCCUPIED", "NOT_READY");
+            "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION", "INACTIVE");
+    private static final Set<String> LOCKED_EDIT_STATUSES = Set.of("OCCUPIED", "NOT_READY", "INACTIVE");
+    private static final Pattern ROOM_DESCRIPTION_PATTERN = Pattern.compile("(?s)^.{1,100}$");
 
     private final RoomDao roomDao;
     private final RoomTypeDao roomTypeDao;
@@ -35,6 +37,11 @@ public class RoomService {
         return roomDao.findAllWithRoomTypeName();
     }
 
+    // Return only rooms that are still selectable in normal workflows.
+    public List<Room> getActiveRooms() {
+        return roomDao.findActiveWithRoomTypeName();
+    }
+
     // Filter rooms in memory for the current UI state.
     public List<Room> findRooms(String keyword, Long roomTypeId, Integer floor, String status) {
         // Normalize the incoming filters before applying them.
@@ -47,6 +54,8 @@ public class RoomService {
 
         // Filter the room list in memory for the current page state.
         return roomDao.findAllWithRoomTypeName().stream()
+                .filter(room -> normalizedStatus != null
+                        || !"INACTIVE".equalsIgnoreCase(room.getStatus()))
                 .filter(room -> matchesKeyword(room, filterKeyword))
                 .filter(room -> normalizedRoomTypeId == null || normalizedRoomTypeId.equals(room.getRoomTypeId()))
                 .filter(room -> normalizedFloor == null || normalizedFloor.equals(room.getFloorNumber()))
@@ -93,21 +102,7 @@ public class RoomService {
         ensureRoomCanBeDeactivated(id);
         Room value = roomDao.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Khong tim thay phong."));
-        value.setStatus("NOT_READY");
-        return roomDao.update(value);
-    }
-
-    // Restore a previously inactive room.
-    public boolean reactivateRoom(long id) throws SQLException {
-        if (id <= 0) {
-            return false;
-        }
-        Optional<Room> room = roomDao.findById(id);
-        if (room.isEmpty()) {
-            return false;
-        }
-        Room value = room.get();
-        value.setStatus("AVAILABLE");
+        value.setStatus("INACTIVE");
         return roomDao.update(value);
     }
 
@@ -121,7 +116,7 @@ public class RoomService {
         // Enforce the shared rules for both create and update flows.
         ValidationUtil.requireTrue(room != null, "Thong tin phong khong hop le.");
 
-        String roomNumber = ValidationUtil.requireDigitsText(room.getRoomNumber(), "So phong", 1, 20);
+        String roomNumber = ValidationUtil.requireDigitsText(room.getRoomNumber(), "So phong", 3, 3);
         ValidationUtil.requireTrue(room.getRoomTypeId() > 0, "Vui long chon loai phong.");
 
         Integer floorNumber = room.getFloorNumber();
@@ -129,7 +124,17 @@ public class RoomService {
                 "Tang chi duoc trong khoang 1 den 4.");
         ensureRoomNumberMatchesFloor(roomNumber, floorNumber);
 
-        String description = ValidationUtil.optionalText(room.getDescription(), 500);
+        String description = ValidationUtil.normalizeText(room.getDescription());
+        if (!description.isEmpty()) {
+            description = ValidationUtil.requirePatternText(
+                    description,
+                    "Mo ta phong",
+                    1,
+                    100,
+                    ROOM_DESCRIPTION_PATTERN,
+                    "Mo ta phong khong duoc qua 100 ky tu."
+            );
+        }
         String status = ValidationUtil.optionalStatus(room.getStatus(), STATUSES);
 
         room.setRoomNumber(roomNumber);
@@ -146,6 +151,10 @@ public class RoomService {
             ValidationUtil.requireTrue(sameStatus, "Trang thai nay khong duoc phep chinh tay.");
             incomingRoom.setStatus(currentStatus);
             return;
+        }
+
+        if ("INACTIVE".equalsIgnoreCase(requestedStatus)) {
+            throw new IllegalArgumentException("Trang thai nay khong duoc phep chinh tay.");
         }
 
         if (requestedStatus != null && LOCKED_EDIT_STATUSES.contains(requestedStatus.toUpperCase())) {
@@ -186,13 +195,14 @@ public class RoomService {
     // Prevent duplicate room numbers within the current dataset.
     public void ensureRoomNumberUnique(String roomNumber, Long excludeId) {
         // Compare room numbers case-insensitively and skip the current row on edit.
-        String normalizedRoomNumber = ValidationUtil.requireDigitsText(roomNumber, "So phong", 1, 20);
+        String normalizedRoomNumber = ValidationUtil.requireDigitsText(roomNumber, "So phong", 3, 3);
 
-        // Stop as soon as another room already uses the same number.
+        // Stop as soon as another active room already uses the same number.
         boolean duplicated = roomDao.findAll().stream()
                 .anyMatch(room -> {
                     // Ignore rows without a number or the row currently being edited.
                     if (room.getRoomNumber() == null) return false;
+                    if ("INACTIVE".equalsIgnoreCase(room.getStatus())) return false;
                     boolean sameNumber = room.getRoomNumber().equalsIgnoreCase(normalizedRoomNumber);
                     boolean sameId = excludeId != null && excludeId > 0 && room.getId() == excludeId;
                     return sameNumber && !sameId;

@@ -169,9 +169,18 @@ public class RoomManagementServlet extends HttpServlet {
         }
 
         req.setAttribute("roomTypeOptions", roomTypes);
-        req.setAttribute("roomOptions", roomService.getAllRooms().stream()
+        List<Room> roomOptions = roomService.getActiveRooms().stream()
                 .filter(room -> existingRoom == null || existingRoom.getId() == null || room.getId() != existingRoom.getId())
-                .toList());
+                .toList();
+        Map<Long, String> roomEquipmentSummaries = roomEquipmentService.findRoomEquipmentSummaries(roomOptions);
+        roomOptions = roomOptions.stream()
+                .filter(room -> {
+                    String summary = roomEquipmentSummaries.get(room.getId());
+                    return summary != null && !summary.isBlank();
+                })
+                .toList();
+
+        req.setAttribute("roomOptions", roomOptions);
         req.setAttribute("roomEquipmentStatuses", roomEquipmentService.findStatuses());
         req.setAttribute("equipmentCatalog", roomEquipmentService.findAssignableEquipments());
     }
@@ -235,7 +244,7 @@ public class RoomManagementServlet extends HttpServlet {
         }
 
         try {
-            room.setRoomNumber(ValidationUtil.requireDigitsText(req.getParameter("roomNumber"), "Room number", 1, 20));
+            room.setRoomNumber(ValidationUtil.requireDigitsText(req.getParameter("roomNumber"), "Room number", 3, 3));
         } catch (IllegalArgumentException ex) {
             errors.put("roomNumber", ex.getMessage());
         }
@@ -248,16 +257,12 @@ public class RoomManagementServlet extends HttpServlet {
 
         try {
             room.setStatus(ValidationUtil.requireStatus(req.getParameter("status"), "Status", java.util.Set.of(
-                    "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION")));
+                    "AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE", "NOT_READY", "INSPECTION", "INACTIVE")));
         } catch (IllegalArgumentException ex) {
             errors.put("status", ex.getMessage());
         }
 
-        try {
-            room.setDescription(ValidationUtil.optionalText(req.getParameter("description"), 500));
-        } catch (IllegalArgumentException ex) {
-            errors.put("description", ex.getMessage());
-        }
+        room.setDescription(req.getParameter("description"));
 
         List<RoomEquipment> equipmentDrafts = readEquipmentDrafts(req);
         List<RoomEquipment> normalizedEquipments = List.of();

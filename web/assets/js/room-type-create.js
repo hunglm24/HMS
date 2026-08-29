@@ -13,6 +13,7 @@
         var capacityInput = document.getElementById('roomTypeCapacity');
         var basePriceInput = document.getElementById('roomTypeBasePrice');
         var sizeInput = document.getElementById('roomTypeSizeM2');
+        var bedTypeInput = document.getElementById('roomTypeBedType');
         var coverInput = document.getElementById('roomTypeCoverImage');
         var uploadZone = form.querySelector('[data-room-type-upload-zone]');
         var uploadTrigger = form.querySelector('[data-room-type-upload-trigger]');
@@ -22,6 +23,8 @@
         var existingCoverSrc = coverPreview ? coverPreview.getAttribute('data-original-src') : '';
         var statusRadios = Array.prototype.slice.call(form.querySelectorAll('input[name="status"]'));
         var numberFormatter = new Intl.NumberFormat('vi-VN');
+        var roomTypeNameMaxLength = 60;
+        var roomTypeBedTypeMaxLength = 50;
         var previewObjectUrl = null;
         var allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
         var allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
@@ -132,34 +135,8 @@
         }
 
         function getStatusValue() {
-            return statusInput ? String(statusInput.value || '').toUpperCase() : '';
-        }
-
-        function renderStatusToggle() {
-            if (!statusToggle || !statusInput) {
-                return;
-            }
-
-            var isActive = getStatusValue() === 'ACTIVE';
-            statusToggle.classList.toggle('is-active', isActive);
-            statusToggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            if (statusLabel) {
-                statusLabel.textContent = isActive ? 'Đang hoạt động' : 'Ngừng hoạt động';
-            }
-        }
-
-        function setStatusValue(nextValue) {
-            if (!statusInput) {
-                return;
-            }
-
-            statusInput.value = nextValue === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE';
-            renderStatusToggle();
-            clearFieldError(statusInput);
-        }
-
-        function toggleStatusValue() {
-            setStatusValue(getStatusValue() === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE');
+            var checked = form.querySelector('input[name="status"]:checked');
+            return checked ? String(checked.value || '').toUpperCase() : '';
         }
 
         function validateName() {
@@ -169,12 +146,12 @@
                 setFieldError(nameInput, 'Vui lòng nhập tên loại phòng.');
                 return false;
             }
-            if (value.length < 3) {
-                setFieldError(nameInput, 'Tên loại phòng phải có ít nhất 3 ký tự.');
+            if (value.length < 2) {
+                setFieldError(nameInput, 'Tên loại phòng phải có ít nhất 2 ký tự.');
                 return false;
             }
-            if (value.length > 100) {
-                setFieldError(nameInput, 'Tên loại phòng không được vượt quá 100 ký tự.');
+            if (value.length > roomTypeNameMaxLength) {
+                setFieldError(nameInput, 'Tên loại phòng không được vượt quá 60 ký tự.');
                 return false;
             }
 
@@ -202,8 +179,8 @@
                 setFieldError(capacityInput, 'Vui lòng nhập sức chứa.');
                 return false;
             }
-            if (!Number.isInteger(value) || value < 1) {
-                setFieldError(capacityInput, 'Sức chứa phải là số nguyên dương.');
+            if (!Number.isInteger(value) || value < 1 || value > 4) {
+                setFieldError(capacityInput, 'Sức chứa phải là số nguyên từ 1 đến 4.');
                 return false;
             }
 
@@ -237,8 +214,8 @@
             }
 
             var value = Number(raw);
-            if (Number.isNaN(value) || value <= 0) {
-                setFieldError(sizeInput, 'Diện tích phòng phải là số dương.');
+            if (Number.isNaN(value) || value <= 0 || value > 70) {
+                setFieldError(sizeInput, 'Diện tích phải lớn hơn 0 và nhỏ hơn hoặc bằng 70 m².');
                 return false;
             }
 
@@ -246,15 +223,36 @@
             return true;
         }
 
+        function validateBedType() {
+            if (!bedTypeInput) {
+                return true;
+            }
+
+            var value = normalizeText(bedTypeInput.value);
+
+            if (!value) {
+                clearFieldError(bedTypeInput);
+                return true;
+            }
+
+            if (value.length > roomTypeBedTypeMaxLength) {
+                setFieldError(bedTypeInput, 'Loại giường không được vượt quá 50 ký tự.');
+                return false;
+            }
+
+            clearFieldError(bedTypeInput);
+            return true;
+        }
+
         function validateStatus() {
             var value = getStatusValue();
 
             if (value !== 'ACTIVE' && value !== 'INACTIVE') {
-                setFieldError(statusInput || statusToggle, 'Vui lòng chọn trạng thái.');
+                setFieldError(statusRadios[0] || nameInput, 'Vui lòng chọn trạng thái.');
                 return false;
             }
 
-            clearFieldError(statusInput || statusToggle);
+            clearFieldError(statusRadios[0] || nameInput);
             return true;
         }
 
@@ -299,6 +297,7 @@
                 { valid: validateCapacity(), input: capacityInput },
                 { valid: validateBasePrice(), input: basePriceInput },
                 { valid: validateSize(), input: sizeInput },
+                { valid: validateBedType(), input: bedTypeInput },
                 { valid: validateStatus(), input: statusRadios[0] },
                 { valid: validateCoverImage(), input: coverInput }
             ];
@@ -326,6 +325,10 @@
                 clearFieldError(input);
             });
 
+            input.addEventListener('change', function () {
+                clearFieldError(input);
+            });
+
             input.addEventListener('blur', function () {
                 validator();
             });
@@ -335,6 +338,7 @@
         wireInputValidation(descriptionInput, validateDescription);
         wireInputValidation(capacityInput, validateCapacity);
         wireInputValidation(sizeInput, validateSize);
+        wireInputValidation(bedTypeInput, validateBedType);
 
         if (basePriceInput) {
             basePriceInput.addEventListener('input', function () {

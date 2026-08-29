@@ -210,13 +210,13 @@ public class EquipmentManagementServlet extends HttpServlet {
         Part imagePart = null;
 
         try {
-            equipment.setName(ValidationUtil.requireText(name, "Equipment name", 2, 100));
+            equipment.setName(ValidationUtil.requireText(name, "Equipment name", 2, 60));
         } catch (IllegalArgumentException ex) {
             errors.put("name", ex.getMessage());
         }
 
         try {
-            equipment.setDescription(ValidationUtil.optionalText(description, 500));
+            equipment.setDescription(ValidationUtil.optionalText(description, 200));
         } catch (IllegalArgumentException ex) {
             errors.put("description", ex.getMessage());
         }

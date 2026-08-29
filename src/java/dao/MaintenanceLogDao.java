@@ -35,6 +35,7 @@ public class MaintenanceLogDao {
                 UPDATE rooms rm
                 JOIN housekeeping_tasks ht ON ht.room_id = rm.id
                 SET rm.status = CASE
+                    WHEN rm.status = 'INACTIVE' THEN 'INACTIVE'
                     WHEN EXISTS (
                         SELECT 1 FROM booking_rooms br
                         JOIN bookings b ON b.id = br.booking_id

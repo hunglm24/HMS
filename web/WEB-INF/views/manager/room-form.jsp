@@ -50,7 +50,7 @@
             <div class="room-form-grid-2">
               <label class="room-form-field${not empty errors.roomNumber ? ' is-error' : ''}">
                 <span>Số phòng *</span>
-                <input name="roomNumber" type="text" value="<c:out value='${form.roomNumber}' />" maxlength="20" required placeholder="101" />
+                <input name="roomNumber" type="text" value="<c:out value='${form.roomNumber}' />" maxlength="3" minlength="3" inputmode="numeric" pattern="[0-9]{3}" required placeholder="101" />
                 <c:if test="${not empty errors.roomNumber}">
                   <div class="room-form-field__error"><c:out value="${errors.roomNumber}" /></div>
                 </c:if>
@@ -83,14 +83,30 @@
 
               <label class="room-form-field${not empty errors.status ? ' is-error' : ''}">
                 <span>Trạng thái *</span>
-                <select name="status" required>
-                  <option value="AVAILABLE" ${form.status eq 'AVAILABLE' or empty form.status ? 'selected' : ''}>Trống</option>
-                  <option value="CLEANING" ${form.status eq 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
-                  <option value="MAINTENANCE" ${form.status eq 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
-                  <option value="INSPECTION" ${form.status eq 'INSPECTION' ? 'selected' : ''}>Chờ kiểm tra</option>
-                  <option value="OCCUPIED" ${form.status eq 'OCCUPIED' ? 'selected' : ''}>Đang có khách</option>
-                  <option value="NOT_READY" ${form.status eq 'NOT_READY' ? 'selected' : ''}>Chưa sẵn sàng</option>
-                </select>
+                <c:choose>
+                  <c:when test="${form.status eq 'INACTIVE'}">
+                    <input type="hidden" name="status" value="INACTIVE" />
+                    <select disabled>
+                      <option value="AVAILABLE">Trống</option>
+                      <option value="CLEANING">Đang dọn</option>
+                      <option value="MAINTENANCE">Bảo trì</option>
+                      <option value="INSPECTION">Chờ kiểm tra</option>
+                      <option value="OCCUPIED">Đang có khách</option>
+                      <option value="NOT_READY">Chưa sẵn sàng</option>
+                      <option value="INACTIVE" selected>Ngừng khai thác</option>
+                    </select>
+                  </c:when>
+                  <c:otherwise>
+                    <select name="status" required>
+                      <option value="AVAILABLE" ${form.status eq 'AVAILABLE' or empty form.status ? 'selected' : ''}>Trống</option>
+                      <option value="CLEANING" ${form.status eq 'CLEANING' ? 'selected' : ''}>Đang dọn</option>
+                      <option value="MAINTENANCE" ${form.status eq 'MAINTENANCE' ? 'selected' : ''}>Bảo trì</option>
+                      <option value="INSPECTION" ${form.status eq 'INSPECTION' ? 'selected' : ''}>Chờ kiểm tra</option>
+                      <option value="OCCUPIED" ${form.status eq 'OCCUPIED' ? 'selected' : ''}>Đang có khách</option>
+                      <option value="NOT_READY" ${form.status eq 'NOT_READY' ? 'selected' : ''}>Chưa sẵn sàng</option>
+                    </select>
+                  </c:otherwise>
+                </c:choose>
                 <c:if test="${not empty errors.status}">
                   <div class="room-form-field__error"><c:out value="${errors.status}" /></div>
                 </c:if>
@@ -99,7 +115,7 @@
 
             <label class="room-form-field${not empty errors.description ? ' is-error' : ''}">
               <span>Mô tả</span>
-              <textarea name="description" rows="5" maxlength="500" placeholder="Ghi chú tùy chọn"><c:out value="${form.description}" /></textarea>
+              <textarea name="description" rows="5" maxlength="100" placeholder="Ghi chú tùy chọn"><c:out value="${form.description}" /></textarea>
               <c:if test="${not empty errors.description}">
                 <div class="room-form-field__error"><c:out value="${errors.description}" /></div>
               </c:if>
@@ -149,13 +165,6 @@
                   <p>Thêm thiết bị khi đang tạo hoặc sửa phòng.</p>
                 </div>
               </header>
-
-              <div class="room-equipment-toolbar">
-                <div class="room-form-field">
-                  <span>Danh mục thiết bị</span>
-                  <div class="room-form-field__hint">Chọn thiết bị từ danh sách bên dưới.</div>
-                </div>
-              </div>
 
               <section class="room-equipment-block">
                 <div class="room-equipment-block__head">
@@ -217,7 +226,7 @@
                                 </select>
                               </td>
                               <td>
-                                <textarea name="equipmentNote" rows="2" maxlength="500"><c:out value="${equip.note}" /></textarea>
+                                <textarea name="equipmentNote" rows="2" maxlength="50"><c:out value="${equip.note}" /></textarea>
                               </td>
                               <td class="room-equipment-row__actions">
                                 <button type="button" class="btn btn-secondary btn-sm" data-room-equipment-remove>Xóa</button>

@@ -19,6 +19,10 @@ import java.util.stream.Collectors;
 
 public class RoomTypeService {
     private static final Set<String> STATUSES = Set.of("ACTIVE", "INACTIVE");
+    private static final int ROOM_TYPE_NAME_MIN_LENGTH = 2;
+    private static final int ROOM_TYPE_NAME_MAX_LENGTH = 60;
+    private static final int ROOM_TYPE_BED_TYPE_MAX_LENGTH = 50;
+    private static final java.math.BigDecimal ROOM_TYPE_MAX_SIZE_M2 = new java.math.BigDecimal("70");
     private final RoomTypeDao roomTypeDao;
     private final AmenityDao amenityDao;
     private final RoomTypeAmenityDao roomTypeAmenityDao;
@@ -162,7 +166,7 @@ public class RoomTypeService {
 
     // Prevent duplicate room type names across the catalog while excluding one record.
     private void ensureRoomTypeNameUnique(String name, Long excludedRoomTypeId) {
-        String normalizedName = ValidationUtil.requireText(name, "Ten loai phong", 2, 100);
+        String normalizedName = ValidationUtil.requireText(name, "Tên loại phòng", ROOM_TYPE_NAME_MIN_LENGTH, ROOM_TYPE_NAME_MAX_LENGTH);
         List<RoomType> roomTypes = roomTypeDao.findAll();
         if (roomTypes == null) {
             roomTypes = Collections.emptyList();
@@ -182,13 +186,13 @@ public class RoomTypeService {
 
     // Validate common room type fields for create and update flows.
     private void validateRoomTypeCoreFields(RoomType roomType) {
-        ValidationUtil.requireTrue(roomType != null, "Thong tin loai phong khong hop le.");
+        ValidationUtil.requireTrue(roomType != null, "Thông tin loại phòng không hợp lệ.");
 
-        String name = ValidationUtil.requireText(roomType.getName(), "Ten loai phong", 2, 100);
+        String name = ValidationUtil.requireText(roomType.getName(), "Tên loại phòng", ROOM_TYPE_NAME_MIN_LENGTH, ROOM_TYPE_NAME_MAX_LENGTH);
         String description = ValidationUtil.optionalText(roomType.getDescription(), 500);
-        String bedType = ValidationUtil.optionalText(roomType.getBedType(), 100);
+        String bedType = ValidationUtil.optionalText(roomType.getBedType(), ROOM_TYPE_BED_TYPE_MAX_LENGTH);
         java.math.BigDecimal sizeM2 = roomType.getSizeM2();
-        int capacity = ValidationUtil.requirePositiveInt(String.valueOf(roomType.getCapacity()), "Capacity");
+        int capacity = ValidationUtil.requirePositiveInt(String.valueOf(roomType.getCapacity()), "Sức chứa");
         Set<String> allowedStatuses = Set.copyOf(findCreateStatuses());
         String status = ValidationUtil.optionalStatus(roomType.getStatus(), allowedStatuses);
         List<String> allowedBedTypes = roomTypeDao.findDistinctBedTypes();
@@ -197,13 +201,16 @@ public class RoomTypeService {
         roomType.setDescription(description.isEmpty() ? null : description);
         roomType.setBedType(bedType.isEmpty() ? null : validateBedType(bedType, allowedBedTypes));
         if (sizeM2 != null) {
-            ValidationUtil.requireTrue(sizeM2.signum() > 0, "Room size phai lon hon 0.");
+            ValidationUtil.requireTrue(sizeM2.compareTo(java.math.BigDecimal.ZERO) > 0
+                    && sizeM2.compareTo(ROOM_TYPE_MAX_SIZE_M2) <= 0,
+                    "Diện tích phải lớn hơn 0 và nhỏ hơn hoặc bằng 70 m².");
         }
         roomType.setSizeM2(sizeM2);
+        ValidationUtil.requireTrue(capacity >= 1 && capacity <= 4, "Sức chứa phải từ 1 đến 4.");
         roomType.setCapacity(capacity);
         roomType.setBasePrice(ValidationUtil.requirePositiveBigDecimal(
                 roomType.getBasePrice() == null ? null : roomType.getBasePrice().toPlainString(),
-                "Base price"));
+                "Giá cơ bản"));
         roomType.setStatus(status == null ? "ACTIVE" : status);
     }
 
@@ -267,7 +274,7 @@ public class RoomTypeService {
                 .anyMatch(value -> value.equalsIgnoreCase(bedType));
 
         if (!valid) {
-            throw new IllegalArgumentException("Bed type khong hop le.");
+            throw new IllegalArgumentException("Loại giường không hợp lệ.");
         }
         return bedType;
     }

@@ -48,7 +48,7 @@
                     <div class="room-type-create-core-grid">
                         <label class="room-type-create-field room-type-create-field--left${not empty errors.name ? ' is-error' : ''}" data-validate-field="name">
                             <span>Tên loại phòng <strong class="room-type-create-required">*</strong></span>
-                            <input id="roomTypeName" name="name" type="text" value="<c:out value='${form.name}' />" maxlength="100" required placeholder="Nhập tên loại phòng">
+                            <input id="roomTypeName" name="name" type="text" value="<c:out value='${form.name}' />" maxlength="60" required placeholder="Nhập tên loại phòng">
                             <c:if test="${not empty errors.name}">
                                 <div class="room-type-create-field__error"><c:out value="${errors.name}" /></div>
                             </c:if>
@@ -84,7 +84,7 @@
 
                         <label class="room-type-create-field room-type-create-field--left${not empty errors.capacity ? ' is-error' : ''}" data-validate-field="capacity">
                             <span>Sức chứa <strong class="room-type-create-required">*</strong></span>
-                            <input id="roomTypeCapacity" name="capacity" type="number" value="<c:out value='${form.capacity}' />" min="1" step="1" required placeholder="2 khách">
+                            <input id="roomTypeCapacity" name="capacity" type="number" value="<c:out value='${form.capacity}' />" min="1" max="4" step="1" required placeholder="2 khách">
                             <c:if test="${not empty errors.capacity}">
                                 <div class="room-type-create-field__error"><c:out value="${errors.capacity}" /></div>
                             </c:if>
@@ -126,7 +126,7 @@
 
                         <label class="room-type-create-field room-type-create-field--right${not empty errors.sizeM2 ? ' is-error' : ''}">
                             <span>Diện tích</span>
-                            <input id="roomTypeSizeM2" name="sizeM2" type="number" value="<c:out value='${form.sizeM2}' />" min="0" step="0.01" placeholder="32 m²">
+                            <input id="roomTypeSizeM2" name="sizeM2" type="number" value="<c:out value='${form.sizeM2}' />" min="0.01" max="70" step="0.01" placeholder="32 m²">
                             <c:if test="${not empty errors.sizeM2}">
                                 <div class="room-type-create-field__error"><c:out value="${errors.sizeM2}" /></div>
                             </c:if>

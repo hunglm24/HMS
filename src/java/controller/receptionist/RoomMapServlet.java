@@ -68,7 +68,7 @@ public class RoomMapServlet extends HttpServlet {
 
         for (Room room : allRooms) {
             String physicalStatus = room.getStatus() != null ? room.getStatus().toUpperCase() : "";
-            if ("INACTIVE".equals(physicalStatus) || "NOT_READY".equals(physicalStatus)) {
+            if ("INACTIVE".equals(physicalStatus)) {
                 continue;
             }
             
@@ -154,6 +154,7 @@ public class RoomMapServlet extends HttpServlet {
         request.setAttribute("currentFloor", request.getParameter("floor"));
         request.setAttribute("currentRoomTypeId", request.getParameter("roomTypeId"));
         request.setAttribute("roomMapMode", managerMode ? "MANAGER" : "RECEPTION");
+        request.setAttribute("roomMapTitle", managerMode ? "Sơ đồ phòng | Manager" : "Sơ đồ phòng");
         request.setAttribute("roomMapActionUrl", request.getContextPath() + path);
         request.setAttribute("roomMapShowChangeActions", !managerMode);
 

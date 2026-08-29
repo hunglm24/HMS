@@ -21,8 +21,8 @@ public class VNPayConfig {
             "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
     public static final String vnp_ReturnUrl = env("HMS_VNPAY_RETURN_URL",
             "http://localhost:8080/HMS/payment-return");
-    public static final String vnp_TmnCode = env("HMS_VNPAY_TMN_CODE", "");
-    public static final String vnp_HashSecret = env("HMS_VNPAY_HASH_SECRET", "");
+    public static final String vnp_TmnCode = env("HMS_VNPAY_TMN_CODE", "4YUP19I4");
+    public static final String vnp_HashSecret = env("HMS_VNPAY_HASH_SECRET", "MDUIFDCRAKLNBPOFIAFNEKFRNMFBYEPX");
     public static final String vnp_apiUrl = env("HMS_VNPAY_API_URL",
             "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
 
