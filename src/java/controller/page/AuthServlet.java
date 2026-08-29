@@ -135,7 +135,7 @@ public class AuthServlet extends HttpServlet {
                         + java.net.URLEncoder.encode(token.get(), java.nio.charset.StandardCharsets.UTF_8);
                 MailUtil.sendPasswordReset(email.trim(), resetUrl);
             }
-            request.setAttribute("success", "Nếu email tồn tại, hệ thống đã gửi liên kết đặt lại mật khẩu.");
+            request.setAttribute("success", "Đã gửi liên kết thành công.");
             request.getRequestDispatcher("/WEB-INF/views/public/forgot-password.jsp").forward(request, response);
         } catch (SQLException | IllegalStateException | IOException ex) {
             getServletContext().log("Gửi email đặt lại mật khẩu thất bại", ex);
