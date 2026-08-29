@@ -407,7 +407,6 @@
 
 /* Password Visibility Wrapper */
 /* Password Visibility Wrapper */
-.auth-field .password-wrap,
 .password-wrap {
     position: relative;
     display: flex;
@@ -415,46 +414,34 @@
     width: 100%;
 }
 
-/* Khóa cứng chiều cao ô input để không bị giật khi đổi type text/password */
-.auth-field .password-wrap input,
 .password-wrap input {
     width: 100%;
-    height: 46px;
-    min-height: 46px;
     display: block;
-    padding-right: 72px;
-    box-sizing: border-box;
+    padding-right: 68px;
 }
 
-/* Khóa cứng kích thước nút bấm Hiện/Ẩn để không bị nhảy vị trí */
-.auth-field .password-wrap button.password-visibility,
-.auth-field button.password-visibility,
 .password-visibility {
     position: absolute;
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    width: 54px;               /* Khóa cứng chiều rộng để 'Hiện' và 'Ẩn' bằng nhau */
+    min-height: auto;          /* Reset min-height của main.css */
     height: 30px;              /* Khóa cứng chiều cao */
-    min-height: 0 !important;  /* Bỏ min-height: 42px của main.css */
-    max-height: 30px;
-    margin: 0;
-    padding: 0;
+    line-height: 1;            /* Khóa line-height để không bị nhảy khi đổi chữ "Ẩn"/"Hiện" */
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0 12px;
     border: 1px solid #e2e8f0;
     border-radius: var(--auth-radius-sm);
     background: #f8fafc;
     color: var(--auth-primary);
     font-size: 12.5px;
     font-weight: 600;
-    line-height: 1;            /* Khóa line-height */
     cursor: pointer;
     box-sizing: border-box;
-    user-select: none;
-    /* Chỉ animate màu sắc, không dùng transition: all */
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    /* Chỉ animate màu sắc, không dùng 'all' */
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .password-visibility:hover {
